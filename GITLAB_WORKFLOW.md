@@ -89,6 +89,9 @@ git commit -m "feat: 实现进程优先级调度"
 - `optimize: 优化性能` - 性能优化
 - `docs: 文档更新` - 更新文档
 - `refactor: 代码重构` - 代码重构
+- `chore: 配置管理` - 构建脚本、.gitignore 等配置文件
+- `build: 编译改动` - 编译相关改动
+- `test: 测试` - 添加或修改测试用例
 
 > 例如：
 > ```
