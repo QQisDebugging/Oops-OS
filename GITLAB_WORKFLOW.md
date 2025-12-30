@@ -142,16 +142,26 @@ git push
 
 ## 同步队友的代码
 
-当队友合并了代码到 main，你需要同步最新的代码：
+### 场景 1：你在自己的分支上开发，需要队友的最新更新
+
+```powershell
+# 假设你现在在 process-management 分支上开发
+# 直接拉取 main 的最新代码到你的分支
+git pull origin main
+
+# 完成！你的分支现在包含了队友的最新代码
+```
+
+### 场景 2：你已完成开发并合并到 main，现在要开始新功能
 
 ```powershell
 # 1. 切回 main 分支
 git checkout main
 
-# 2. 拉取最新代码
+# 2. 拉取最新代码（包括你自己和队友的更新）
 git pull origin main
 
-# 3. 继续你的开发或创建新分支
+# 3. 创建新分支继续开发
 git checkout -b 新分支
 ```
 
