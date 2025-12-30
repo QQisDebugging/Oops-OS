@@ -29,8 +29,8 @@ git config user.email "你的邮箱"
 
 > 例如：
 > ```powershell
-> git config user.name "贺鑫帅"
-> git config user.email "hexinshuai@example.com"
+> git config user.name "ironhxs"
+> git config user.email "ironhxs@gmail.com"
 > ```
 
 ---
@@ -59,10 +59,6 @@ git checkout -b filesystem
 # 陈倩倩（内存管理）
 git checkout -b memory-management
 ```
-
-> **分支命名规则**：`功能-描述`
-> - 好例子：`process-scheduler`、`file-cache`、`memory-alloc`
-> - 不好的：`test`、`fix`、`tmp`
 
 ### 第 3 步：修改代码
 
@@ -120,6 +116,8 @@ git push
    - Target branch：`main`
 4. 填写 MR 标题和描述
 5. 点击 **Create merge request**
+
+![MR创建流程](./docs/img/1.png)
 
 > **MR 描述示例**：
 > ```
