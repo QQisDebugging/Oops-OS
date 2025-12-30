@@ -841,6 +841,7 @@ void wakeupOneProc(void *chan)
     if (p->state == SLEEPING && p->chan == chan)
     {
       p->state = RUNNABLE;
+      release(&p->lock);
       break; // 多加了这一步
     }
     release(&p->lock);

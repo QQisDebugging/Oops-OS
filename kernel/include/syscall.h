@@ -52,3 +52,4 @@
 #define SYS_recoveri 51     // 根据文件的索引信息恢复文件
 #define SYS_clone 52        // 创建线程
 #define SYS_join 53         // 回收线程
+#define SYS_sem_p_multi 54  // 信号量：AND P 操作

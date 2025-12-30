@@ -255,7 +255,7 @@ int sys_sh_var_write()
 int sys_sem_create()
 {
   int n_sem, id;
-  if (argint(0, &n_sem) < 0 || n_sem <= 0) // 参数必须合法且大于0
+  if (argint(0, &n_sem) < 0 || n_sem < 0) // 参数必须合法且非负
   {
     return -1;
   }
@@ -287,13 +287,20 @@ int sys_sem_free()
   }
 
   acquire(&sems[id].lock);
-  if (sems[id].allocated == 1)
+  if (sems[id].allocated == 0)
   {
-    sems[id].allocated = 0;
-    sems[id].resource_count = 0; // 清除资源计数
-    sem_used_count--;
-    printf("释放 %d sem\n", id);
+    release(&sems[id].lock);
+    return -1;
   }
+  if (sems[id].resource_count < 0 || sems[id].waiters > 0)
+  {
+    release(&sems[id].lock);
+    return -1;
+  }
+  sems[id].allocated = 0;
+  sems[id].resource_count = 0; // 清除资源计数
+  sem_used_count--;
+  printf("释放 %d sem\n", id);
   release(&sems[id].lock);
 
   return 0;
@@ -302,8 +309,6 @@ int sys_sem_free()
 int sys_sem_p()
 {
   int id;
-  struct proc *p = myproc();
-
   if (argint(0, &id) < 0 || id < 0 || id >= SEM_MAX_NUM) // 参数合法性检查
   {
     return -1;
@@ -311,22 +316,139 @@ int sys_sem_p()
 
   // printf("sem_p: 尝试获取信号量 id = %d\n", id);
 
-  acquire(&p->lock);       // 获取当前进程的锁
   acquire(&sems[id].lock); // 获取信号量锁
+  if (sems[id].allocated == 0)
+  {
+    release(&sems[id].lock);
+    return -1;
+  }
 
   sems[id].resource_count--;
   if (sems[id].resource_count < 0)
   {
-    release(&sems[id].lock);    // 释放信号量锁
-    sleep(&sems[id], &p->lock); // 使用进程锁进行休眠
+    sems[id].waiters++;
+    sleep(&sems[id], &sems[id].lock); // 使用信号量锁进行休眠
+    sems[id].waiters--;
   }
-  else
+  release(&sems[id].lock); // 释放信号量锁
+  return 0;
+}
+
+// 信号量：P 操作（AND），一次获取多个信号量
+int sys_sem_p_multi()
+{
+  int n;
+  uint64 uids;
+  int ids[SEM_MAX_NUM];
+
+  if (argint(0, &n) < 0 || n <= 0 || n > SEM_MAX_NUM)
   {
-    release(&sems[id].lock); // 如果资源足够，释放信号量锁
+    return -1;
+  }
+  if (argaddr(1, &uids) < 0)
+  {
+    return -1;
+  }
+  if (copyin(myproc()->pagetable, (char *)ids, uids, n * sizeof(int)) < 0)
+  {
+    return -1;
   }
 
-  release(&p->lock); // 释放进程锁
-  return 0;
+  for (int i = 1; i < n; i++)
+  {
+    int key = ids[i];
+    int j = i - 1;
+    while (j >= 0 && ids[j] > key)
+    {
+      ids[j + 1] = ids[j];
+      j--;
+    }
+    ids[j + 1] = key;
+  }
+
+  for (int i = 0; i < n; i++)
+  {
+    if (ids[i] < 0 || ids[i] >= SEM_MAX_NUM)
+    {
+      return -1;
+    }
+    if (i > 0 && ids[i] == ids[i - 1])
+    {
+      return -1;
+    }
+  }
+
+  for (;;)
+  {
+    int wait_id = -1;
+    int invalid = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+      acquire(&sems[ids[i]].lock);
+    }
+    for (int i = 0; i < n; i++)
+    {
+      struct sem *s = &sems[ids[i]];
+      if (s->allocated == 0)
+      {
+        invalid = 1;
+        break;
+      }
+      if (s->resource_count <= 0 && wait_id < 0)
+      {
+        wait_id = ids[i];
+      }
+    }
+
+    if (invalid)
+    {
+      for (int i = 0; i < n; i++)
+      {
+        release(&sems[ids[i]].lock);
+      }
+      return -1;
+    }
+    if (wait_id < 0)
+    {
+      for (int i = 0; i < n; i++)
+      {
+        sems[ids[i]].resource_count--;
+      }
+      for (int i = 0; i < n; i++)
+      {
+        release(&sems[ids[i]].lock);
+      }
+      return 0;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+      sems[ids[i]].waiters++;
+    }
+    for (int i = 0; i < n; i++)
+    {
+      if (ids[i] != wait_id)
+      {
+        release(&sems[ids[i]].lock);
+      }
+    }
+    sleep(&sems[wait_id], &sems[wait_id].lock);
+    release(&sems[wait_id].lock);
+
+    for (int i = 0; i < n; i++)
+    {
+      acquire(&sems[ids[i]].lock);
+    }
+    for (int i = 0; i < n; i++)
+    {
+      sems[ids[i]].waiters--;
+    }
+    for (int i = 0; i < n; i++)
+    {
+      release(&sems[ids[i]].lock);
+    }
+  }
 }
 
 // 信号量：V操作，释放资源
@@ -341,11 +463,16 @@ int sys_sem_v()
   // printf("sem_v: 尝试释放信号量 id = %d\n", id);
 
   acquire(&sems[id].lock); // 获取信号量锁
+  if (sems[id].allocated == 0)
+  {
+    release(&sems[id].lock);
+    return -1;
+  }
 
   sems[id].resource_count++;
   if (sems[id].resource_count <= 0)
   {
-    wakeup(&sems[id]); // 唤醒等待的进程
+    wakeupOneProc(&sems[id]); // 唤醒一个等待的进程
   }
 
   release(&sems[id].lock); // 释放信号量锁
