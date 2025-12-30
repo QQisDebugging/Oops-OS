@@ -107,6 +107,16 @@ git push -u origin process-management
 git push
 ```
 
+> **第一次推送时**：
+> - Git 会提示输入 **GitLab 用户名和密码**
+> - 用户名：`T202519359997707`
+> - 密码：`Dbd12345678`
+> - 输入一次后，Git 会记住凭证，之后推送不需要再输入
+> 
+> **如果没有出现提示框**：
+> - 可能已经保存过凭证了，直接推送即可
+> - 或者在 Windows 凭证管理器中手动添加（系统会自动管理）
+
 ### 第 6 步：在 GitLab 网页上发起合并请求（MR）
 
 1. 访问：https://gitlab.eduxiji.net/T202519359997707/project3035746-353055
@@ -162,7 +172,7 @@ git checkout main
 git pull origin main
 
 # 3. 创建新分支继续开发
-git checkout -b 新分支
+git checkout -b 新分支（上面约定好的那三个名称）
 ```
 
 ---
