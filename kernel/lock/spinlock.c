@@ -25,6 +25,7 @@ void initsem()
     initlock(&sems[i].lock, "semaphore");
     sems[i].allocated = 0;      // 标记为未分配
     sems[i].resource_count = 0; // 初始化资源计数
+    sems[i].waiters = 0;
   }
 }
 

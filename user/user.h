@@ -47,6 +47,7 @@ int sem_create(int);
 int sem_free(int);
 int sem_p(int);
 int sem_v(int);
+int sem_p_multi(int, int *);
 int mkf(char *);
 // 共享内存
 uint64 shmgetat(int, int);
@@ -81,4 +82,3 @@ int statistics(void *buf, int sz);
 // uthread.c
 int thread_join(void);
 int thread_create(void(*start_routine)(void*),void*arg);
-

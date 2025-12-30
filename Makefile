@@ -167,6 +167,8 @@ UPROGS=\
 	$U/program/_uthread\
 	$U/test/_kalloctest\
 	$U/test/_bcachetest\
+	$U/test/_semtest\
+	$U/test/_semandtest\
 	$U/program/_statistics
 
 

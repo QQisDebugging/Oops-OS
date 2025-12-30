@@ -50,6 +50,7 @@ entry("sh_var_write");#  信号量：修改共享变量
 entry("sem_create"); # 信号量：
 entry("sem_free");#  信号量：
 entry("sem_p"); # 信号量：
+entry("sem_p_multi"); # 信号量：
 entry("sem_v");#  信号量：
 entry("symlink");
 entry("mkf");
