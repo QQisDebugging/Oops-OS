@@ -37,6 +37,7 @@ void main()
     pci_init();
     sockinit();
     initsem();          // 信号量数组初始化
+    initsemset();
     sharememinit();
     mqinit();
     printf("\033[0m");

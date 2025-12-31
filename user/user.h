@@ -48,6 +48,11 @@ int sem_free(int);
 int sem_p(int);
 int sem_v(int);
 int sem_p_multi(int, int *);
+int semset_create(int, int *);
+int semset_free(int);
+int semset_p(int, int);
+int semset_v(int, int);
+int semset_p_multi(int, int, int *);
 int mkf(char *);
 // 共享内存
 uint64 shmgetat(int, int);

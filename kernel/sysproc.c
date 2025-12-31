@@ -470,13 +470,325 @@ int sys_sem_v()
   }
 
   sems[id].resource_count++;
-  if (sems[id].resource_count <= 0)
+  if (sems[id].resource_count <= 0 || sems[id].waiters > 0)
   {
     wakeupOneProc(&sems[id]); // 唤醒一个等待的进程
   }
 
   release(&sems[id].lock); // 释放信号量锁
   return 0;
+}
+
+int sys_semset_create()
+{
+  int n;
+  uint64 uvals;
+  int vals[SEMSET_MAX_SIZE];
+
+  if (argint(0, &n) < 0 || n <= 0 || n > SEMSET_MAX_SIZE)
+  {
+    return -1;
+  }
+  if (argaddr(1, &uvals) < 0)
+  {
+    return -1;
+  }
+
+  if (uvals != 0)
+  {
+    if (copyin(myproc()->pagetable, (char *)vals, uvals, n * sizeof(int)) < 0)
+    {
+      return -1;
+    }
+    for (int i = 0; i < n; i++)
+    {
+      if (vals[i] < 0)
+      {
+        return -1;
+      }
+    }
+  }
+  else
+  {
+    for (int i = 0; i < n; i++)
+    {
+      vals[i] = 0;
+    }
+  }
+
+  for (int id = 0; id < SEMSET_MAX_NUM; id++)
+  {
+    acquire(&semsets[id].lock);
+    if (semsets[id].allocated == 0)
+    {
+      semsets[id].allocated = 1;
+      semsets[id].count = n;
+      semset_used_count++;
+      for (int i = 0; i < n; i++)
+      {
+        semsets[id].sems[i].allocated = 1;
+        semsets[id].sems[i].resource_count = vals[i];
+        semsets[id].sems[i].waiters = 0;
+      }
+      for (int i = n; i < SEMSET_MAX_SIZE; i++)
+      {
+        semsets[id].sems[i].allocated = 0;
+        semsets[id].sems[i].resource_count = 0;
+        semsets[id].sems[i].waiters = 0;
+      }
+      release(&semsets[id].lock);
+      return id;
+    }
+    release(&semsets[id].lock);
+  }
+
+  return -1;
+}
+
+int sys_semset_free()
+{
+  int id;
+  if (argint(0, &id) < 0 || id < 0 || id >= SEMSET_MAX_NUM)
+  {
+    return -1;
+  }
+
+  struct semset *set = &semsets[id];
+  acquire(&set->lock);
+  if (set->allocated == 0)
+  {
+    release(&set->lock);
+    return -1;
+  }
+  int n = set->count;
+  release(&set->lock);
+
+  for (int i = 0; i < n; i++)
+  {
+    acquire(&set->sems[i].lock);
+    if (set->sems[i].allocated == 0 || set->sems[i].resource_count < 0 || set->sems[i].waiters > 0)
+    {
+      release(&set->sems[i].lock);
+      return -1;
+    }
+    release(&set->sems[i].lock);
+  }
+
+  for (int i = 0; i < n; i++)
+  {
+    acquire(&set->sems[i].lock);
+    set->sems[i].allocated = 0;
+    set->sems[i].resource_count = 0;
+    set->sems[i].waiters = 0;
+    release(&set->sems[i].lock);
+  }
+
+  acquire(&set->lock);
+  set->allocated = 0;
+  set->count = 0;
+  semset_used_count--;
+  release(&set->lock);
+  return 0;
+}
+
+int sys_semset_p()
+{
+  int id, idx;
+  if (argint(0, &id) < 0 || argint(1, &idx) < 0 || id < 0 || id >= SEMSET_MAX_NUM)
+  {
+    return -1;
+  }
+
+  struct semset *set = &semsets[id];
+  acquire(&set->lock);
+  if (set->allocated == 0 || idx < 0 || idx >= set->count)
+  {
+    release(&set->lock);
+    return -1;
+  }
+  release(&set->lock);
+
+  struct sem *s = &set->sems[idx];
+  acquire(&s->lock);
+  if (s->allocated == 0)
+  {
+    release(&s->lock);
+    return -1;
+  }
+
+  s->resource_count--;
+  if (s->resource_count < 0)
+  {
+    s->waiters++;
+    sleep(s, &s->lock);
+    s->waiters--;
+  }
+  release(&s->lock);
+  return 0;
+}
+
+int sys_semset_v()
+{
+  int id, idx;
+  if (argint(0, &id) < 0 || argint(1, &idx) < 0 || id < 0 || id >= SEMSET_MAX_NUM)
+  {
+    return -1;
+  }
+
+  struct semset *set = &semsets[id];
+  acquire(&set->lock);
+  if (set->allocated == 0 || idx < 0 || idx >= set->count)
+  {
+    release(&set->lock);
+    return -1;
+  }
+  release(&set->lock);
+
+  struct sem *s = &set->sems[idx];
+  acquire(&s->lock);
+  if (s->allocated == 0)
+  {
+    release(&s->lock);
+    return -1;
+  }
+
+  s->resource_count++;
+  if (s->resource_count <= 0 || s->waiters > 0)
+  {
+    wakeupOneProc(s);
+  }
+  release(&s->lock);
+  return 0;
+}
+
+int sys_semset_p_multi()
+{
+  int id, n;
+  uint64 uidxs;
+  int idxs[SEMSET_MAX_SIZE];
+
+  if (argint(0, &id) < 0 || argint(1, &n) < 0 || id < 0 || id >= SEMSET_MAX_NUM)
+  {
+    return -1;
+  }
+  if (n <= 0 || n > SEMSET_MAX_SIZE)
+  {
+    return -1;
+  }
+  if (argaddr(2, &uidxs) < 0)
+  {
+    return -1;
+  }
+
+  struct semset *set = &semsets[id];
+  acquire(&set->lock);
+  if (set->allocated == 0 || n > set->count)
+  {
+    release(&set->lock);
+    return -1;
+  }
+  release(&set->lock);
+
+  if (copyin(myproc()->pagetable, (char *)idxs, uidxs, n * sizeof(int)) < 0)
+  {
+    return -1;
+  }
+
+  for (int i = 1; i < n; i++)
+  {
+    int key = idxs[i];
+    int j = i - 1;
+    while (j >= 0 && idxs[j] > key)
+    {
+      idxs[j + 1] = idxs[j];
+      j--;
+    }
+    idxs[j + 1] = key;
+  }
+
+  for (int i = 0; i < n; i++)
+  {
+    if (idxs[i] < 0 || idxs[i] >= set->count)
+    {
+      return -1;
+    }
+    if (i > 0 && idxs[i] == idxs[i - 1])
+    {
+      return -1;
+    }
+  }
+
+  for (;;)
+  {
+    int wait_idx = -1;
+    int invalid = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+      acquire(&set->sems[idxs[i]].lock);
+    }
+    for (int i = 0; i < n; i++)
+    {
+      struct sem *s = &set->sems[idxs[i]];
+      if (s->allocated == 0)
+      {
+        invalid = 1;
+        break;
+      }
+      if (s->resource_count <= 0 && wait_idx < 0)
+      {
+        wait_idx = idxs[i];
+      }
+    }
+
+    if (invalid)
+    {
+      for (int i = 0; i < n; i++)
+      {
+        release(&set->sems[idxs[i]].lock);
+      }
+      return -1;
+    }
+    if (wait_idx < 0)
+    {
+      for (int i = 0; i < n; i++)
+      {
+        set->sems[idxs[i]].resource_count--;
+      }
+      for (int i = 0; i < n; i++)
+      {
+        release(&set->sems[idxs[i]].lock);
+      }
+      return 0;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+      set->sems[idxs[i]].waiters++;
+    }
+    for (int i = 0; i < n; i++)
+    {
+      if (idxs[i] != wait_idx)
+      {
+        release(&set->sems[idxs[i]].lock);
+      }
+    }
+    sleep(&set->sems[wait_idx], &set->sems[wait_idx].lock);
+    release(&set->sems[wait_idx].lock);
+
+    for (int i = 0; i < n; i++)
+    {
+      acquire(&set->sems[idxs[i]].lock);
+    }
+    for (int i = 0; i < n; i++)
+    {
+      set->sems[idxs[i]].waiters--;
+    }
+    for (int i = 0; i < n; i++)
+    {
+      release(&set->sems[idxs[i]].lock);
+    }
+  }
 }
 
 uint64 sys_shmgetat(void)

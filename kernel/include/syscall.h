@@ -53,3 +53,8 @@
 #define SYS_clone 52        // 创建线程
 #define SYS_join 53         // 回收线程
 #define SYS_sem_p_multi 54  // 信号量：AND P 操作
+#define SYS_semset_create 55
+#define SYS_semset_free 56
+#define SYS_semset_p 57
+#define SYS_semset_v 58
+#define SYS_semset_p_multi 59

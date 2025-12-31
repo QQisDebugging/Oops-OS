@@ -143,6 +143,11 @@ extern uint64 sys_sem_free(void);     // 信号量
 extern uint64 sys_sem_p(void);        // 信号量
 extern uint64 sys_sem_v(void);        // 信号量
 extern uint64 sys_sem_p_multi(void);  // 信号量
+extern uint64 sys_semset_create(void);
+extern uint64 sys_semset_free(void);
+extern uint64 sys_semset_p(void);
+extern uint64 sys_semset_v(void);
+extern uint64 sys_semset_p_multi(void);
 extern uint64 sys_symlink(void);
 extern uint64 sys_mkf(void);
 extern uint64 sys_shmgetat(void);    // 共享内存
@@ -200,6 +205,11 @@ static uint64 (*syscalls[])(void) = {
     [SYS_sem_p] sys_sem_p,
     [SYS_sem_v] sys_sem_v,
     [SYS_sem_p_multi] sys_sem_p_multi,
+    [SYS_semset_create] sys_semset_create,
+    [SYS_semset_free] sys_semset_free,
+    [SYS_semset_p] sys_semset_p,
+    [SYS_semset_v] sys_semset_v,
+    [SYS_semset_p_multi] sys_semset_p_multi,
     [SYS_symlink] sys_symlink,
     [SYS_mkf] sys_mkf,
     [SYS_shmgetat] sys_shmgetat,
@@ -256,6 +266,11 @@ static char *syscall_names[] = {
     [SYS_sem_p] "sys_sem_p",
     [SYS_sem_v] "sys_sem_v",
     [SYS_sem_p_multi] "sys_sem_p_multi",
+    [SYS_semset_create] "sys_semset_create",
+    [SYS_semset_free] "sys_semset_free",
+    [SYS_semset_p] "sys_semset_p",
+    [SYS_semset_v] "sys_semset_v",
+    [SYS_semset_p_multi] "sys_semset_p_multi",
     [SYS_symlink] "sys_symlink",
     [SYS_mkf] "sys_mkf",
     [SYS_shmgetat] "sys_shmgetat",
