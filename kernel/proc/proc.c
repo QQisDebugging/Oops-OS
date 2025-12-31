@@ -811,6 +811,7 @@ void forkret(void)
     // be run from main().
     first = 0;
     fsinit(ROOTDEV);
+    swapinit();
   }
 
   usertrapret();

@@ -2734,6 +2734,14 @@ void dmsgtest_run(char *s)
   exit(1);
 }
 
+void swaptest_run(char *s)
+{
+  char *argv[] = {"swaptest", 0};
+  exec("swaptest", argv);
+  printf("%s: exec swaptest failed\n", s);
+  exit(1);
+}
+
 int main(int argc, char *argv[])
 {
   int continuous = 0;
@@ -2793,6 +2801,7 @@ int main(int argc, char *argv[])
       {bigwrite, "bigwrite"},
       {bsstest, "bsstest"},
       {sbrkmuch, "sbrkmuch"},
+      {swaptest_run, "swaptest"},
       {sbrkarg, "sbrkarg"},
       {validatetest, "validatetest"},
       {stacktest, "stacktest"},

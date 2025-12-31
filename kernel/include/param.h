@@ -1,4 +1,4 @@
-#define NPROC 64  // maximum number of processes
+﻿#define NPROC 64  // maximum number of processes
 #define NCPU 8    // maximum number of CPUs
 #define NOFILE 16 // open files per process
 #define NFILE 100 // open files per system
@@ -13,7 +13,10 @@
 #define LOGSIZE (MAXOPBLOCKS * 3) // 指定日志区域的大小为每次可以写入的最大磁盘块数的3倍
 #define NBUF (MAXOPBLOCKS * 3)    // size of disk block cache
 #define FSSIZE 100000             // size of file system in blocks
+#define SWAP_PAGES 512            // swap size in pages (4 blocks per page)
+#define SWAPBLOCKS (SWAP_PAGES * 4)
 #define MAXPATH 128               // maximum file path name
 #define MQMAX 8                   // 消息队列数量
 #define DMSG_MAX 128              // direct message max size
 #define DMSG_QUEUE_MAX 16         // direct message queue length
+

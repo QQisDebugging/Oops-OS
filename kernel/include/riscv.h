@@ -332,6 +332,7 @@ sfence_vma()
 #define PTE_X (1L << 3)
 #define PTE_U (1L << 4) // 1 -> user can access
 #define PTE_F (1L << 8)// 记录应用了COW策略后fork的页面
+#define PTE_S (1L << 9) // swapped out
 
 
 // shift a physical address to the right place for a PTE.
@@ -340,6 +341,8 @@ sfence_vma()
 #define PTE2PA(pte) (((pte) >> 10) << 12)
 
 #define PTE_FLAGS(pte) ((pte) & 0x3FF)
+#define PTE2SWAP(pte) ((uint64)(pte) >> 10)
+#define SWAP2PTE(slot) ((uint64)(slot) << 10)
 
 // extract the three 9-bit page table indices from a virtual address.
 #define PXMASK          0x1FF // 9 bits

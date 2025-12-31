@@ -110,6 +110,15 @@ walkaddr(pagetable_t pagetable, uint64 va)
   if (pte == 0)
     return 0;
   if ((*pte & PTE_V) == 0)
+  {
+    if ((*pte & PTE_S) && swapin(pagetable, PGROUNDDOWN(va)) == 0)
+      pte = walk(pagetable, va, 0);
+    else
+      return 0;
+  }
+  if (pte == 0)
+    return 0;
+  if ((*pte & PTE_V) == 0)
     return 0;
   if ((*pte & PTE_U) == 0)
     return 0;
@@ -188,7 +197,12 @@ void uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
     if ((pte = walk(pagetable, a, 0)) == 0)
       continue;
     if ((*pte & PTE_V) == 0)
+    {
+      if (do_free && (*pte & PTE_S))
+        swapfree(PTE2SWAP(*pte));
+      *pte = 0;
       continue;
+    }
     if (PTE_FLAGS(*pte) == PTE_V)
       panic("uvmunmap: not a leaf");
     if (do_free)
@@ -327,7 +341,17 @@ int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
     if ((pte = walk(old, i, 0)) == 0)
       continue;
     if ((*pte & PTE_V) == 0)
+    {
+      if (*pte & PTE_S)
+      {
+        if (swapcopy(new, i, *pte) < 0)
+        {
+          uvmunmap(new, 0, i / PGSIZE, 1);
+          return -1;
+        }
+      }
       continue;
+    }
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
 

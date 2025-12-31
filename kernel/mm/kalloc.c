@@ -92,7 +92,9 @@ void kfree(void *pa)
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
-void *kalloc(void)
+
+static void *
+kalloc_try(void)
 {
   struct run *r;
   push_off();
@@ -100,16 +102,16 @@ void *kalloc(void)
   acquire(&kmem[id].lock);
   r = kmem[id].freelist;
   if (r)
-  { // 当前CPU的空闲列表有空闲内存就分配
+  { // ???CPU????????????????????
     kmem[id].freelist = r->next;
     acquire(&ref.lock);
-    ref.cnt[(uint64)r / PGSIZE] = 1; // 将引用计数初始化为1
+    ref.cnt[(uint64)r / PGSIZE] = 1; // ??????????????
     release(&ref.lock);
   }
   else
-  { // 当前CPU的空闲列表没有可分配内存时窃取其他内存的
+  { // ???CPU??????????????????????????????
     int antid;
-    // 遍历所有CPU的空闲列表
+    // ???????PU????????
     for (antid = 0; antid < NCPU; antid++)
     {
       if (antid == id)
@@ -134,6 +136,19 @@ void *kalloc(void)
     memset((char *)r, 5, PGSIZE); // fill with junk
   return (void *)r;
 }
+
+void *kalloc(void)
+{
+  for (;;)
+  {
+    void *r = kalloc_try();
+    if (r != 0)
+      return r;
+    if (swapout() < 0)
+      return 0;
+  }
+}
+
 
 void freebytes(uint64 *dst) // 获取空闲内存量
 {

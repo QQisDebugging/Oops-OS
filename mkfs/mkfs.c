@@ -124,6 +124,13 @@ int main(int argc, char *argv[])
 		   nmeta, nlog, ninodeblocks, nbitmap, nblocks, FSSIZE);
 	// 文件系统中第一个可以分配的空闲块:元数据块
 	freeblock = nmeta; // the first free block that we can allocate
+	if (nmeta + SWAPBLOCKS >= FSSIZE)
+	{
+		fprintf(stderr, "swap blocks exceed fs size\n");
+		exit(1);
+	}
+	// reserve a contiguous swap area right after metadata
+	freeblock += SWAPBLOCKS;
 
 	for (i = 0; i < FSSIZE; i++)
 		wsect(i, zeroes); // 写磁盘扇区的函数，将第 i 个块写为零
