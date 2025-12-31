@@ -11,6 +11,10 @@
 #include "kernel/include/stat.h"
 #include "kernel/include/param.h"
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 #ifndef static_assert
 #define static_assert(a, b) \
 	do                      \
@@ -93,7 +97,7 @@ int main(int argc, char *argv[])
 	// 这意味着如果文件已存在，它会被截断到零大小；如果不存在，则创建一个新文件。
 	// 0666 表示新文件的权限，即所有用户都可以读写。
 	// 如果 open 函数返回一个负值，说明打开文件失败,输出错误信息并退出。
-	fsfd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0666);
+	fsfd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC | O_BINARY, 0666);
 	if (fsfd < 0)
 	{
 		perror(argv[1]);
@@ -136,12 +140,12 @@ int main(int argc, char *argv[])
 	rootino = ialloc(T_DIR);	// ialloc 申请一个 inode 节点，T_DIR表示分配的是根目录的inode
 	assert(rootino == ROOTINO); // 确保根目录的 inode 节点号为 ROOTINO
 
-	bzero(&de, sizeof(de));			   // 将目录项 de 清零
+	memset(&de, 0, sizeof(de));			   // 将目录项 de 清零
 	de.inum = xshort(rootino);		   // 将根目录的 inode号存储在目录项中
 	strcpy(de.name, ".");			   // 设置目录项名称为 "."
 	iappend(rootino, &de, sizeof(de)); // 将目录项 de 写入磁盘，关联到根目录 inode
 
-	bzero(&de, sizeof(de));
+	memset(&de, 0, sizeof(de));
 	de.inum = xshort(rootino);
 	strcpy(de.name, "..");
 
@@ -163,8 +167,8 @@ int main(int argc, char *argv[])
 		else
 			shortname = argv[i];
 		//printf("%s\n", shortname);
-		assert(index(shortname, '/') == 0);
-		if ((fd = open(argv[i], 0)) < 0)
+		assert(strchr(shortname, '/') == 0);
+		if ((fd = open(argv[i], O_RDONLY | O_BINARY)) < 0)
 		{
 			perror(argv[i]);
 			exit(1);
@@ -179,7 +183,7 @@ int main(int argc, char *argv[])
 
 		inum = ialloc(T_FILE);
 
-		bzero(&de, sizeof(de));
+		memset(&de, 0, sizeof(de));
 		de.inum = xshort(inum);
 		strncpy(de.name, shortname, DIRSIZ);
 		iappend(rootino, &de, sizeof(de));
@@ -260,7 +264,7 @@ uint ialloc(char type)
 	uint inum = freeinode++;
 	struct dinode din;
 
-	bzero(&din, sizeof(din));
+	memset(&din, 0, sizeof(din));
 	din.type = xshort(type);
 	din.nlink = xshort(1);
 	din.size = xint(0);
@@ -278,7 +282,7 @@ void balloc(int used)
 
 	printf("balloc: first %d blocks have been allocated\n", used);
 	assert(used < BSIZE * 8);
-	bzero(buf, BSIZE);
+	memset(buf, 0, BSIZE);
 	for (i = 0; i < used; i++)
 	{
 		buf[i / 8] = buf[i / 8] | (0x1 << (i % 8));
@@ -296,6 +300,7 @@ void iappend(uint inum, void *xp, int n)
 	struct dinode din;		  // 文件的 inode
 	char buf[BSIZE];		  // 数据缓冲区，用于读写文件数据块
 	uint indirect[NINDIRECT]; // 缓冲区，用于存储间接块地址
+	uint dindirect[NINDIRECT];
 	uint x;					  // 临时变量
 
 	rinode(inum, &din);
@@ -315,7 +320,7 @@ void iappend(uint inum, void *xp, int n)
 			}
 			x = xint(din.addrs[fbn]);
 		}
-		else // 超过直接块数，使用间接块
+		else if (fbn < NDIRECT + NINDIRECT) // 超过直接块数，使用间接块
 		{
 			// 如果没有间接块，分配一个新的间接块
 			if (xint(din.addrs[NDIRECT]) == 0)
@@ -331,10 +336,34 @@ void iappend(uint inum, void *xp, int n)
 			}
 			x = xint(indirect[fbn - NDIRECT]); // 获取间接块中的实际块地址
 		}
+		else // Use double-indirect block.
+		{
+			uint dindex = (fbn - NDIRECT - NINDIRECT) / NINDIRECT;
+			uint findex = (fbn - NDIRECT - NINDIRECT) % NINDIRECT;
+
+			if (xint(din.addrs[NDIRECT + 1]) == 0)
+			{
+				din.addrs[NDIRECT + 1] = xint(freeblock++);
+			}
+			rsect(xint(din.addrs[NDIRECT + 1]), (char *)dindirect);
+			if (dindirect[dindex] == 0)
+			{
+				dindirect[dindex] = xint(freeblock++);
+				wsect(xint(din.addrs[NDIRECT + 1]), (char *)dindirect);
+			}
+
+			rsect(xint(dindirect[dindex]), (char *)indirect);
+			if (indirect[findex] == 0)
+			{
+				indirect[findex] = xint(freeblock++);
+				wsect(xint(dindirect[dindex]), (char *)indirect);
+			}
+			x = xint(indirect[findex]);
+		}
 		// 计算当前写入块的字节数
 		n1 = min(n, (fbn + 1) * BSIZE - off);
 		rsect(x, buf);							 // 读取块数据到缓冲区
-		bcopy(p, buf + off - (fbn * BSIZE), n1); // 计算出缓冲区中的具体位置，即当前文件块的偏移位置,拷贝数据到缓冲区
+		memmove(buf + off - (fbn * BSIZE), p, n1); // 计算出缓冲区中的具体位置，即当前文件块的偏移位置,拷贝数据到缓冲区
 		wsect(x, buf);							 // 写回数据块
 		// 更新剩余数据大小、偏移量和数据指针
 		n -= n1;
