@@ -2734,6 +2734,14 @@ void dmsgtest_run(char *s)
   exit(1);
 }
 
+void cstest_run(char *s)
+{
+  char *argv[] = {"cstest", 0};
+  exec("cstest", argv);
+  printf("%s: exec cstest failed\n", s);
+  exit(1);
+}
+
 void monitortest_run(char *s)
 {
   char *argv[] = {"monitortest", 0};
@@ -2834,6 +2842,7 @@ int main(int argc, char *argv[])
       {semandtest_run, "semandtest"},
       {semsettest_run, "semsettest"},
       {dmsgtest_run, "dmsgtest"},
+      {cstest_run, "cstest"},
       {monitortest_run, "monitortest"},
       {0, 0},
   };
@@ -2882,4 +2891,3 @@ int main(int argc, char *argv[])
     exit(0);
   }
 }
-
