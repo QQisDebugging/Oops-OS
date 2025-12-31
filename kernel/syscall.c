@@ -114,6 +114,8 @@ extern uint64 sys_exit(void);
 extern uint64 sys_fork(void);
 extern uint64 sys_fstat(void);
 extern uint64 sys_getpid(void);
+extern uint64 sys_gettid(void);
+extern uint64 sys_gettgid(void);
 extern uint64 sys_kill(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
@@ -169,6 +171,7 @@ extern uint64 sys_geti(void);
 extern uint64 sys_recoveri(void);
 extern uint64 sys_clone(void);
 extern uint64 sys_join(void);
+extern uint64 sys_thread_exit(void);
 extern uint64 sys_mon_create(void);
 extern uint64 sys_mon_free(void);
 extern uint64 sys_mon_enter(void);
@@ -190,6 +193,8 @@ static uint64 (*syscalls[])(void) = {
     [SYS_chdir] sys_chdir,
     [SYS_dup] sys_dup,
     [SYS_getpid] sys_getpid,
+    [SYS_gettid] sys_gettid,
+    [SYS_gettgid] sys_gettgid,
     [SYS_sbrk] sys_sbrk,
     [SYS_sleep] sys_sleep,
     [SYS_uptime] sys_uptime,
@@ -240,6 +245,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_recoveri] sys_recoveri,
     [SYS_clone] sys_clone,
     [SYS_join] sys_join,
+    [SYS_thread_exit] sys_thread_exit,
     [SYS_mon_create] sys_mon_create,
     [SYS_mon_free] sys_mon_free,
     [SYS_mon_enter] sys_mon_enter,
@@ -262,6 +268,8 @@ static char *syscall_names[] = {
     [SYS_chdir] "chdir",
     [SYS_dup] "dup",
     [SYS_getpid] "getpid",
+    [SYS_gettid] "gettid",
+    [SYS_gettgid] "gettgid",
     [SYS_sbrk] "sbrk",
     [SYS_sleep] "sleep",
     [SYS_uptime] "uptime",
@@ -312,6 +320,7 @@ static char *syscall_names[] = {
     [SYS_recoveri] "sys_recoveri",
     [SYS_clone] "sys_clone",
     [SYS_join] "sys_join",
+    [SYS_thread_exit] "sys_thread_exit",
     [SYS_mon_create] "sys_mon_create",
     [SYS_mon_free] "sys_mon_free",
     [SYS_mon_enter] "sys_mon_enter",
@@ -344,7 +353,6 @@ void syscall(void) // 在usys.s中系统调用的参数放在a0与a1中，系统
     p->trapframe->a0 = -1; // 系统调用成功返回0或正数，返回负数表示错误。
   }
 }
-
 
 
 

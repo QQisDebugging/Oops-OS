@@ -69,4 +69,6 @@
 #define SYS_cond_wait 68
 #define SYS_cond_signal 69
 #define SYS_cond_broadcast 70
-
+#define SYS_gettid 71
+#define SYS_gettgid 72
+#define SYS_thread_exit 73

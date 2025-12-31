@@ -41,6 +41,30 @@ sys_getpid(void)
 }
 
 uint64
+sys_gettid(void)
+{
+  return myproc()->pid;
+}
+
+uint64
+sys_gettgid(void)
+{
+  struct proc *p = myproc();
+  if (p->tgid != 0)
+    return p->tgid;
+  return p->pid;
+}
+
+uint64
+sys_thread_exit(void)
+{
+  int status = 0;
+  argint(0, &status);
+  exit(status);
+  return 0;
+}
+
+uint64
 sys_fork(void)
 {
   return fork();
@@ -1260,4 +1284,3 @@ int sys_join(void)
   argaddr(0,&stackaddr);
   return join(stackaddr);
 }
-

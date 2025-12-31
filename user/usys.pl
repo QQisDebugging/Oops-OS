@@ -33,6 +33,8 @@ entry("mkdir");
 entry("chdir");
 entry("dup");
 entry("getpid");
+entry("gettid");
+entry("gettgid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
@@ -83,4 +85,4 @@ entry("geti");
 entry("recoveri");
 entry("clone");
 entry("join");
-
+entry("thread_exit");

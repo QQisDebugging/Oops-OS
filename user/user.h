@@ -21,6 +21,8 @@ int mkdir(const char *);
 int chdir(const char *);
 int dup(int);
 int getpid(void);
+int gettid(void);
+int gettgid(void);
 char *sbrk(int);
 int sleep(int);
 int uptime(void);
@@ -77,6 +79,7 @@ int chmod(const char*,char);
 // 内核线程
 int clone(uint64,uint64,uint64);
 int join(uint64);
+int thread_exit(int) __attribute__((noreturn));
 
 // ulib.c
 int stat(const char *, struct stat *);
@@ -98,4 +101,3 @@ int statistics(void *buf, int sz);
 // uthread.c
 int thread_join(void);
 int thread_create(void(*start_routine)(void*),void*arg);
-
