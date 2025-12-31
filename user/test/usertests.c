@@ -2718,6 +2718,22 @@ void semandtest_run(char *s)
   exit(1);
 }
 
+void semsettest_run(char *s)
+{
+  char *argv[] = {"semsettest", 0};
+  exec("semsettest", argv);
+  printf("%s: exec semsettest failed\n", s);
+  exit(1);
+}
+
+void dmsgtest_run(char *s)
+{
+  char *argv[] = {"dmsgtest", 0};
+  exec("dmsgtest", argv);
+  printf("%s: exec dmsgtest failed\n", s);
+  exit(1);
+}
+
 int main(int argc, char *argv[])
 {
   int continuous = 0;
@@ -2799,6 +2815,8 @@ int main(int argc, char *argv[])
       {bigdir, "bigdir"}, // slow
       {semtest_run, "semtest"},
       {semandtest_run, "semandtest"},
+      {semsettest_run, "semsettest"},
+      {dmsgtest_run, "dmsgtest"},
       {0, 0},
   };
 

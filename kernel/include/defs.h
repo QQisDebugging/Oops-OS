@@ -149,6 +149,7 @@ void release(struct spinlock *);
 void push_off(void);
 void pop_off(void);
 void initsem(void); // 信号量：初始化
+void initsemset(void);
 
 // sleeplock.c
 void acquiresleep(struct sleeplock *);

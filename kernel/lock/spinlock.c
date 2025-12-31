@@ -10,6 +10,8 @@
 
 int sem_used_count = 0;       // 信号量：当前在用信号量数量
 struct sem sems[SEM_MAX_NUM]; // 信号量：系统最多有128个信号量
+int semset_used_count = 0;
+struct semset semsets[SEMSET_MAX_NUM];
 
 void initlock(struct spinlock *lk, char *name)
 {
@@ -26,6 +28,23 @@ void initsem()
     sems[i].allocated = 0;      // 标记为未分配
     sems[i].resource_count = 0; // 初始化资源计数
     sems[i].waiters = 0;
+  }
+}
+
+void initsemset()
+{
+  for (int i = 0; i < SEMSET_MAX_NUM; i++)
+  {
+    initlock(&semsets[i].lock, "semset");
+    semsets[i].allocated = 0;
+    semsets[i].count = 0;
+    for (int j = 0; j < SEMSET_MAX_SIZE; j++)
+    {
+      initlock(&semsets[i].sems[j].lock, "semset_sem");
+      semsets[i].sems[j].allocated = 0;
+      semsets[i].sems[j].resource_count = 0;
+      semsets[i].sems[j].waiters = 0;
+    }
   }
 }
 

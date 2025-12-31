@@ -131,6 +131,7 @@ UPROGS=\
 	$U/program/_mkdir\
 	$U/program/_rm\
 	$U/program/_sh\
+	$U/program/_pcand\
 	$U/program/_stressfs\
 	$U/test/_usertests\
 	$U/program/_grind\
@@ -169,6 +170,8 @@ UPROGS=\
 	$U/test/_bcachetest\
 	$U/test/_semtest\
 	$U/test/_semandtest\
+	$U/test/_semsettest\
+	$U/test/_dmsgtest\
 	$U/program/_statistics
 
 

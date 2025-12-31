@@ -18,3 +18,15 @@ struct sem
   int allocated;        // 是否被分配 1已分配，0未分配
 };
 extern struct sem sems[SEM_MAX_NUM]; // 系统最多有128个信号量
+
+#define SEMSET_MAX_NUM 16  // semaphore sets
+#define SEMSET_MAX_SIZE 16 // semaphores per set
+extern int semset_used_count;
+struct semset
+{
+  struct spinlock lock;
+  int allocated;
+  int count;
+  struct sem sems[SEMSET_MAX_SIZE];
+};
+extern struct semset semsets[SEMSET_MAX_NUM];

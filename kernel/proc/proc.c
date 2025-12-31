@@ -48,6 +48,12 @@ void procinit(void)
   for (p = proc; p < &proc[NPROC]; p++)
   {
     initlock(&p->lock, "proc");
+    initlock(&p->dmsg_lock, "dmsg");
+    p->dmsg_head = 0;
+    p->dmsg_tail = 0;
+    p->dmsg_count = 0;
+    p->dmsg_bytes = 0;
+    p->dmsg_closed = 0;
     // 为每个进程分配一个内核栈。它将每个栈映射在KSTACK生成的虚拟地址上，这就为栈守护页留下了空间
     //  Allocate a page for the process's kernel stack.
     //  Map it high in memory, followed by an invalid
@@ -128,6 +134,11 @@ found:
 
   p->pid = allocpid();
   p->mqmask = 0;
+  p->dmsg_head = 0;
+  p->dmsg_tail = 0;
+  p->dmsg_count = 0;
+  p->dmsg_bytes = 0;
+  p->dmsg_closed = 0;
   p->priority = 10; // 设定优先级为10
   p->cpu_time = 0;
   p->wait_time = 0;
@@ -168,6 +179,30 @@ found:
   p->context.sp = p->kstack + PGSIZE;
   memset(&p->vma, 0, sizeof(p->vma));
   return p;
+}
+
+static void
+dmsg_close(struct proc *p)
+{
+  struct dmsg *m;
+  struct dmsg *next;
+
+  acquire(&p->dmsg_lock);
+  p->dmsg_closed = 1;
+  m = p->dmsg_head;
+  p->dmsg_head = 0;
+  p->dmsg_tail = 0;
+  p->dmsg_count = 0;
+  p->dmsg_bytes = 0;
+  wakeup(&p->dmsg_count);
+  release(&p->dmsg_lock);
+
+  while (m)
+  {
+    next = m->next;
+    kfree((void *)m);
+    m = next;
+  }
 }
 
 // free a proc structure and the data hanging from it,
@@ -413,6 +448,8 @@ void exit(int status)
 
   if (p == initproc)
     panic("init exiting");
+
+  dmsg_close(p);
 
   // Close all open files.
   for (int fd = 0; fd < NOFILE; fd++)

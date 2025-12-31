@@ -15,3 +15,5 @@
 #define FSSIZE 100000             // size of file system in blocks
 #define MAXPATH 128               // maximum file path name
 #define MQMAX 8                   // 消息队列数量
+#define DMSG_MAX 128              // direct message max size
+#define DMSG_QUEUE_MAX 16         // direct message queue length
