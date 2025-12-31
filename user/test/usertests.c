@@ -2742,6 +2742,14 @@ void swaptest_run(char *s)
   exit(1);
 }
 
+void fallocatetest_run(char *s)
+{
+  char *argv[] = {"fallocatetest", 0};
+  exec("fallocatetest", argv);
+  printf("%s: exec fallocatetest failed\n", s);
+  exit(1);
+}
+
 int main(int argc, char *argv[])
 {
   int continuous = 0;
@@ -2818,6 +2826,7 @@ int main(int argc, char *argv[])
       {rmdot, "rmdot"},
       {fourteen, "fourteen"},
       {bigfile, "bigfile"},
+      {fallocatetest_run, "fallocatetest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

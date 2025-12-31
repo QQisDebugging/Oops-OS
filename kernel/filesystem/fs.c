@@ -565,6 +565,24 @@ writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
   return n;
 }
 
+// Pre-allocate blocks for [startb, endb) and optionally update size.
+// Caller must hold ip->lock.
+int
+falloc(struct inode *ip, uint startb, uint endb, uint newsize, int keep_size)
+{
+  uint b;
+
+  if(newsize > MAXFILE*BSIZE)
+    return -1;
+  for(b = startb; b < endb; b++)
+    bmap(ip, b);
+  if(!keep_size && newsize > ip->size){
+    ip->size = newsize;
+    iupdate(ip);
+  }
+  return 0;
+}
+
 // Directories
 
 int

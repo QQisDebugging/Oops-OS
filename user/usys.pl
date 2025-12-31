@@ -74,3 +74,4 @@ entry("geti");
 entry("recoveri");
 entry("clone");
 entry("join");
+entry("fallocate");

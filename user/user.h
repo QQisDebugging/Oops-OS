@@ -42,6 +42,7 @@ int connect(uint32, uint16, uint16);
 //恢复被删除的文件
 int geti(const char*,uint64);
 int recoveri(uint,uint64);
+int fallocate(int, int, int);
 // 信号量
 int sem_create(int);
 int sem_free(int);

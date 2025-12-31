@@ -95,6 +95,76 @@ sys_write(void)
 }
 
 uint64
+sys_fallocate(void)
+{
+  struct file *f;
+  int size;
+  int flags;
+
+  if (argfd(0, 0, &f) < 0 || argint(1, &size) < 0 || argint(2, &flags) < 0)
+    return -1;
+  if (size < 0)
+    return -1;
+  if (flags & ~FALLOC_KEEP_SIZE)
+    return -1;
+  if (f->type != FD_INODE || f->ip->type != T_FILE)
+    return -1;
+  if (f->writable == 0)
+    return -1;
+
+  uint target = (uint)size;
+
+  ilock(f->ip);
+  uint cur_size = f->ip->size;
+  iunlock(f->ip);
+  if (target <= cur_size)
+    return 0;
+
+  uint startb = (cur_size + BSIZE - 1) / BSIZE;
+  uint endb = (target + BSIZE - 1) / BSIZE;
+  uint maxblocks = (MAXOPBLOCKS - 1 - 1 - 2) / 2;
+  if (maxblocks < 1)
+    maxblocks = 1;
+
+  uint b = startb;
+  while (b < endb)
+  {
+    uint chunk = endb - b;
+    if (chunk > maxblocks)
+      chunk = maxblocks;
+
+    begin_op();
+    ilock(f->ip);
+    uint cur_start = (f->ip->size + BSIZE - 1) / BSIZE;
+    if (cur_start > b)
+      b = cur_start;
+    if (b >= endb)
+    {
+      iunlock(f->ip);
+      end_op();
+      break;
+    }
+    if (chunk > endb - b)
+      chunk = endb - b;
+    uint newsize = target;
+    uint block_end_size = (b + chunk) * BSIZE;
+    if (block_end_size < newsize)
+      newsize = block_end_size;
+    if (falloc(f->ip, b, b + chunk, newsize, flags & FALLOC_KEEP_SIZE) < 0)
+    {
+      iunlock(f->ip);
+      end_op();
+      return -1;
+    }
+    iunlock(f->ip);
+    end_op();
+    b += chunk;
+  }
+
+  return 0;
+}
+
+uint64
 sys_close(void)
 {
   int fd;

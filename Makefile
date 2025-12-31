@@ -154,6 +154,7 @@ UPROGS=\
 	$U/test/_sh_rw_lock\
 	$U/test/_symlinktest\
 	$U/test/_bigfiletest\
+	$U/test/_fallocatetest\
 	$U/program/_symlink\
 	$U/program/_readfile\
 	$U/program/_writefile\
