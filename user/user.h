@@ -53,6 +53,8 @@ int semset_free(int);
 int semset_p(int, int);
 int semset_v(int, int);
 int semset_p_multi(int, int, int *);
+int dmsgsend(int, void *, int);
+int dmsgrcv(void *, int);
 int mkf(char *);
 // 共享内存
 uint64 shmgetat(int, int);

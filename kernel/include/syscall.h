@@ -58,3 +58,5 @@
 #define SYS_semset_p 57
 #define SYS_semset_v 58
 #define SYS_semset_p_multi 59
+#define SYS_dmsgsend 60
+#define SYS_dmsgrcv 61

@@ -140,8 +140,8 @@ void freebytes(uint64 *dst) // 获取空闲内存量
   *dst = 0;
   for (int i = 0; i < 8; i++)
   {
-    struct run *p = kmem[i].freelist; // 用于遍历
     acquire(&kmem[i].lock);
+    struct run *p = kmem[i].freelist; // 用于遍历
     while (p)
     {
       *dst += PGSIZE;

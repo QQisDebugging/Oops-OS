@@ -171,6 +171,7 @@ UPROGS=\
 	$U/test/_semtest\
 	$U/test/_semandtest\
 	$U/test/_semsettest\
+	$U/test/_dmsgtest\
 	$U/program/_statistics
 
 

@@ -791,6 +791,154 @@ int sys_semset_p_multi()
   }
 }
 
+static struct proc *
+dmsg_lock_target(int pid)
+{
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->pid == pid && p->state != UNUSED)
+    {
+      acquire(&p->dmsg_lock);
+      release(&p->lock);
+      if (p->dmsg_closed)
+      {
+        release(&p->dmsg_lock);
+        return 0;
+      }
+      return p;
+    }
+    release(&p->lock);
+  }
+  return 0;
+}
+
+int sys_dmsgsend()
+{
+  int pid, len;
+  uint64 uaddr;
+  char kbuf[DMSG_MAX];
+
+  if (argint(0, &pid) < 0 || argaddr(1, &uaddr) < 0 || argint(2, &len) < 0)
+  {
+    return -1;
+  }
+  if (pid <= 0 || len < 0 || len > DMSG_MAX)
+  {
+    return -1;
+  }
+  if (len > 0 && copyin(myproc()->pagetable, kbuf, uaddr, len) < 0)
+  {
+    return -1;
+  }
+
+  for (;;)
+  {
+    struct proc *p = dmsg_lock_target(pid);
+    if (p == 0)
+    {
+      return -1;
+    }
+    while (p->dmsg_count >= DMSG_QUEUE_MAX)
+    {
+      sleep(&p->dmsg_count, &p->dmsg_lock);
+      if (p->dmsg_closed)
+      {
+        release(&p->dmsg_lock);
+        return -1;
+      }
+    }
+
+    struct dmsg *m = (struct dmsg *)kalloc();
+    if (m == 0)
+    {
+      release(&p->dmsg_lock);
+      return -1;
+    }
+    m->next = 0;
+    m->len = len;
+    m->sender = myproc()->pid;
+    if (len > 0)
+    {
+      memmove(m->data, kbuf, len);
+    }
+    if (p->dmsg_tail != 0)
+    {
+      p->dmsg_tail->next = m;
+    }
+    else
+    {
+      p->dmsg_head = m;
+    }
+    p->dmsg_tail = m;
+    p->dmsg_count++;
+    p->dmsg_bytes += len;
+    wakeupOneProc(&p->dmsg_count);
+    release(&p->dmsg_lock);
+    return 0;
+  }
+}
+
+int sys_dmsgrcv()
+{
+  uint64 uaddr;
+  int len;
+  struct proc *p = myproc();
+  char kbuf[DMSG_MAX];
+
+  if (argaddr(0, &uaddr) < 0 || argint(1, &len) < 0)
+  {
+    return -1;
+  }
+  if (len < 0 || len > DMSG_MAX)
+  {
+    return -1;
+  }
+
+  acquire(&p->dmsg_lock);
+  while (p->dmsg_count == 0)
+  {
+    if (p->killed || p->dmsg_closed)
+    {
+      release(&p->dmsg_lock);
+      return -1;
+    }
+    sleep(&p->dmsg_count, &p->dmsg_lock);
+  }
+
+  struct dmsg *m = p->dmsg_head;
+  if (len < m->len)
+  {
+    release(&p->dmsg_lock);
+    return -1;
+  }
+  int mlen = m->len;
+  int sender = m->sender;
+  if (mlen > 0)
+  {
+    memmove(kbuf, m->data, mlen);
+  }
+
+  p->dmsg_head = m->next;
+  if (p->dmsg_head == 0)
+  {
+    p->dmsg_tail = 0;
+  }
+  p->dmsg_count--;
+  p->dmsg_bytes -= mlen;
+  wakeupOneProc(&p->dmsg_count);
+  release(&p->dmsg_lock);
+  kfree((void *)m);
+
+  if (mlen > 0 &&
+      copyout(p->pagetable, uaddr, kbuf, mlen) < 0)
+  {
+    return -1;
+  }
+  return sender;
+}
+
 uint64 sys_shmgetat(void)
 {
   int key, num;

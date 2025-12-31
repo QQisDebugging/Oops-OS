@@ -148,6 +148,8 @@ extern uint64 sys_semset_free(void);
 extern uint64 sys_semset_p(void);
 extern uint64 sys_semset_v(void);
 extern uint64 sys_semset_p_multi(void);
+extern uint64 sys_dmsgsend(void);
+extern uint64 sys_dmsgrcv(void);
 extern uint64 sys_symlink(void);
 extern uint64 sys_mkf(void);
 extern uint64 sys_shmgetat(void);    // 共享内存
@@ -210,6 +212,8 @@ static uint64 (*syscalls[])(void) = {
     [SYS_semset_p] sys_semset_p,
     [SYS_semset_v] sys_semset_v,
     [SYS_semset_p_multi] sys_semset_p_multi,
+    [SYS_dmsgsend] sys_dmsgsend,
+    [SYS_dmsgrcv] sys_dmsgrcv,
     [SYS_symlink] sys_symlink,
     [SYS_mkf] sys_mkf,
     [SYS_shmgetat] sys_shmgetat,
@@ -271,6 +275,8 @@ static char *syscall_names[] = {
     [SYS_semset_p] "sys_semset_p",
     [SYS_semset_v] "sys_semset_v",
     [SYS_semset_p_multi] "sys_semset_p_multi",
+    [SYS_dmsgsend] "sys_dmsgsend",
+    [SYS_dmsgrcv] "sys_dmsgrcv",
     [SYS_symlink] "sys_symlink",
     [SYS_mkf] "sys_mkf",
     [SYS_shmgetat] "sys_shmgetat",

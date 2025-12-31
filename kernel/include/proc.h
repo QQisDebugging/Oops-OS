@@ -1,3 +1,4 @@
+#include "param.h"
 // Saved registers for kernel context switches.
 struct context
 {
@@ -104,6 +105,13 @@ struct vm_area
   struct file *vfile; // 对应文件
   int offset;         // 文件偏移，本实验中一直为0
 };
+struct dmsg
+{
+  struct dmsg *next;
+  int len;
+  int sender;
+  char data[DMSG_MAX];
+};
 // Per-process state
 struct proc
 {
@@ -140,6 +148,13 @@ struct proc
 
 
   uint mqmask; // 本进程使用的消息队列（掩码）
+
+  struct spinlock dmsg_lock;
+  struct dmsg *dmsg_head;
+  struct dmsg *dmsg_tail;
+  int dmsg_count;
+  int dmsg_bytes;
+  int dmsg_closed;
 
   int alarm_interval;          // Alarm interval (0 for disabled)
   void(*alarm_handler)();      // Alarm handler

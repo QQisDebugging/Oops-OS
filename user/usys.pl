@@ -57,6 +57,8 @@ entry("semset_free");
 entry("semset_p");
 entry("semset_v");
 entry("semset_p_multi");
+entry("dmsgsend");
+entry("dmsgrcv");
 entry("symlink");
 entry("mkf");
 entry("shmgetat"); # 共享内存
