@@ -1,4 +1,4 @@
-#include "param.h"
+﻿#include "param.h"
 struct stat;
 struct rtcdate;
 struct sysinfo;
@@ -55,6 +55,15 @@ int semset_v(int, int);
 int semset_p_multi(int, int, int *);
 int dmsgsend(int, void *, int);
 int dmsgrcv(void *, int);
+int mon_create(void);
+int mon_free(int);
+int mon_enter(int);
+int mon_exit(int);
+int cond_create(int);
+int cond_free(int, int);
+int cond_wait(int, int);
+int cond_signal(int, int);
+int cond_broadcast(int, int);
 int mkf(char *);
 // 共享内存
 uint64 shmgetat(int, int);
@@ -89,3 +98,4 @@ int statistics(void *buf, int sz);
 // uthread.c
 int thread_join(void);
 int thread_create(void(*start_routine)(void*),void*arg);
+

@@ -1,4 +1,4 @@
-struct buf;
+﻿struct buf;
 struct context;
 struct file;
 struct inode;
@@ -155,6 +155,7 @@ void push_off(void);
 void pop_off(void);
 void initsem(void); // 信号量：初始化
 void initsemset(void);
+void initmonitor(void);
 
 // sleeplock.c
 void acquiresleep(struct sleeplock *);
@@ -249,3 +250,4 @@ void            sockclose(struct sock *);
 int             sockread(struct sock *, uint64, int);
 int             sockwrite(struct sock *, uint64, int);
 void            sockrecvudp(struct mbuf*, uint32, uint16, uint16);
+
