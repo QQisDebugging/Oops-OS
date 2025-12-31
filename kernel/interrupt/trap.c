@@ -72,10 +72,18 @@ void usertrap(void)
   {
     // ok
   }
-  else if (cause == 13 || cause == 15)
+  else if (cause == 12 || cause == 13 || cause == 15)
   {
     uint64 fault_va = r_stval(); // 获取出错的虚拟地址
-    if (cowpage(p->pagetable, fault_va) == 0)
+    int swapret = swapin(p->pagetable, PGROUNDDOWN(fault_va));
+    if (swapret == 0)
+    {
+    }
+    else if (swapret < 0)
+    {
+      p->killed = 1;
+    }
+    else if (cowpage(p->pagetable, fault_va) == 0)
     { // 如果是cow页出错
       if (fault_va >= p->sz || cowalloc(p->pagetable, PGROUNDDOWN(fault_va)) == 0)
         p->killed = 1;
@@ -341,8 +349,10 @@ int mmap_handler(int va, int cause)
     pte_flags |= PTE_X;
 
   struct file *vf = p->vma[i].vfile;
-  // 读导致的页面错误
-  if (cause == 13 && vf->readable == 0)
+  // 读/取指导致的页面错误
+  if ((cause == 12 || cause == 13) && vf->readable == 0)
+    return -1;
+  if (cause == 12 && (p->vma[i].prot & PROT_EXEC) == 0)
     return -1;
   // 写导致的页面错误
   if (cause == 15 && vf->writable == 0)

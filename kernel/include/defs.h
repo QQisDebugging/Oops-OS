@@ -92,6 +92,11 @@ int cowpage(pagetable_t, uint64);
 void *cowalloc(pagetable_t, uint64);
 int krefcnt(void *);
 int kaddrefcnt(void *);
+void swapinit(void);
+int swapout(void);
+int swapin(pagetable_t, uint64);
+void swapfree(uint64);
+int swapcopy(pagetable_t, uint64, pte_t);
 // log.c
 void initlog(int, struct superblock *);
 void log_write(struct buf *);

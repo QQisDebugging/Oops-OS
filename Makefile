@@ -8,6 +8,7 @@ OBJS = \
   $K/lib/printf.o \
   $K/driver/uart.o \
   $K/mm/kalloc.o \
+  $K/mm/swap.o \
   $K/lock/spinlock.o \
   $K/lib/string.o \
   $K/main.o \
@@ -143,6 +144,7 @@ UPROGS=\
 	$U/test/_cowtest\
 	$U/program/_setp\
 	$U/test/_lazytest\
+	$U/test/_swaptest\
 	$U/program/_execve\
 	$U/program/_getparentpid\
 	$U/program/_print_pgtable\
