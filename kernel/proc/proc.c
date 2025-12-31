@@ -205,6 +205,25 @@ dmsg_close(struct proc *p)
   }
 }
 
+static void
+monitor_release_on_exit(struct proc *p)
+{
+  int pid = p->pid;
+
+  for (int i = 0; i < MONITOR_MAX_NUM; i++)
+  {
+    struct monitor *m = &monitors[i];
+    acquire(&m->lock);
+    if (m->allocated && m->locked && m->owner == pid)
+    {
+      m->locked = 0;
+      m->owner = 0;
+      wakeupOneProc(m);
+    }
+    release(&m->lock);
+  }
+}
+
 // free a proc structure and the data hanging from it,
 // including user pages.
 // p->lock must be held.
@@ -450,6 +469,7 @@ void exit(int status)
     panic("init exiting");
 
   dmsg_close(p);
+  monitor_release_on_exit(p);
 
   // Close all open files.
   for (int fd = 0; fd < NOFILE; fd++)
