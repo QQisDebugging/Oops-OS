@@ -370,6 +370,49 @@ int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
     // 增加内存的引用计数
     kaddrefcnt((char *)pa);
   }
+    return 0;
+}
+
+// Share user memory pages between page tables.
+// Pages are mapped to the same physical addresses (no COW).
+int
+uvmshare(pagetable_t old, pagetable_t new, uint64 sz)
+{
+  pte_t *pte;
+  uint64 pa, i;
+  uint flags;
+
+  for (i = 0; i < sz; i += PGSIZE)
+  {
+    if ((pte = walk(old, i, 0)) == 0)
+      continue;
+    if ((*pte & PTE_V) == 0)
+    {
+      if (*pte & PTE_S)
+      {
+        if (swapin(old, i) < 0)
+        {
+          uvmunmap(new, 0, i / PGSIZE, 1);
+          return -1;
+        }
+        pte = walk(old, i, 0);
+        if (pte == 0 || (*pte & PTE_V) == 0)
+          continue;
+      }
+      else
+      {
+        continue;
+      }
+    }
+    pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte);
+    if (mappages(new, i, PGSIZE, pa, flags) != 0)
+    {
+      uvmunmap(new, 0, i / PGSIZE, 1);
+      return -1;
+    }
+    kaddrefcnt((char *)pa);
+  }
   return 0;
 }
 

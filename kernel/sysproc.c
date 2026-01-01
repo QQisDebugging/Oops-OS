@@ -1,4 +1,4 @@
-#include "types.h"
+﻿#include "types.h"
 #include "riscv.h"
 #include "defs.h" //存放函数声明
 #include "date.h"
@@ -38,6 +38,30 @@ uint64
 sys_getpid(void)
 {
   return myproc()->pid;
+}
+
+uint64
+sys_gettid(void)
+{
+  return myproc()->pid;
+}
+
+uint64
+sys_gettgid(void)
+{
+  struct proc *p = myproc();
+  if (p->tgid != 0)
+    return p->tgid;
+  return p->pid;
+}
+
+uint64
+sys_thread_exit(void)
+{
+  int status = 0;
+  argint(0, &status);
+  exit(status);
+  return 0;
 }
 
 uint64
@@ -791,6 +815,279 @@ int sys_semset_p_multi()
   }
 }
 
+int sys_mon_create()
+{
+  for (int id = 0; id < MONITOR_MAX_NUM; id++)
+  {
+    struct monitor *m = &monitors[id];
+    acquire(&m->lock);
+    if (m->allocated == 0)
+    {
+      m->allocated = 1;
+      m->locked = 0;
+      m->owner = 0;
+      m->waiters = 0;
+      for (int i = 0; i < MONITOR_COND_MAX; i++)
+      {
+        m->conds[i].allocated = 0;
+        m->conds[i].waiters = 0;
+      }
+      release(&m->lock);
+      return id;
+    }
+    release(&m->lock);
+  }
+  return -1;
+}
+
+int sys_mon_free()
+{
+  int id;
+  if (argint(0, &id) < 0 || id < 0 || id >= MONITOR_MAX_NUM)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[id];
+  acquire(&m->lock);
+  if (m->allocated == 0 || m->locked || m->waiters > 0)
+  {
+    release(&m->lock);
+    return -1;
+  }
+  for (int i = 0; i < MONITOR_COND_MAX; i++)
+  {
+    if (m->conds[i].allocated || m->conds[i].waiters > 0)
+    {
+      release(&m->lock);
+      return -1;
+    }
+  }
+  m->allocated = 0;
+  release(&m->lock);
+  return 0;
+}
+
+int sys_mon_enter()
+{
+  int id;
+  if (argint(0, &id) < 0 || id < 0 || id >= MONITOR_MAX_NUM)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[id];
+  int pid = myproc()->pid;
+
+  acquire(&m->lock);
+  if (m->allocated == 0 || m->owner == pid)
+  {
+    release(&m->lock);
+    return -1;
+  }
+  while (m->locked)
+  {
+    if (myproc()->killed)
+    {
+      release(&m->lock);
+      return -1;
+    }
+    m->waiters++;
+    sleep(m, &m->lock);
+    m->waiters--;
+  }
+  m->locked = 1;
+  m->owner = pid;
+  release(&m->lock);
+  return 0;
+}
+
+int sys_mon_exit()
+{
+  int id;
+  if (argint(0, &id) < 0 || id < 0 || id >= MONITOR_MAX_NUM)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[id];
+  int pid = myproc()->pid;
+
+  acquire(&m->lock);
+  if (m->allocated == 0 || m->owner != pid)
+  {
+    release(&m->lock);
+    return -1;
+  }
+  m->locked = 0;
+  m->owner = 0;
+  wakeupOneProc(m);
+  release(&m->lock);
+  return 0;
+}
+
+int sys_cond_create()
+{
+  int mid;
+  if (argint(0, &mid) < 0 || mid < 0 || mid >= MONITOR_MAX_NUM)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[mid];
+  acquire(&m->lock);
+  if (m->allocated == 0)
+  {
+    release(&m->lock);
+    return -1;
+  }
+  for (int i = 0; i < MONITOR_COND_MAX; i++)
+  {
+    if (m->conds[i].allocated == 0)
+    {
+      m->conds[i].allocated = 1;
+      m->conds[i].waiters = 0;
+      release(&m->lock);
+      return i;
+    }
+  }
+  release(&m->lock);
+  return -1;
+}
+
+int sys_cond_free()
+{
+  int mid, cid;
+  if (argint(0, &mid) < 0 || argint(1, &cid) < 0)
+  {
+    return -1;
+  }
+  if (mid < 0 || mid >= MONITOR_MAX_NUM || cid < 0 || cid >= MONITOR_COND_MAX)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[mid];
+  acquire(&m->lock);
+  if (m->allocated == 0 || m->conds[cid].allocated == 0 || m->conds[cid].waiters > 0)
+  {
+    release(&m->lock);
+    return -1;
+  }
+  m->conds[cid].allocated = 0;
+  release(&m->lock);
+  return 0;
+}
+
+int sys_cond_wait()
+{
+  int mid, cid;
+  if (argint(0, &mid) < 0 || argint(1, &cid) < 0)
+  {
+    return -1;
+  }
+  if (mid < 0 || mid >= MONITOR_MAX_NUM || cid < 0 || cid >= MONITOR_COND_MAX)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[mid];
+  int pid = myproc()->pid;
+
+  acquire(&m->lock);
+  if (m->allocated == 0 || m->conds[cid].allocated == 0 || m->owner != pid)
+  {
+    release(&m->lock);
+    return -1;
+  }
+
+  m->conds[cid].waiters++;
+  m->locked = 0;
+  m->owner = 0;
+  wakeupOneProc(m);
+  sleep(&m->conds[cid], &m->lock);
+  m->conds[cid].waiters--;
+
+  if (myproc()->killed)
+  {
+    release(&m->lock);
+    return -1;
+  }
+
+  while (m->locked)
+  {
+    m->waiters++;
+    sleep(m, &m->lock);
+    m->waiters--;
+    if (myproc()->killed)
+    {
+      release(&m->lock);
+      return -1;
+    }
+  }
+  m->locked = 1;
+  m->owner = pid;
+  release(&m->lock);
+  return 0;
+}
+
+int sys_cond_signal()
+{
+  int mid, cid;
+  if (argint(0, &mid) < 0 || argint(1, &cid) < 0)
+  {
+    return -1;
+  }
+  if (mid < 0 || mid >= MONITOR_MAX_NUM || cid < 0 || cid >= MONITOR_COND_MAX)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[mid];
+  int pid = myproc()->pid;
+
+  acquire(&m->lock);
+  if (m->allocated == 0 || m->conds[cid].allocated == 0 || m->owner != pid)
+  {
+    release(&m->lock);
+    return -1;
+  }
+  if (m->conds[cid].waiters > 0)
+  {
+    wakeupOneProc(&m->conds[cid]);
+  }
+  release(&m->lock);
+  return 0;
+}
+
+int sys_cond_broadcast()
+{
+  int mid, cid;
+  if (argint(0, &mid) < 0 || argint(1, &cid) < 0)
+  {
+    return -1;
+  }
+  if (mid < 0 || mid >= MONITOR_MAX_NUM || cid < 0 || cid >= MONITOR_COND_MAX)
+  {
+    return -1;
+  }
+
+  struct monitor *m = &monitors[mid];
+  int pid = myproc()->pid;
+
+  acquire(&m->lock);
+  if (m->allocated == 0 || m->conds[cid].allocated == 0 || m->owner != pid)
+  {
+    release(&m->lock);
+    return -1;
+  }
+  if (m->conds[cid].waiters > 0)
+  {
+    wakeup(&m->conds[cid]);
+  }
+  release(&m->lock);
+  return 0;
+}
 static struct proc *
 dmsg_lock_target(int pid)
 {

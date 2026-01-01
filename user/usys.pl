@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+﻿#!/usr/bin/perl -w
 
 # Generate usys.S, the stubs for syscalls.
 
@@ -33,6 +33,8 @@ entry("mkdir");
 entry("chdir");
 entry("dup");
 entry("getpid");
+entry("gettid");
+entry("gettgid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
@@ -59,6 +61,15 @@ entry("semset_v");
 entry("semset_p_multi");
 entry("dmsgsend");
 entry("dmsgrcv");
+entry("mon_create");
+entry("mon_free");
+entry("mon_enter");
+entry("mon_exit");
+entry("cond_create");
+entry("cond_free");
+entry("cond_wait");
+entry("cond_signal");
+entry("cond_broadcast");
 entry("symlink");
 entry("mkf");
 entry("shmgetat"); # 共享内存
@@ -76,3 +87,4 @@ entry("clone");
 entry("join");
 entry("fallocate");
 entry("fclone");
+entry("thread_exit");

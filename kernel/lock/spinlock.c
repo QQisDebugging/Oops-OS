@@ -1,4 +1,4 @@
-// Mutual exclusion spin locks.
+﻿// Mutual exclusion spin locks.
 
 #include "types.h"
 #include "param.h"
@@ -12,6 +12,7 @@ int sem_used_count = 0;       // 信号量：当前在用信号量数量
 struct sem sems[SEM_MAX_NUM]; // 信号量：系统最多有128个信号量
 int semset_used_count = 0;
 struct semset semsets[SEMSET_MAX_NUM];
+struct monitor monitors[MONITOR_MAX_NUM];
 
 void initlock(struct spinlock *lk, char *name)
 {
@@ -48,6 +49,22 @@ void initsemset()
   }
 }
 
+void initmonitor()
+{
+  for (int i = 0; i < MONITOR_MAX_NUM; i++)
+  {
+    initlock(&monitors[i].lock, "monitor");
+    monitors[i].allocated = 0;
+    monitors[i].locked = 0;
+    monitors[i].owner = 0;
+    monitors[i].waiters = 0;
+    for (int j = 0; j < MONITOR_COND_MAX; j++)
+    {
+      monitors[i].conds[j].allocated = 0;
+      monitors[i].conds[j].waiters = 0;
+    }
+  }
+}
 // Acquire the lock.
 // Loops (spins) until the lock is acquired.
 void acquire(struct spinlock *lk)
@@ -134,3 +151,4 @@ void pop_off(void)
   if (c->noff == 0 && c->intena) // 如果当前所有锁已释放而且上锁之前是开中断
     intr_on();
 }
+

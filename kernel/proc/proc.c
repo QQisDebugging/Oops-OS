@@ -1,4 +1,4 @@
-#include "types.h"
+﻿#include "types.h"
 #include "param.h"
 #include "memlayout.h"
 #include "riscv.h"
@@ -19,6 +19,9 @@ struct spinlock pid_lock;
 extern void forkret(void);
 static void wakeup1(struct proc *chan);
 static void freeproc(struct proc *p);
+static struct proc *tgroup_leader(struct proc *p);
+static void freethread(struct proc *p, struct proc *leader);
+static void tgroup_kill_and_reap(struct proc *leader);
 
 extern char trampoline[]; // trampoline.S
 
@@ -130,10 +133,14 @@ static struct proc *allocproc(void)
     }
   }
   return 0;
-found:
+  found:
 
-  p->pid = allocpid();
-  p->mqmask = 0;
+    p->pid = allocpid();
+    p->tgid = 0;
+    p->tgroup_ref = 0;
+    p->pthread = 0;
+    p->ustack = 0;
+    p->mqmask = 0;
   p->dmsg_head = 0;
   p->dmsg_tail = 0;
   p->dmsg_count = 0;
@@ -205,6 +212,109 @@ dmsg_close(struct proc *p)
   }
 }
 
+static struct proc *
+tgroup_leader(struct proc *p)
+{
+  if (p->pthread)
+    return p->pthread;
+  return p;
+}
+
+static void
+freethread(struct proc *p, struct proc *leader)
+{
+  if (p->trapframe)
+    kfree((void *)p->trapframe);
+  p->trapframe = 0;
+  if (p->alarm_trapframe)
+    kfree((void *)p->alarm_trapframe);
+  p->alarm_trapframe = 0;
+  if (p->pagetable)
+    proc_freepagetable(p->pagetable, p->sz);
+  p->pagetable = 0;
+  p->sz = 0;
+  p->pid = 0;
+  p->parent = 0;
+  p->pthread = 0;
+  p->tgid = 0;
+  p->tgroup_ref = 0;
+  p->name[0] = 0;
+  p->chan = 0;
+  p->killed = 0;
+  p->xstate = 0;
+  p->trace_mask = 0;
+  p->ustack = 0;
+  p->mqmask = 0;
+  p->shm = KERNBASE;
+  p->shmkeymask = 0;
+  p->dmsg_head = 0;
+  p->dmsg_tail = 0;
+  p->dmsg_count = 0;
+  p->dmsg_bytes = 0;
+  p->dmsg_closed = 0;
+  p->alarm_interval = 0;
+  p->alarm_handler = 0;
+  p->alarm_ticks = 0;
+  p->alarm_goingoff = 0;
+  memset(&p->vma, 0, sizeof(p->vma));
+  p->state = UNUSED;
+  if (leader && leader->tgroup_ref > 0)
+    leader->tgroup_ref--;
+}
+
+static void
+tgroup_kill_and_reap(struct proc *leader)
+{
+  acquire(&leader->lock);
+  for (;;)
+  {
+    int found = 0;
+
+    for (struct proc *p = proc; p < &proc[NPROC]; p++)
+    {
+      if (p->pthread == leader)
+      {
+        found = 1;
+        acquire(&p->lock);
+        if (p->state == ZOMBIE)
+        {
+          freethread(p, leader);
+          release(&p->lock);
+          continue;
+        }
+        p->killed = 1;
+        if (p->state == SLEEPING)
+          p->state = RUNNABLE;
+        release(&p->lock);
+      }
+    }
+
+    if (!found || leader->tgroup_ref <= 1)
+      break;
+    sleep(leader, &leader->lock);
+  }
+  release(&leader->lock);
+}
+
+static void
+monitor_release_on_exit(struct proc *p)
+{
+  int pid = p->pid;
+
+  for (int i = 0; i < MONITOR_MAX_NUM; i++)
+  {
+    struct monitor *m = &monitors[i];
+    acquire(&m->lock);
+    if (m->allocated && m->locked && m->owner == pid)
+    {
+      m->locked = 0;
+      m->owner = 0;
+      wakeupOneProc(m);
+    }
+    release(&m->lock);
+  }
+}
+
 // free a proc structure and the data hanging from it,
 // including user pages.
 // p->lock must be held.
@@ -219,10 +329,14 @@ static void freeproc(struct proc *p)
     kfree((void*)p->alarm_trapframe);
   p->alarm_trapframe = 0;
   p->pagetable = 0;
-  p->sz = 0;
-  p->pid = 0;
-  p->parent = 0;
-  p->name[0] = 0;
+    p->sz = 0;
+    p->pid = 0;
+    p->tgid = 0;
+    p->tgroup_ref = 0;
+    p->parent = 0;
+    p->pthread = 0;
+    p->ustack = 0;
+    p->name[0] = 0;
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
@@ -312,6 +426,8 @@ void userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  p->tgid = p->pid;
+  p->tgroup_ref = 1;
   p->state = RUNNABLE;
 
   release(&p->lock);
@@ -379,6 +495,10 @@ int fork(void)
   np->mqmask = p->mqmask; // 掩码复制
   np->sz = p->sz;
 
+  np->tgid = np->pid;
+  np->tgroup_ref = 1;
+  np->pthread = 0;
+  np->ustack = 0;
   np->parent = p;
 
   // copy saved user registers.
@@ -449,7 +569,11 @@ void exit(int status)
   if (p == initproc)
     panic("init exiting");
 
+  if (p->pthread == 0 && p->tgroup_ref > 1)
+    tgroup_kill_and_reap(p);
+
   dmsg_close(p);
+  monitor_release_on_exit(p);
 
   // Close all open files.
   for (int fd = 0; fd < NOFILE; fd++)
@@ -461,18 +585,21 @@ void exit(int status)
       p->ofile[fd] = 0;
     }
   }
-  // 将进程的已映射区域取消映射
-  for (int i = 0; i < NVMA; ++i)
+  if (p->pthread == 0)
   {
-    if (p->vma[i].used)
+    // 将进程的已映射区域取消映射（线程共享地址空间，不能在子线程 exit 时解除）
+    for (int i = 0; i < NVMA; ++i)
     {
-      if (p->vma[i].flags == MAP_SHARED && (p->vma[i].prot & PROT_WRITE) != 0)
+      if (p->vma[i].used)
       {
-        filewrite(p->vma[i].vfile, p->vma[i].addr, p->vma[i].len);
+        if (p->vma[i].flags == MAP_SHARED && (p->vma[i].prot & PROT_WRITE) != 0)
+        {
+          filewrite(p->vma[i].vfile, p->vma[i].addr, p->vma[i].len);
+        }
+        fileclose(p->vma[i].vfile);
+        uvmunmap(p->pagetable, p->vma[i].addr, p->vma[i].len / PGSIZE, 1);
+        p->vma[i].used = 0;
       }
-      fileclose(p->vma[i].vfile);
-      uvmunmap(p->pagetable, p->vma[i].addr, p->vma[i].len / PGSIZE, 1);
-      p->vma[i].used = 0;
     }
   }
   begin_op();
@@ -1016,51 +1143,74 @@ void procnum(uint64 *dst) // 获取进程数
 }
 int clone(uint64 fcn, uint64 arg, uint64 stack)
 {
-  struct proc *curproc = myproc();  // 获取当前进程的结构体指针
-  struct proc *np = 0;              // 创建新的进程指针
-  // 分配新的进程结构体，如果失败则返回-1
-  if ((np = allocproc()) == 0) return -1;
-  np->pagetable = curproc->pagetable;   // 子进程继承父进程的页表
-  np->sz = curproc->sz;                 // 子进程继承父进程的地址空间大小
-  np->pthread = curproc;                // 子进程关联到父进程，表示它是一个线程
-  np->ustack = (void *)stack;           // 设置子进程的用户堆栈地址
-  np->parent = 0;                       // 目前没有父进程（这里应该指向父进程，可能是逻辑问题）
-  // 复制父进程的 trapframe（陷阱帧），包含上下文信息（如寄存器值）
+  struct proc *curproc = myproc();
+  struct proc *leader = tgroup_leader(curproc);
+  struct proc *np = 0;
+
+  if ((np = allocproc()) == 0)
+    return -1;
+
+  if (stack % PGSIZE != 0 || stack < PGSIZE || stack >= MAXVA - PGSIZE)
+  {
+    freeproc(np);
+    release(&np->lock);
+    return -1;
+  }
+
+  if (walkaddr(leader->pagetable, stack) == 0 ||
+      walkaddr(leader->pagetable, stack - PGSIZE) == 0)
+  {
+    freeproc(np);
+    release(&np->lock);
+    return -1;
+  }
+
+  np->sz = leader->sz;
+  np->tgid = leader->pid;
+  np->pthread = leader;
+  np->ustack = (void *)stack;
+  np->parent = 0;
+  np->trace_mask = leader->trace_mask;
+
+  np->shm = leader->shm;
+  np->shmkeymask = leader->shmkeymask;
+  for (int i = 0; i < 8; ++i)
+  {
+    if (shmkeyused(i, np->shmkeymask))
+      np->shmva[i] = leader->shmva[i];
+  }
+
+  uvmclear(leader->pagetable, stack - PGSIZE);
+  if (uvmshare(leader->pagetable, np->pagetable, leader->sz) < 0)
+  {
+    freeproc(np);
+    release(&np->lock);
+    return -1;
+  }
+
   *np->trapframe = *curproc->trapframe;
-  // 为新的进程分配内核栈空间
-  void *stackin = kalloc();
-  // 设置栈指针（从栈顶开始，倒推16字节位置）
-  uint64 *sp = stackin + 4096 - 16;
-  // 在内核栈中伪造现场，假装子进程的返回地址是 fcn 函数，并将堆栈指针指向线程栈
-  np->trapframe->epc = fcn;             // 设置程序计数器为目标函数地址
-  np->trapframe->sp = stack + 4096 - 16; // 设置栈指针为线程栈的起始位置
-  np->trapframe->s0 = stack + 4096 - 16; // 设置帧指针为线程栈的起始位置
-  np->trapframe->a0 = 0;                // 设置返回值寄存器为 0
-  // 在内核栈中伪造函数参数
-  *(sp + 1) = arg;  // 将参数 `arg` 存入栈中
-  *sp = 0xffffffffffffffff;  // 设置一个伪造的返回地址，表示函数调用的结束
-  // 将内核栈的内容复制到用户栈中
-  copyout(curproc->pagetable, stack, stackin, PGSIZE);
-  // 复制文件描述符：子进程继承父进程的打开文件
-  for (int i = 0; i < NOFILE; i++) {
+  np->trapframe->epc = fcn;
+  np->trapframe->sp = stack + PGSIZE - 16;
+  np->trapframe->s0 = np->trapframe->sp;
+  np->trapframe->a0 = arg;
+
+  for (int i = 0; i < NOFILE; i++)
+  {
     if (curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
   }
-  // 复制父进程的当前工作目录
   np->cwd = idup(curproc->cwd);
-  // 复制父进程的进程名
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-  // 释放新进程的锁
-  release(&np->lock);
-  int pid = np->pid;  // 获取新进程的 PID
-  // 重新获取新进程的锁并将状态设置为 RUNNABLE，表示它可以被调度
-  acquire(&np->lock);
-  np->state = RUNNABLE;
-  // 释放进程锁
-  release(&np->lock);
-  return pid;  // 返回新进程的 PID
-}
 
+  acquire(&leader->lock);
+  leader->tgroup_ref++;
+  release(&leader->lock);
+
+  int pid = np->pid;
+  np->state = RUNNABLE;
+  release(&np->lock);
+  return pid;
+}
 int join(uint64 stackaddrout)
 {
   uint64 stackaddrin;  // 用于存储子进程的堆栈地址
@@ -1082,18 +1232,13 @@ int join(uint64 stackaddrout)
         {
           stackaddrin = (uint64)p->ustack;  // 获取子进程的堆栈地址
           int pid = p->pid;  // 获取子进程的PID
-          // 释放子进程的内核栈
-          kfree((void*)p->kstack);
-          p->kstack = 0;
-          // 重置子进程的状态和相关字段
-          p->state = UNUSED;
-          p->pid = 0;
-          p->parent = 0;
-          p->pthread = 0;
-          p->name[0] = 0;
-          p->killed = 0;
-          // 将子进程的堆栈地址返回给父进程
-          copyout(p->pagetable, stackaddrout, (char*)&stackaddrin, 8);
+          if (copyout(p->pagetable, stackaddrout, (char*)&stackaddrin, sizeof(stackaddrin)) < 0)
+          {
+            release(&p->lock);
+            release(&curproc->lock);
+            return -1;
+          }
+          freethread(p, curproc);
           release(&p->lock);  // 释放子进程的锁
           release(&curproc->lock);  // 释放当前进程的锁
           return pid;  // 返回子进程的PID，表示成功回收
@@ -1111,3 +1256,4 @@ int join(uint64 stackaddrout)
   }
   return 0;  // 这是一个永远不会到达的地方
 }
+

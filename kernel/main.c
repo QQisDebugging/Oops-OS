@@ -1,4 +1,4 @@
-#include "types.h"
+﻿#include "types.h"
 #include "param.h"
 #include "memlayout.h"
 #include "riscv.h"
@@ -38,6 +38,7 @@ void main()
     sockinit();
     initsem();          // 信号量数组初始化
     initsemset();
+    initmonitor();
     sharememinit();
     mqinit();
     printf("\033[0m");
@@ -58,3 +59,4 @@ void main()
 
   scheduler();
 }
+

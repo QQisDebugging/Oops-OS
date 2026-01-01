@@ -1,3 +1,5 @@
+﻿#include "param.h"
+
 #define SEM_MAX_NUM 128 // 信号量：总量
 // Mutual exclusion lock.
 struct spinlock
@@ -30,3 +32,22 @@ struct semset
   struct sem sems[SEMSET_MAX_SIZE];
 };
 extern struct semset semsets[SEMSET_MAX_NUM];
+
+struct condvar
+{
+  int allocated;
+  int waiters;
+};
+
+struct monitor
+{
+  struct spinlock lock;
+  int allocated;
+  int locked;
+  int owner;
+  int waiters;
+  struct condvar conds[MONITOR_COND_MAX];
+};
+
+extern struct monitor monitors[MONITOR_MAX_NUM];
+

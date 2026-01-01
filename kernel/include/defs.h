@@ -1,4 +1,4 @@
-struct buf;
+﻿struct buf;
 struct context;
 struct file;
 struct inode;
@@ -157,6 +157,7 @@ void push_off(void);
 void pop_off(void);
 void initsem(void); // 信号量：初始化
 void initsemset(void);
+void initmonitor(void);
 
 // sleeplock.c
 void acquiresleep(struct sleeplock *);
@@ -208,6 +209,7 @@ void uvminit(pagetable_t, uchar *, uint);
 uint64 uvmalloc(pagetable_t, uint64, uint64);
 uint64 uvmdealloc(pagetable_t, uint64, uint64);
 int uvmcopy(pagetable_t, pagetable_t, uint64);
+int uvmshare(pagetable_t, pagetable_t, uint64);
 void uvmfree(pagetable_t, uint64);
 void uvmunmap(pagetable_t, uint64, uint64, int);
 void uvmclear(pagetable_t, uint64);

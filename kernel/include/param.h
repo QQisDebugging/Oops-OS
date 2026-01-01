@@ -19,4 +19,5 @@
 #define MQMAX 8                   // 消息队列数量
 #define DMSG_MAX 128              // direct message max size
 #define DMSG_QUEUE_MAX 16         // direct message queue length
-
+#define MONITOR_MAX_NUM 16        // monitor count
+#define MONITOR_COND_MAX 16       // condition variables per monitor

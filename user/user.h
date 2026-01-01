@@ -1,4 +1,4 @@
-#include "param.h"
+﻿#include "param.h"
 struct stat;
 struct rtcdate;
 struct sysinfo;
@@ -21,6 +21,8 @@ int mkdir(const char *);
 int chdir(const char *);
 int dup(int);
 int getpid(void);
+int gettid(void);
+int gettgid(void);
 char *sbrk(int);
 int sleep(int);
 int uptime(void);
@@ -57,6 +59,15 @@ int semset_v(int, int);
 int semset_p_multi(int, int, int *);
 int dmsgsend(int, void *, int);
 int dmsgrcv(void *, int);
+int mon_create(void);
+int mon_free(int);
+int mon_enter(int);
+int mon_exit(int);
+int cond_create(int);
+int cond_free(int, int);
+int cond_wait(int, int);
+int cond_signal(int, int);
+int cond_broadcast(int, int);
 int mkf(char *);
 // 共享内存
 uint64 shmgetat(int, int);
@@ -70,6 +81,7 @@ int chmod(const char*,char);
 // 内核线程
 int clone(uint64,uint64,uint64);
 int join(uint64);
+int thread_exit(int) __attribute__((noreturn));
 
 // ulib.c
 int stat(const char *, struct stat *);

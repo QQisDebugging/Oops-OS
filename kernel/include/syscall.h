@@ -1,4 +1,4 @@
-// System call numbers
+﻿// System call numbers
 #define SYS_fork 1
 #define SYS_exit 2
 #define SYS_wait 3
@@ -60,5 +60,17 @@
 #define SYS_semset_p_multi 59
 #define SYS_dmsgsend 60
 #define SYS_dmsgrcv 61
-#define SYS_fallocate 62
-#define SYS_fclone 63
+#define SYS_mon_create 62
+#define SYS_mon_free 63
+#define SYS_mon_enter 64
+#define SYS_mon_exit 65
+#define SYS_cond_create 66
+#define SYS_cond_free 67
+#define SYS_cond_wait 68
+#define SYS_cond_signal 69
+#define SYS_cond_broadcast 70
+#define SYS_gettid 71
+#define SYS_gettgid 72
+#define SYS_thread_exit 73
+#define SYS_fallocate 74
+#define SYS_fclone 75
