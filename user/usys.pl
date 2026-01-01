@@ -89,3 +89,5 @@ entry("fallocate");
 entry("fclone");
 entry("thread_exit");
 entry("lseek");
+entry("truncate");
+entry("ftruncate");

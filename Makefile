@@ -180,6 +180,7 @@ UPROGS=\
 	$U/test/_threadtest\
 	$U/test/_cstest\
 	$U/test/_lseektest\
+	$U/test/_truncatetest\
 	$U/program/_statistics
 
 

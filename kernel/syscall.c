@@ -184,6 +184,8 @@ extern uint64 sys_cond_broadcast(void);
 extern uint64 sys_fallocate(void);
 extern uint64 sys_fclone(void);
 extern uint64 sys_lseek(void);
+extern uint64 sys_truncate(void);
+extern uint64 sys_ftruncate(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -261,6 +263,8 @@ static uint64 (*syscalls[])(void) = {
     [SYS_fallocate] sys_fallocate,
     [SYS_fclone] sys_fclone,
     [SYS_lseek] sys_lseek,
+    [SYS_truncate] sys_truncate,
+    [SYS_ftruncate] sys_ftruncate,
 }; // 这些索引会从1开始，不是从0开始
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -339,6 +343,8 @@ static char *syscall_names[] = {
     [SYS_fallocate] "sys_fallocate",
     [SYS_fclone] "sys_fclone",
     [SYS_lseek] "sys_lseek",
+    [SYS_truncate] "sys_truncate",
+    [SYS_ftruncate] "sys_ftruncate",
 };
 void syscall(void) // 在usys.s中系统调用的参数放在a0与a1中，系统调用号放在a7
 {

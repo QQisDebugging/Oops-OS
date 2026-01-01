@@ -2782,6 +2782,22 @@ void fclonetest_run(char *s)
   exit(1);
 }
 
+void lseektest_run(char *s)
+{
+  char *argv[] = {"lseektest", 0};
+  exec("lseektest", argv);
+  printf("%s: exec lseektest failed\n", s);
+  exit(1);
+}
+
+void truncatetest_run(char *s)
+{
+  char *argv[] = {"truncatetest", 0};
+  exec("truncatetest", argv);
+  printf("%s: exec truncatetest failed\n", s);
+  exit(1);
+}
+
 int main(int argc, char *argv[])
 {
   int continuous = 0;
@@ -2858,8 +2874,10 @@ int main(int argc, char *argv[])
       {rmdot, "rmdot"},
       {fourteen, "fourteen"},
       {bigfile, "bigfile"},
+      {lseektest_run, "lseektest"},
       {fallocatetest_run, "fallocatetest"},
       {fclonetest_run, "fclonetest"},
+      {truncatetest_run, "truncatetest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

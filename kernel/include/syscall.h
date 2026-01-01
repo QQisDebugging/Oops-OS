@@ -75,3 +75,5 @@
 #define SYS_fallocate 74
 #define SYS_fclone 75
 #define SYS_lseek 76
+#define SYS_truncate 77
+#define SYS_ftruncate 78
