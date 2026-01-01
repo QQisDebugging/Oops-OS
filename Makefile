@@ -72,6 +72,14 @@ CFLAGS += -I. -Ikernel/include
 # CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += -DNET_TESTS_PORT=$(SERVERPORT)
+SCHED ?= MLFQ
+ifeq ($(SCHED),MLFQ)
+CFLAGS += -DSCHED_MLFQ
+else ifeq ($(SCHED),DYNPRIO)
+CFLAGS += -DSCHED_DYNPRIO
+else
+$(error Unknown SCHED value: $(SCHED). Use MLFQ or DYNPRIO.)
+endif
 ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
 CFLAGS += -fno-pie -no-pie
 endif
@@ -179,6 +187,7 @@ UPROGS=\
 	$U/test/_monitortest\
 	$U/test/_threadtest\
 	$U/test/_cstest\
+	$U/test/_schedtest\
 	$U/test/_lseektest\
 	$U/program/_statistics
 

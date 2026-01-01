@@ -147,7 +147,12 @@ void usertrap(void)
         // 如果一个时钟到期的时候已经有一个时钟处理函数正在运行，则会推迟到原处理函数运行完成后的下一个 tick 才触发这次时钟
       }
     }
+#if defined(SCHED_MLFQ)
+    if (mlfq_tick())
+      yield();
+#else
     yield();
+#endif
   }
 
   usertrapret();
@@ -220,7 +225,14 @@ void kerneltrap()
 
   // give up the CPU if this is a timer interrupt.
   if (which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
+  {
+#if defined(SCHED_MLFQ)
+    if (mlfq_tick())
+      yield();
+#else
     yield();
+#endif
+  }
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.
@@ -230,31 +242,21 @@ void kerneltrap()
 
 void clockintr()
 {
+#if defined(SCHED_MLFQ)
+  uint now;
+#endif
   acquire(&tickslock);
   ticks++;
+#if defined(SCHED_MLFQ)
+  now = ticks;
+#endif
   wakeup(&ticks);
   release(&tickslock);
+#if defined(SCHED_MLFQ)
+  if (now % MLFQ_BOOST_TICKS == 0)
+    mlfq_boost(now);
+#endif
 
-  // struct proc *p;
-  //  // 遍历进程表，更新每个进程的等待时间和CPU时间
-  //  for (p = proc; p < &proc[NPROC]; p++)
-  //  {
-
-  //   acquire(&p->lock);
-  //   if (p->state == RUNNABLE)
-  //   {
-  //     p->wait_time++; // 增加等待时间
-  //     p->dyn_priority = p->priority + (p->wait_time / 5) - (p->cpu_time / 5);
-  //     // printf("PID: %d, wait_time: %d, cpu_time: %d, dyn_priority: %d\n", p->pid, p->wait_time, p->cpu_time, p->dyn_priority);
-  //   }
-  //   else if (p->state == RUNNING)
-  //   {
-  //     p->cpu_time++; // 增加CPU时间
-  //     p->dyn_priority = p->priority + (p->wait_time / 5) - (p->cpu_time / 5);
-  //     // printf("PID: %d, wait_time: %d, cpu_time: %d, dyn_priority: %d\n", p->pid, p->wait_time, p->cpu_time, p->dyn_priority);
-  //   }
-  //   release(&p->lock);
-  // }
 }
 
 // check if it's an external interrupt or software interrupt,

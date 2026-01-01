@@ -13,6 +13,16 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+#if defined(SCHED_MLFQ)
+static const int mlfq_time_slice[MLFQ_LEVELS] = {
+    MLFQ_SLICE_L0,
+    MLFQ_SLICE_L1,
+    MLFQ_SLICE_L2,
+    MLFQ_SLICE_L3,
+};
+static int mlfq_rr_next[MLFQ_LEVELS];
+#endif
+
 int nextpid = 1;
 struct spinlock pid_lock;
 
@@ -28,12 +38,27 @@ extern char trampoline[]; // trampoline.S
 int setPriority(int pid, int priority)
 {
   struct proc *p;
+  if (priority < 0)
+    priority = 0;
+  if (priority > 20)
+    priority = 20;
   for (p = proc; p < &proc[NPROC]; p++)
   {
     if (p->pid == pid)
     {
       acquire(&p->lock); // 获取进程的锁
       p->priority = priority;
+#if defined(SCHED_MLFQ)
+      // Higher priority maps to higher MLFQ level (smaller index).
+      p->mlfq_level = (MLFQ_LEVELS - 1) - (priority * MLFQ_LEVELS / 21);
+      if (p->mlfq_level < 0)
+        p->mlfq_level = 0;
+      if (p->mlfq_level >= MLFQ_LEVELS)
+        p->mlfq_level = MLFQ_LEVELS - 1;
+      p->mlfq_ticks = 0;
+#else
+      p->dyn_priority = priority;
+#endif
       release(&p->lock); // 修改完成后释放锁
       return 0;
     }
@@ -150,6 +175,8 @@ static struct proc *allocproc(void)
   p->cpu_time = 0;
   p->wait_time = 0;
   p->dyn_priority = 10;
+  p->mlfq_level = 0;
+  p->mlfq_ticks = 0;
   p->trace_mask = 0; // 设定掩码为0
   p->shm = KERNBASE; // 初始化shm，刚开始shm与kernbase重合
   p->shmkeymask = 0; // 初始化shmkeymask
@@ -344,6 +371,8 @@ static void freeproc(struct proc *p)
   p->alarm_handler = 0;
   p->alarm_ticks = 0;
   p->alarm_goingoff = 0;
+  p->mlfq_level = 0;
+  p->mlfq_ticks = 0;
   p->state = UNUSED;
   // 释放进程
   shmrelease(p->pagetable, p->shm, p->shmkeymask);
@@ -816,8 +845,65 @@ void scheduler1(void)
     }
   }
 }
+
+#if defined(SCHED_MLFQ)
+int mlfq_tick(void)
+{
+  struct proc *p = myproc();
+  if (p == 0)
+    return 0;
+
+  acquire(&p->lock);
+  if (p->state != RUNNING)
+  {
+    release(&p->lock);
+    return 0;
+  }
+
+  if (p->mlfq_level < 0)
+    p->mlfq_level = 0;
+  if (p->mlfq_level >= MLFQ_LEVELS)
+    p->mlfq_level = MLFQ_LEVELS - 1;
+
+  p->mlfq_ticks++;
+  if (p->mlfq_ticks >= mlfq_time_slice[p->mlfq_level])
+  {
+    if (p->mlfq_level < MLFQ_LEVELS - 1)
+      p->mlfq_level++;
+    p->mlfq_ticks = 0;
+    release(&p->lock);
+    return 1;
+  }
+
+  release(&p->lock);
+  return 0;
+}
+
+void mlfq_boost(uint now)
+{
+  static uint last_boost = 0;
+  struct proc *p;
+
+  if (now == last_boost)
+    return;
+  last_boost = now;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state != UNUSED)
+    {
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+    }
+    release(&p->lock);
+  }
+}
+#endif
+
 void scheduler(void)
 {
+#if defined(SCHED_DYNPRIO)
   struct proc *p;
   struct proc *pmax; // 优先级最高的进程
   struct cpu *c = mycpu();
@@ -837,8 +923,7 @@ void scheduler(void)
       acquire(&p->lock);
       if (p->state == RUNNABLE)
       {
-        // 更新动态优先级
-        p->wait_time++; // 增加等待时间
+        p->wait_time++;
         p->dyn_priority = p->priority + (p->wait_time / 5) - (p->cpu_time / 5);
 
         // 限制动态优先级范围在 [0, 20]
@@ -854,7 +939,6 @@ void scheduler(void)
           pmax = p;
         }
       }
-
       release(&p->lock);
     }
 
@@ -868,14 +952,11 @@ void scheduler(void)
 
     // 调度优先级最高的进程
     acquire(&pmax->lock);
-    if (pmax->state == RUNNING)
-    {
-      pmax->cpu_time = 0;
-    }
     if (pmax->state == RUNNABLE) // 再次确认状态
     {
       pmax->state = RUNNING;              // 设置为运行状态
       pmax->wait_time = 0;                // 清零等待时间
+      pmax->cpu_time++;                   // 统计CPU时间
       c->proc = pmax;                     // 当前 CPU 正在运行的进程
       swtch(&c->context, &pmax->context); // 切换到目标进程
 
@@ -884,6 +965,58 @@ void scheduler(void)
     }
     release(&pmax->lock);
   }
+#else
+  struct cpu *c = mycpu();
+  struct proc *p;
+
+  c->proc = 0;
+
+  for (;;)
+  {
+    int found = 0;
+
+    intr_on();
+
+    for (int level = 0; level < MLFQ_LEVELS; level++)
+    {
+      for (int i = 0; i < NPROC; i++)
+      {
+        int idx = (mlfq_rr_next[level] + i) % NPROC;
+        struct proc *cand = &proc[idx];
+
+        acquire(&cand->lock);
+        if (cand->mlfq_level < 0)
+          cand->mlfq_level = 0;
+        if (cand->mlfq_level >= MLFQ_LEVELS)
+          cand->mlfq_level = MLFQ_LEVELS - 1;
+        if (cand->state == RUNNABLE && cand->mlfq_level == level)
+        {
+          mlfq_rr_next[level] = (idx + 1) % NPROC;
+          p = cand;
+          found = 1;
+          break;
+        }
+        release(&cand->lock);
+      }
+      if (found)
+        break;
+    }
+
+    if (!found)
+    {
+      intr_on();
+      asm volatile("wfi");
+      continue;
+    }
+
+    p->state = RUNNING;
+    p->mlfq_ticks = 0;
+    c->proc = p;
+    swtch(&c->context, &p->context);
+    c->proc = 0;
+    release(&p->lock);
+  }
+#endif
 }
 
 // Switch to scheduler.  Must hold only p->lock
@@ -917,6 +1050,7 @@ void yield(void)
 {
   struct proc *p = myproc();
   acquire(&p->lock);
+  p->mlfq_ticks = 0;
   p->state = RUNNABLE;
   sched();
   release(&p->lock);
@@ -965,6 +1099,7 @@ void sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
+  p->mlfq_ticks = 0;
 
   sched();
 
@@ -991,6 +1126,10 @@ void wakeup(void *chan)
     if (p->state == SLEEPING && p->chan == chan)
     {
       p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
     }
     release(&p->lock);
   }
@@ -1006,6 +1145,10 @@ void wakeupOneProc(void *chan)
     if (p->state == SLEEPING && p->chan == chan)
     {
       p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
       release(&p->lock);
       break; // 多加了这一步
     }
@@ -1023,6 +1166,10 @@ wakeup1(struct proc *p)
   if (p->chan == p && p->state == SLEEPING)
   {
     p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+    p->mlfq_level = 0;
+    p->mlfq_ticks = 0;
+#endif
   }
 }
 
@@ -1043,6 +1190,10 @@ int kill(int pid)
       {
         // Wake process from sleep().
         p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+        p->mlfq_level = 0;
+        p->mlfq_ticks = 0;
+#endif
       }
       release(&p->lock);
       return 0;
@@ -1118,15 +1269,37 @@ int cps(void)
 {
   struct proc *p = proc; // 定义一个结构体(进程控制块)
   // stati();	// 中断
+#if defined(SCHED_DYNPRIO)
   printf("name \t pid \t state \t \t priority \tdyn_priority\n"); // 罗列所有的pid
+#else
+  printf("name \t pid \t state \t \t priority \tmlfq_lvl \tmlfq_ticks\n"); // 罗列所有的pid
+#endif
   for (p = proc; p < &proc[NPROC]; p++)                           // NPROC为64
   {
     if (p->state == SLEEPING) // 睡眠
+    {
+#if defined(SCHED_DYNPRIO)
       printf("%s \t %d \t SLEEPING \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
+#else
+      printf("%s \t %d \t SLEEPING \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
+#endif
+    }
     else if (p->state == RUNNING) // 正在执行
+    {
+#if defined(SCHED_DYNPRIO)
       printf("%s \t %d \t RUNNING \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
+#else
+      printf("%s \t %d \t RUNNING \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
+#endif
+    }
     else if (p->state == RUNNABLE) // 可运行队列
+    {
+#if defined(SCHED_DYNPRIO)
       printf("%s \t %d \t RUNNABLE \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
+#else
+      printf("%s \t %d \t RUNNABLE \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
+#endif
+    }
   }
   return 22; // 返回22
 }
@@ -1171,6 +1344,8 @@ int clone(uint64 fcn, uint64 arg, uint64 stack)
   np->ustack = (void *)stack;
   np->parent = 0;
   np->trace_mask = leader->trace_mask;
+  np->mlfq_level = leader->mlfq_level;
+  np->mlfq_ticks = 0;
 
   np->shm = leader->shm;
   np->shmkeymask = leader->shmkeymask;
@@ -1256,4 +1431,3 @@ int join(uint64 stackaddrout)
   }
   return 0;  // 这是一个永远不会到达的地方
 }
-

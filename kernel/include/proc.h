@@ -142,6 +142,8 @@ struct proc
   int wait_time;            // 等待CPU的时间
   int cpu_time;             // CPU上运行的时间
   int dyn_priority;         // 动态优先级
+  int mlfq_level;           // MLFQ level (0 is highest)
+  int mlfq_ticks;           // ticks consumed in current time slice
   struct proc *pthread;     // 父线程
   void *ustack;             // 用户线程栈
   uint shm;        // 本进程共享内存区域的下边界
