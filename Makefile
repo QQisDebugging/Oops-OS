@@ -179,6 +179,7 @@ UPROGS=\
 	$U/test/_monitortest\
 	$U/test/_threadtest\
 	$U/test/_cstest\
+	$U/test/_lseektest\
 	$U/program/_statistics
 
 

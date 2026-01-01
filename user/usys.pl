@@ -88,3 +88,4 @@ entry("join");
 entry("fallocate");
 entry("fclone");
 entry("thread_exit");
+entry("lseek");

@@ -97,6 +97,58 @@ sys_write(void)
   return filewrite(f, p, n);
 }
 
+// lseek - 改变文件读写偏移量
+// 参数: fd - 文件描述符
+//       offset - 偏移量
+//       whence - 偏移基准 (SEEK_SET=0, SEEK_CUR=1, SEEK_END=2)
+// 返回: 成功返回新的偏移量，失败返回-1
+uint64
+sys_lseek(void)
+{
+  struct file *f;
+  int offset;
+  int whence;
+  int newoff;
+
+  // 获取参数
+  if (argfd(0, 0, &f) < 0 || argint(1, &offset) < 0 || argint(2, &whence) < 0)
+    return -1;
+
+  // 只支持普通文件 (FD_INODE 类型)
+  if (f->type != FD_INODE)
+    return -1;
+
+  ilock(f->ip);
+
+  // 根据 whence 计算新的偏移量
+  switch (whence) {
+    case 0:  // SEEK_SET: 从文件开头计算
+      newoff = offset;
+      break;
+    case 1:  // SEEK_CUR: 从当前位置计算
+      newoff = f->off + offset;
+      break;
+    case 2:  // SEEK_END: 从文件末尾计算
+      newoff = f->ip->size + offset;
+      break;
+    default:
+      iunlock(f->ip);
+      return -1;
+  }
+
+  // 检查新偏移量是否有效（不能为负数）
+  if (newoff < 0) {
+    iunlock(f->ip);
+    return -1;
+  }
+
+  // 设置新的偏移量
+  f->off = newoff;
+
+  iunlock(f->ip);
+  return newoff;
+}
+
 uint64
 sys_fallocate(void)
 {

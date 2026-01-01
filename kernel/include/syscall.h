@@ -74,3 +74,4 @@
 #define SYS_thread_exit 73
 #define SYS_fallocate 74
 #define SYS_fclone 75
+#define SYS_lseek 76
