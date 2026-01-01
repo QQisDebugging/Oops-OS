@@ -185,7 +185,7 @@ void trapinit(void);
 void trapinithart(void);
 extern struct spinlock tickslock;
 void usertrapret(void);
-int mmap_handler(int va, int cause);
+int mmap_handler(uint64 va, int cause);
 int sigalarm(int ticks, void (*handler)());
 int sigreturn(void);
 // uart.c

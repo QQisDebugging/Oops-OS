@@ -3,11 +3,13 @@
 #include "memlayout.h"
 #include "riscv.h"
 #include "spinlock.h"
+#include "sleeplock.h"
+#include "fs.h"
 #include "proc.h"
 #include "defs.h"
 #include "elf.h"
-
-static int loadseg(pde_t *pgdir, uint64 addr, struct inode *ip, uint offset, uint sz);
+#include "file.h"
+#include "fcntl.h"
 
 int exec(char *path, char **argv)
 {
@@ -15,9 +17,12 @@ int exec(char *path, char **argv)
   char *s, *last;
   int i, off;
   uint64 argc, sz = 0, sp, ustack[MAXARG + 1], stackbase;
+  uint64 sz1;
   struct elfhdr elf;
   struct inode *ip;
   struct proghdr ph;
+  struct vm_area newvma[NVMA];
+  struct file *vf = 0;
   pagetable_t pagetable = 0, oldpagetable;
   struct proc *p = myproc();
 
@@ -39,6 +44,15 @@ int exec(char *path, char **argv)
   if ((pagetable = proc_pagetable(p)) == 0)
     goto bad;
 
+  memset(newvma, 0, sizeof(newvma));
+  if ((vf = filealloc()) == 0)
+    goto bad;
+  vf->type = FD_INODE;
+  vf->readable = 1;
+  vf->writable = 0;
+  vf->ip = idup(ip);
+  vf->off = 0;
+
   // Load program into memory.
   for (i = 0, off = elf.phoff; i < elf.phnum; i++, off += sizeof(ph))
   {
@@ -48,16 +62,46 @@ int exec(char *path, char **argv)
       continue;
     if (ph.memsz < ph.filesz)
       goto bad;
+    if (ph.memsz == 0)
+      continue;
     if (ph.vaddr + ph.memsz < ph.vaddr)
       goto bad;
-    uint64 sz1;
-    if ((sz1 = uvmalloc(pagetable, sz, ph.vaddr + ph.memsz)) == 0)
-      goto bad;
-    sz = sz1;
     if (ph.vaddr % PGSIZE != 0)
       goto bad;
-    if (loadseg(pagetable, ph.vaddr, ip, ph.off, ph.filesz) < 0)
+    if (ph.memsz > 0x7fffffff)
       goto bad;
+
+    uint64 segend = ph.vaddr + ph.memsz;
+    if (segend > sz)
+      sz = segend;
+
+    int vma_idx = -1;
+    for (int j = 0; j < NVMA; j++)
+    {
+      if (newvma[j].used == 0)
+      {
+        vma_idx = j;
+        break;
+      }
+    }
+    if (vma_idx < 0)
+      goto bad;
+
+    newvma[vma_idx].used = 1;
+    newvma[vma_idx].addr = ph.vaddr;
+    newvma[vma_idx].len = PGROUNDUP(ph.memsz);
+    newvma[vma_idx].prot = 0;
+    if (ph.flags & ELF_PROG_FLAG_READ)
+      newvma[vma_idx].prot |= PROT_READ;
+    if (ph.flags & ELF_PROG_FLAG_WRITE)
+      newvma[vma_idx].prot |= PROT_WRITE;
+    if (ph.flags & ELF_PROG_FLAG_EXEC)
+      newvma[vma_idx].prot |= PROT_EXEC;
+    newvma[vma_idx].flags = MAP_PRIVATE;
+    newvma[vma_idx].vfile = vf;
+    newvma[vma_idx].vfd = -1;
+    newvma[vma_idx].offset = ph.off;
+    newvma[vma_idx].filesz = ph.filesz;
   }
   iunlockput(ip);
   end_op();
@@ -69,7 +113,6 @@ int exec(char *path, char **argv)
   // Allocate two pages at the next page boundary.
   // Use the second as the user stack.
   sz = PGROUNDUP(sz);
-  uint64 sz1;
   if ((sz1 = uvmalloc(pagetable, sz, sz + 2 * PGSIZE)) == 0)
     goto bad;
   sz = sz1;
@@ -111,21 +154,64 @@ int exec(char *path, char **argv)
       last = s + 1;
   safestrcpy(p->name, last, sizeof(p->name));
 
+  // Clear existing VMAs before committing the new image.
+  for (i = 0; i < NVMA; i++)
+  {
+    if (p->vma[i].used)
+    {
+      if (p->vma[i].flags == MAP_SHARED && (p->vma[i].prot & PROT_WRITE) != 0)
+      {
+        filewrite(p->vma[i].vfile, p->vma[i].addr, p->vma[i].len);
+      }
+      fileclose(p->vma[i].vfile);
+      uvmunmap(p->pagetable, p->vma[i].addr, p->vma[i].len / PGSIZE, 1);
+      p->vma[i].used = 0;
+    }
+  }
+  memset(p->vma, 0, sizeof(p->vma));
+
   // Commit to the user image.
   oldpagetable = p->pagetable;
   p->pagetable = pagetable;
   p->sz = sz;
   p->trapframe->epc = elf.entry;                         // initial program counter = main
   p->trapframe->sp = sp;                                 // initial stack pointer
-  shmrelease(oldpagetable, proc->shm, proc->shmkeymask); // 回收共享内存
+  memmove(p->vma, newvma, sizeof(newvma));
+  if (vf)
+  {
+    int first_vma = 1;
+    for (i = 0; i < NVMA; i++)
+    {
+      if (p->vma[i].used)
+      {
+        if (first_vma)
+        {
+          p->vma[i].vfile = vf;
+          first_vma = 0;
+        }
+        else
+        {
+          p->vma[i].vfile = filedup(vf);
+        }
+      }
+    }
+    if (first_vma)
+    {
+      fileclose(vf);
+      vf = 0;
+    }
+  }
+  shmrelease(oldpagetable, p->shm, p->shmkeymask); // 回收共享内存
   proc_freepagetable(oldpagetable, oldsz);
-  proc->shm = KERNBASE; // 重置虚拟内存信息
-  proc->shmkeymask = 0;
+  p->shm = KERNBASE; // 重置虚拟内存信息
+  p->shmkeymask = 0;
   releasemq(p->mqmask);
   p->mqmask = 0;
   return argc; // this ends up in a0, the first argument to main(argc, argv)
 
 bad:
+  if (vf)
+    fileclose(vf);
   if (pagetable)
     proc_freepagetable(pagetable, sz);
   if (ip)
@@ -134,33 +220,4 @@ bad:
     end_op();
   }
   return -1;
-}
-
-// Load a program segment into pagetable at virtual address va.
-// va must be page-aligned
-// and the pages from va to va+sz must already be mapped.
-// Returns 0 on success, -1 on failure.
-static int
-loadseg(pagetable_t pagetable, uint64 va, struct inode *ip, uint offset, uint sz)
-{
-  uint i, n;
-  uint64 pa;
-
-  if ((va % PGSIZE) != 0)
-    panic("loadseg: va must be page aligned");
-
-  for (i = 0; i < sz; i += PGSIZE)
-  {
-    pa = walkaddr(pagetable, va + i);
-    if (pa == 0)
-      panic("loadseg: address should exist");
-    if (sz - i < PGSIZE)
-      n = sz - i;
-    else
-      n = PGSIZE;
-    if (readi(ip, 0, (uint64)pa, offset + i, n) != n)
-      return -1;
-  }
-
-  return 0;
 }

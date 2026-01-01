@@ -146,6 +146,7 @@ UPROGS=\
 	$U/program/_setp\
 	$U/test/_lazytest\
 	$U/test/_swaptest\
+	$U/test/_demandloadtest\
 	$U/program/_execve\
 	$U/program/_getparentpid\
 	$U/program/_print_pgtable\
@@ -154,6 +155,7 @@ UPROGS=\
 	$U/test/_sh_rw_lock\
 	$U/test/_symlinktest\
 	$U/test/_bigfiletest\
+	$U/program/_bigbss\
 	$U/program/_symlink\
 	$U/program/_readfile\
 	$U/program/_writefile\

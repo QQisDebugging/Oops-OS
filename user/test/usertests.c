@@ -2742,6 +2742,14 @@ void swaptest_run(char *s)
   exit(1);
 }
 
+void demandloadtest_run(char *s)
+{
+  char *argv[] = {"demandloadtest", 0};
+  exec("demandloadtest", argv);
+  printf("%s: exec demandloadtest failed\n", s);
+  exit(1);
+}
+
 int main(int argc, char *argv[])
 {
   int continuous = 0;
@@ -2802,6 +2810,7 @@ int main(int argc, char *argv[])
       {bsstest, "bsstest"},
       {sbrkmuch, "sbrkmuch"},
       {swaptest_run, "swaptest"},
+      {demandloadtest_run, "demandloadtest"},
       {sbrkarg, "sbrkarg"},
       {validatetest, "validatetest"},
       {stacktest, "stacktest"},

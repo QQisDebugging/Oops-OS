@@ -586,12 +586,23 @@ sys_mmap(void)
     {
       p->vma[i].used = 1;
       p->vma[i].addr = p->sz;
-      p->vma[i].len = length;
+      p->vma[i].len = (uint64)length;
       p->vma[i].flags = flags;
       p->vma[i].prot = prot;
       p->vma[i].vfile = vfile;
       p->vma[i].vfd = vfd;
-      p->vma[i].offset = offset;
+      p->vma[i].offset = (uint64)offset;
+      p->vma[i].filesz = (uint64)length;
+      if (vfile->type == FD_INODE)
+      {
+        ilock(vfile->ip);
+        uint64 fsz = vfile->ip->size;
+        iunlock(vfile->ip);
+        if (p->vma[i].offset >= fsz)
+          p->vma[i].filesz = 0;
+        else if (p->vma[i].offset + p->vma[i].filesz > fsz)
+          p->vma[i].filesz = fsz - p->vma[i].offset;
+      }
 
       // 增加文件的引用计数
       filedup(vfile);

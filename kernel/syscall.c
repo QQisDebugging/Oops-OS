@@ -1,4 +1,4 @@
-#include "types.h"
+﻿#include "types.h"
 #include "param.h"
 #include "memlayout.h"
 #include "riscv.h"
@@ -8,7 +8,7 @@
 #include "defs.h"
 
 // Fetch the uint64 at addr from the current process.
-// 实现安全的参数传递机制
+// 实现安全的参数读取。
 int fetchaddr(uint64 addr, uint64 *ip)
 {
   struct proc *p = myproc();
@@ -21,11 +21,18 @@ int fetchaddr(uint64 addr, uint64 *ip)
 
 // Fetch the nul-terminated string at addr from the current process.
 // Returns length of string, not including nul, or -1 for error.
-// 实现安全的参数传递机制
+// 实现安全的字符串参数读取。
 int fetchstr(uint64 addr, char *buf, int max)
 {
   struct proc *p = myproc();
-  
+  if (addr >= KERNBASE)
+    return -1;
+  if (addr >= p->sz)
+  {
+    uint64 shm = (uint64)p->shm;
+    if (!(addr >= shm && addr < KERNBASE))
+      return -1;
+  }
   int err = copyinstr(p->pagetable, buf, addr, max);
   if (err < 0)
     return err;
@@ -68,11 +75,18 @@ int argint(int n, int *ip)
 int argaddr(int n, uint64 *ip)
 {
   *ip = argraw(n);
+  if (*ip == 0)
+    return 0;
   struct proc *p = myproc();
 
-  // 处理向系统调用传入lazy allocation地址的情况
+  // handle lazy allocation or demand-loaded VMA
   if (walkaddr(p->pagetable, *ip) == 0)
   {
+    int mmret = mmap_handler(*ip, 13);
+    if (mmret == 0)
+      return 0;
+    if (mmret < 0)
+      return -1;
     if (PGROUNDUP(p->trapframe->sp) - 1 < *ip && *ip < p->sz)
     {
       char *pa = kalloc();
@@ -136,13 +150,13 @@ extern uint64 sys_getparentpid(void);
 extern uint64 sys_print_pgtable(void);
 extern uint64 sys_mmap(void);
 extern uint64 sys_munmap(void);
-extern uint64 sys_sh_var_read(void);  // 信号量
-extern uint64 sys_sh_var_write(void); // 信号量
-extern uint64 sys_sem_create(void);   // 信号量
-extern uint64 sys_sem_free(void);     // 信号量
-extern uint64 sys_sem_p(void);        // 信号量
-extern uint64 sys_sem_v(void);        // 信号量
-extern uint64 sys_sem_p_multi(void);  // 信号量
+extern uint64 sys_sh_var_read(void);
+extern uint64 sys_sh_var_write(void);
+extern uint64 sys_sem_create(void);
+extern uint64 sys_sem_free(void);
+extern uint64 sys_sem_p(void);
+extern uint64 sys_sem_v(void);
+extern uint64 sys_sem_p_multi(void);
 extern uint64 sys_semset_create(void);
 extern uint64 sys_semset_free(void);
 extern uint64 sys_semset_p(void);
@@ -152,15 +166,15 @@ extern uint64 sys_dmsgsend(void);
 extern uint64 sys_dmsgrcv(void);
 extern uint64 sys_symlink(void);
 extern uint64 sys_mkf(void);
-extern uint64 sys_shmgetat(void);    // 共享内存
+extern uint64 sys_shmgetat(void); // 共享内存
 extern uint64 sys_shmrefcount(void); // 共享内存
 extern uint64 sys_mqget(void);
 extern uint64 sys_msgsnd(void);
 extern uint64 sys_msgrcv(void);
 extern uint64 sys_getcwd(void);
 extern uint64 sys_dup_new(void);
-extern uint64 sys_shmgetat(void);     // 共享内存
-extern uint64 sys_shmrefcount(void);  // 共享内存
+extern uint64 sys_shmgetat(void); // 共享内存
+extern uint64 sys_shmrefcount(void); // 共享内存
 extern uint64 sys_sigalarm(void);
 extern uint64 sys_sigreturn(void);
 extern uint64 sys_connect(void);
@@ -200,8 +214,8 @@ static uint64 (*syscalls[])(void) = {
     [SYS_print_pgtable] sys_print_pgtable,
     [SYS_mmap] sys_mmap,
     [SYS_munmap] sys_munmap,
-    [SYS_sh_var_read] sys_sh_var_read,   // 信号量
-    [SYS_sh_var_write] sys_sh_var_write, // 信号量
+    [SYS_sh_var_read] sys_sh_var_read,
+    [SYS_sh_var_write] sys_sh_var_write,
     [SYS_sem_create] sys_sem_create,
     [SYS_sem_free] sys_sem_free,
     [SYS_sem_p] sys_sem_p,
@@ -231,7 +245,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_recoveri] sys_recoveri,
     [SYS_clone] sys_clone,
     [SYS_join] sys_join,
-}; // 这些索引会从1开始，不是从0开始
+};
 static char *syscall_names[] = {
     [SYS_fork] "fork",
     [SYS_exit] "exit",
@@ -263,8 +277,8 @@ static char *syscall_names[] = {
     [SYS_print_pgtable] "sys_print_pgtable",
     [SYS_mmap] "sys_mmap",
     [SYS_munmap] "sys_munmap",
-    [SYS_sh_var_read] "sys_sh_var_read",   // 信号量
-    [SYS_sh_var_write] "sys_sh_var_write", // 信号量
+    [SYS_sh_var_read] "sys_sh_var_read",
+    [SYS_sh_var_write] "sys_sh_var_write",
     [SYS_sem_create] "sys_sem_create",
     [SYS_sem_free] "sys_sem_free",
     [SYS_sem_p] "sys_sem_p",
@@ -295,15 +309,16 @@ static char *syscall_names[] = {
     [SYS_clone] "sys_clone",
     [SYS_join] "sys_join",
 };
-void syscall(void) // 在usys.s中系统调用的参数放在a0与a1中，系统调用号放在a7
+void syscall(void)
 {
   int num;
   struct proc *p = myproc();
   char *syscall_name;
-  num = p->trapframe->a7; // 从当前进程的trampoline页中的a7中得到系统调用号
+
+  num = p->trapframe->a7;
   if (num > 0 && num < NELEM(syscalls) && syscalls[num])
   {
-    p->trapframe->a0 = syscalls[num](); // 执行相应的系统调用函数并将返回值会存储在p->trapframe->a0中
+    p->trapframe->a0 = syscalls[num]();
     if ((p->trace_mask & (1 << num)) != 0)
     {
       syscall_name = syscall_names[num];
@@ -314,6 +329,6 @@ void syscall(void) // 在usys.s中系统调用的参数放在a0与a1中，系统
   {
     printf("%d %s: unknown sys call %d\n",
            p->pid, p->name, num);
-    p->trapframe->a0 = -1; // 系统调用成功返回0或正数，返回负数表示错误。
+    p->trapframe->a0 = -1;
   }
 }

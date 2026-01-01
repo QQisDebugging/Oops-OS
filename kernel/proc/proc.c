@@ -363,17 +363,17 @@ int fork(void)
     return -1;
   }
   // 共享内存区信息复制
-  np->shm = proc->shm;
-  np->shmkeymask = proc->shmkeymask;
+  np->shm = p->shm;
+  np->shmkeymask = p->shmkeymask;
   // printf("shmkeymask:%d\n", np->shmkeymask);
   for (int i = 0; i < 8; ++i)
   {
     if (shmkeyused(i, np->shmkeymask)) // 只复制已启用的共享内存区
     {
-      np->shmva[i] = proc->shmva[i];
+      np->shmva[i] = p->shmva[i];
     }
   }
-  shmaddcount(proc->shmkeymask); // fork新进程，所以共享内存引用数量加一
+  shmaddcount(p->shmkeymask); // fork新进程，所以共享内存引用数量加一
 
   addmqcount(p->mqmask);  // 消息队列引用数量+1
   np->mqmask = p->mqmask; // 掩码复制

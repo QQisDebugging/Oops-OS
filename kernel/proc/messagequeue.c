@@ -54,6 +54,7 @@ void mqinit()
 }
 int newmq(int key)
 {
+    struct proc *p = myproc();
     int idx = -1;
     for (int i = 0; i < MQMAX; i++)
     {
@@ -82,7 +83,7 @@ int newmq(int key)
     mqs[idx].maxbytes = PGSIZE;
     mqs[idx].curbytes = 16;
     mqs[idx].refcount = 1;
-    proc->mqmask |= 1 << idx; // 修改当前进程的mqmask，表示使用中
+    p->mqmask |= 1 << idx; // 修改当前进程的mqmask，表示使用中
     return idx;
 }
 
@@ -101,13 +102,14 @@ void addmqcount(uint mask)
 
 int sys_mqget(uint key)
 {
+    struct proc *p = myproc();
     acquire(&mqlock);
     int idx = findkey(key);
     if (idx != -1)
     { // 如果key对应的消息队列已经创建
-        if (!(proc->mqmask >> idx & 1))
+        if (!(p->mqmask >> idx & 1))
         {
-            proc->mqmask |= 1 << idx; // 标记该进程使用该消息队列
+            p->mqmask |= 1 << idx; // 标记该进程使用该消息队列
             mqs[idx].refcount++;      // 消息队列的引用计数+1
         }
         release(&mqlock);
@@ -143,6 +145,7 @@ int reloc(int mqid)
 
 int sys_msgsnd(uint mqid, void *msg, int sz)
 {
+    struct proc *p = myproc();
     // 校验消息队列的合法性
     if (mqid < 0 || mqid >= MQMAX || mqs[mqid].status == 0)
     {
@@ -202,9 +205,9 @@ int sys_msgsnd(uint mqid, void *msg, int sz)
         else
         { // 如果空间不足，进程睡眠在wqueue阻塞队列
             printf("msgsnd: cannot alloc: pthread: %d sleep.\n", myproc()->pid);
-            wqueue[wstart++] = proc; // 将当前进程加入等待队列
+            wqueue[wstart++] = p; // 将当前进程加入等待队列
 
-            sleep(proc, &mqlock); // 进入休眠状态，等待唤醒
+            sleep(p, &mqlock); // 进入休眠状态，等待唤醒
         }
     }
     return -1; // 发送失败
@@ -212,6 +215,7 @@ int sys_msgsnd(uint mqid, void *msg, int sz)
 
 int sys_msgrcv(uint mqid, void *msg, int sz)
 {
+    struct proc *p = myproc();
     // 校验消息队列的合法性
     if (mqid < 0 || mqid >= MQMAX || mqs[mqid].status == 0)
     {
@@ -260,12 +264,12 @@ int sys_msgrcv(uint mqid, void *msg, int sz)
         }
 
         // 如果没有找到匹配的消息类型，当前进程进入休眠状态
-        printf("msgrcv: can not read: pthread: %d sleep.\n", proc->pid);
+        printf("msgrcv: can not read: pthread: %d sleep.\n", p->pid);
 
         // 将当前进程加入读阻塞队列
-        rqueue[rstart++] = proc;
+        rqueue[rstart++] = p;
 
-        sleep(proc, &mqlock); // 进入休眠状态，等待唤醒
+        sleep(p, &mqlock); // 进入休眠状态，等待唤醒
         return -1;            // 未能成功读取消息
     }
 }

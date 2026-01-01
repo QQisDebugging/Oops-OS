@@ -331,6 +331,7 @@ sfence_vma()
 #define PTE_W (1L << 2)
 #define PTE_X (1L << 3)
 #define PTE_U (1L << 4) // 1 -> user can access
+#define PTE_A (1L << 6) // accessed
 #define PTE_F (1L << 8)// 记录应用了COW策略后fork的页面
 #define PTE_S (1L << 9) // swapped out
 
