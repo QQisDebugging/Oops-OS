@@ -61,3 +61,4 @@
 #define SYS_dmsgsend 60
 #define SYS_dmsgrcv 61
 #define SYS_fallocate 62
+#define SYS_fclone 63

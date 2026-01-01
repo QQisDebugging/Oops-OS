@@ -155,6 +155,7 @@ UPROGS=\
 	$U/test/_symlinktest\
 	$U/test/_bigfiletest\
 	$U/test/_fallocatetest\
+	$U/test/_fclonetest\
 	$U/program/_symlink\
 	$U/program/_readfile\
 	$U/program/_writefile\

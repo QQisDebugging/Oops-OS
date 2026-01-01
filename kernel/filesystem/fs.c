@@ -26,6 +26,10 @@
 // there should be one superblock per disk device, but we run with
 // only one device
 struct superblock sb; 
+struct {
+  struct spinlock lock;
+  uint ref[FSSIZE];
+} brefs;
 
 // Read the super block.
 static void
@@ -38,6 +42,8 @@ readsb(int dev, struct superblock *sb)
   brelse(bp);
 }
 
+static void bref_init(int dev);
+
 // Init fs
 void
 fsinit(int dev) {
@@ -45,6 +51,8 @@ fsinit(int dev) {
   if(sb.magic != FSMAGIC)
     panic("invalid file system");
   initlog(dev, &sb);
+  // Rebuild block refcounts after log recovery.
+  bref_init(dev);
 }
 
 // Zero a block.
@@ -60,6 +68,100 @@ bzero(int dev, int bno)
 }
 
 // Blocks.
+
+static void
+bref_inc(uint b)
+{
+  if(b >= sb.size)
+    panic("bref_inc");
+  acquire(&brefs.lock);
+  brefs.ref[b]++;
+  release(&brefs.lock);
+}
+
+static int
+bref_dec(uint b)
+{
+  int ref;
+
+  if(b >= sb.size)
+    panic("bref_dec");
+  acquire(&brefs.lock);
+  if(brefs.ref[b] < 1)
+    panic("bref_dec: underflow");
+  brefs.ref[b]--;
+  ref = brefs.ref[b];
+  release(&brefs.lock);
+  return ref;
+}
+
+static uint
+bref_get(uint b)
+{
+  uint ref;
+
+  if(b >= sb.size)
+    panic("bref_get");
+  acquire(&brefs.lock);
+  ref = brefs.ref[b];
+  release(&brefs.lock);
+  return ref;
+}
+
+static void
+bref_init(int dev)
+{
+  int i, j, inum;
+  struct buf *bp;
+  struct dinode *dip;
+  uint *a;
+
+  initlock(&brefs.lock, "brefs");
+  for(i = 0; i < sb.size && i < FSSIZE; i++)
+    brefs.ref[i] = 0;
+
+  for(inum = 1; inum < sb.ninodes; inum++){
+    bp = bread(dev, IBLOCK(inum, sb));
+    dip = (struct dinode*)bp->data + inum%IPB;
+    if(dip->type == 0){
+      brelse(bp);
+      continue;
+    }
+    for(i = 0; i < NDIRECT; i++){
+      if(dip->addrs[i])
+        brefs.ref[dip->addrs[i]]++;
+    }
+    if(dip->addrs[NDIRECT]){
+      brefs.ref[dip->addrs[NDIRECT]]++;
+      struct buf *bp1 = bread(dev, dip->addrs[NDIRECT]);
+      a = (uint*)bp1->data;
+      for(j = 0; j < NINDIRECT; j++){
+        if(a[j])
+          brefs.ref[a[j]]++;
+      }
+      brelse(bp1);
+    }
+    if(dip->addrs[NDIRECT + 1]){
+      brefs.ref[dip->addrs[NDIRECT + 1]]++;
+      struct buf *bp2 = bread(dev, dip->addrs[NDIRECT + 1]);
+      a = (uint*)bp2->data;
+      for(i = 0; i < NADDR_PER_BLOCK; i++){
+        if(a[i] == 0)
+          continue;
+        brefs.ref[a[i]]++;
+        struct buf *bp3 = bread(dev, a[i]);
+        uint *a1 = (uint*)bp3->data;
+        for(j = 0; j < NADDR_PER_BLOCK; j++){
+          if(a1[j])
+            brefs.ref[a1[j]]++;
+        }
+        brelse(bp3);
+      }
+      brelse(bp2);
+    }
+    brelse(bp);
+  }
+}
 
 // Allocate a zeroed disk block.
 static uint
@@ -78,6 +180,7 @@ balloc(uint dev)
         log_write(bp);
         brelse(bp);
         bzero(dev, b + bi);
+        bref_inc(b + bi);
         return b + bi;
       }
     }
@@ -93,6 +196,8 @@ bfree(int dev, uint b)
   struct buf *bp;
   int bi, m;
 
+  if(bref_dec(b) > 0)
+    return;
   bp = bread(dev, BBLOCK(b, sb));
   bi = b % BPB;
   m = 1 << (bi % 8);
@@ -378,59 +483,82 @@ iunlockput(struct inode *ip)
 // Return the disk block address of the nth block in inode ip.
 // If there is no such block, bmap allocates one.
 static uint
-bmap(struct inode *ip, uint bn)
+bmap(struct inode *ip, uint bn, int for_write)
 {
   uint addr, *a;
   struct buf *bp;
+  uint *p = 0;
+  struct buf *pbuf = 0;
 
   if(bn < NDIRECT){
-    if((addr = ip->addrs[bn]) == 0)
-      ip->addrs[bn] = addr = balloc(ip->dev);
-    return addr;
-  }
-  bn -= NDIRECT;
+    p = &ip->addrs[bn];
+    if((addr = *p) == 0)
+      *p = addr = balloc(ip->dev);
+  } else {
+    bn -= NDIRECT;
+    if(bn < NINDIRECT){
+      // Load indirect block, allocating if necessary.
+      if((addr = ip->addrs[NDIRECT]) == 0)
+        ip->addrs[NDIRECT] = addr = balloc(ip->dev);
+      bp = bread(ip->dev, addr);
+      a = (uint*)bp->data;
+      p = &a[bn];
+      if((addr = *p) == 0){
+        *p = addr = balloc(ip->dev);
+        log_write(bp);
+      }
+      pbuf = bp;
+    } else {
+      bn -= NINDIRECT;
+      // Double indirect blocks.
+      if(bn < NDINDIRECT) {
+        int level2_idx = bn / NADDR_PER_BLOCK;
+        int level1_idx = bn % NADDR_PER_BLOCK;
 
-  if(bn < NINDIRECT){
-    // Load indirect block, allocating if necessary.
-    if((addr = ip->addrs[NDIRECT]) == 0)
-      ip->addrs[NDIRECT] = addr = balloc(ip->dev);
-    bp = bread(ip->dev, addr);
-    a = (uint*)bp->data;  // 将缓冲区数据转换为指向 uint 类型的指针
-    if((addr = a[bn]) == 0){  // 检查对应位置是否已经分配了块  a[bn]获取的是间接块中第 bn 个块的地址。
-      a[bn] = addr = balloc(ip->dev); // 如果未分配，调用 balloc 分配新块
-      log_write(bp);  // 记录对缓冲区的修改
-    }
-    brelse(bp);
-    return addr;
-  }
-  bn-=NINDIRECT;
-  // 二级间接块的情况
-  if(bn < NDINDIRECT) {
-    int level2_idx = bn / NADDR_PER_BLOCK;  // 要查找的块号位于二级间接块中的位置
-    int level1_idx = bn % NADDR_PER_BLOCK;  // 要查找的块号位于一级间接块中的位置
-    // 读出二级间接块
-    if((addr = ip->addrs[NDIRECT + 1]) == 0)
-      ip->addrs[NDIRECT + 1] = addr = balloc(ip->dev);
-    bp = bread(ip->dev, addr);
-    a = (uint*)bp->data;
+        if((addr = ip->addrs[NDIRECT + 1]) == 0)
+          ip->addrs[NDIRECT + 1] = addr = balloc(ip->dev);
+        bp = bread(ip->dev, addr);
+        a = (uint*)bp->data;
+        if((addr = a[level2_idx]) == 0) {
+          a[level2_idx] = addr = balloc(ip->dev);
+          log_write(bp);
+        }
+        brelse(bp);
 
-    if((addr = a[level2_idx]) == 0) {
-      a[level2_idx] = addr = balloc(ip->dev);
-      // 更改了当前块的内容，标记以供后续写回磁盘
-      log_write(bp);
+        bp = bread(ip->dev, addr);
+        a = (uint*)bp->data;
+        p = &a[level1_idx];
+        if((addr = *p) == 0) {
+          *p = addr = balloc(ip->dev);
+          log_write(bp);
+        }
+        pbuf = bp;
+      } else {
+        panic("bmap: out of range");
+      }
     }
-    brelse(bp);
-
-    bp = bread(ip->dev, addr);
-    a = (uint*)bp->data;
-    if((addr = a[level1_idx]) == 0) {
-      a[level1_idx] = addr = balloc(ip->dev);
-      log_write(bp);
-    }
-    brelse(bp);
-    return addr;
   }
-  panic("bmap: out of range");
+
+  if(for_write && addr && bref_get(addr) > 1){
+    uint newb = balloc(ip->dev);
+    struct buf *src = bread(ip->dev, addr);
+    struct buf *dst = bread(ip->dev, newb);
+    memmove(dst->data, src->data, BSIZE);
+    log_write(dst);
+    brelse(src);
+    brelse(dst);
+    if(p)
+      *p = newb;
+    if(pbuf)
+      log_write(pbuf);
+    bfree(ip->dev, addr);
+    addr = newb;
+  }
+
+  if(pbuf)
+    brelse(pbuf);
+
+  return addr;
 }
 
 // Truncate inode (discard contents).
@@ -516,7 +644,7 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
     n = ip->size - off;
 
   for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
-    bp = bread(ip->dev, bmap(ip, off/BSIZE));
+    bp = bread(ip->dev, bmap(ip, off/BSIZE, 0));
     m = min(n - tot, BSIZE - off%BSIZE);
     if(either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
       brelse(bp);
@@ -543,7 +671,7 @@ writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
     return -1;
 
   for(tot=0; tot<n; tot+=m, off+=m, src+=m){
-    bp = bread(ip->dev, bmap(ip, off/BSIZE));
+    bp = bread(ip->dev, bmap(ip, off/BSIZE, 1));
     m = min(n - tot, BSIZE - off%BSIZE);
     if(either_copyin(bp->data + (off % BSIZE), user_src, src, m) == -1) {
       brelse(bp);
@@ -571,15 +699,87 @@ int
 falloc(struct inode *ip, uint startb, uint endb, uint newsize, int keep_size)
 {
   uint b;
+  int need_update = keep_size;
 
   if(newsize > MAXFILE*BSIZE)
     return -1;
   for(b = startb; b < endb; b++)
-    bmap(ip, b);
+    bmap(ip, b, 0);
   if(!keep_size && newsize > ip->size){
     ip->size = newsize;
-    iupdate(ip);
+    need_update = 1;
   }
+  if(need_update)
+    iupdate(ip);
+  return 0;
+}
+
+// Clone file data blocks from src to dst, sharing data blocks.
+// Caller must hold both inode locks.
+int
+iclone(struct inode *src, struct inode *dst)
+{
+  int i, j;
+
+  if(src->type != T_FILE || dst->type != T_FILE)
+    return -1;
+
+  dst->mode = src->mode;
+  dst->size = src->size;
+
+  for(i = 0; i < NDIRECT; i++){
+    dst->addrs[i] = src->addrs[i];
+    if(src->addrs[i])
+      bref_inc(src->addrs[i]);
+  }
+
+  if(src->addrs[NDIRECT]){
+    uint new_ind = balloc(dst->dev);
+    dst->addrs[NDIRECT] = new_ind;
+    struct buf *bp_src = bread(src->dev, src->addrs[NDIRECT]);
+    struct buf *bp_dst = bread(dst->dev, new_ind);
+    memmove(bp_dst->data, bp_src->data, BSIZE);
+    uint *a = (uint*)bp_dst->data;
+    for(i = 0; i < NINDIRECT; i++){
+      if(a[i])
+        bref_inc(a[i]);
+    }
+    log_write(bp_dst);
+    brelse(bp_src);
+    brelse(bp_dst);
+  }
+
+  if(src->addrs[NDIRECT + 1]){
+    uint new_dind = balloc(dst->dev);
+    dst->addrs[NDIRECT + 1] = new_dind;
+    struct buf *bp_src = bread(src->dev, src->addrs[NDIRECT + 1]);
+    struct buf *bp_dst = bread(dst->dev, new_dind);
+    memset(bp_dst->data, 0, BSIZE);
+    uint *a_src = (uint*)bp_src->data;
+    uint *a_dst = (uint*)bp_dst->data;
+    for(i = 0; i < NADDR_PER_BLOCK; i++){
+      if(a_src[i] == 0)
+        continue;
+      uint new_l1 = balloc(dst->dev);
+      a_dst[i] = new_l1;
+      struct buf *bp_src_l1 = bread(src->dev, a_src[i]);
+      struct buf *bp_dst_l1 = bread(dst->dev, new_l1);
+      memmove(bp_dst_l1->data, bp_src_l1->data, BSIZE);
+      uint *a_l1 = (uint*)bp_dst_l1->data;
+      for(j = 0; j < NADDR_PER_BLOCK; j++){
+        if(a_l1[j])
+          bref_inc(a_l1[j]);
+      }
+      log_write(bp_dst_l1);
+      brelse(bp_src_l1);
+      brelse(bp_dst_l1);
+    }
+    log_write(bp_dst);
+    brelse(bp_src);
+    brelse(bp_dst);
+  }
+
+  iupdate(dst);
   return 0;
 }
 

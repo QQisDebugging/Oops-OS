@@ -2750,6 +2750,14 @@ void fallocatetest_run(char *s)
   exit(1);
 }
 
+void fclonetest_run(char *s)
+{
+  char *argv[] = {"fclonetest", 0};
+  exec("fclonetest", argv);
+  printf("%s: exec fclonetest failed\n", s);
+  exit(1);
+}
+
 int main(int argc, char *argv[])
 {
   int continuous = 0;
@@ -2827,6 +2835,7 @@ int main(int argc, char *argv[])
       {fourteen, "fourteen"},
       {bigfile, "bigfile"},
       {fallocatetest_run, "fallocatetest"},
+      {fclonetest_run, "fclonetest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

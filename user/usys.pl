@@ -75,3 +75,4 @@ entry("recoveri");
 entry("clone");
 entry("join");
 entry("fallocate");
+entry("fclone");

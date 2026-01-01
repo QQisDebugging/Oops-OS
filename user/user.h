@@ -43,6 +43,7 @@ int connect(uint32, uint16, uint16);
 int geti(const char*,uint64);
 int recoveri(uint,uint64);
 int fallocate(int, int, int);
+int fclone(const char *, const char *);
 // 信号量
 int sem_create(int);
 int sem_free(int);

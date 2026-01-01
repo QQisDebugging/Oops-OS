@@ -17,6 +17,9 @@
 #include "fcntl.h"
 #include "buf.h"
 
+static struct inode *create(char *path, char type, short major, short minor);
+static struct inode *create_exclusive(char *path, char type, short major, short minor);
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -161,6 +164,50 @@ sys_fallocate(void)
     b += chunk;
   }
 
+  return 0;
+}
+
+uint64
+sys_fclone(void)
+{
+  char src[MAXPATH], dst[MAXPATH];
+  struct inode *ip_src, *ip_dst;
+
+  if (argstr(0, src, MAXPATH) < 0 || argstr(1, dst, MAXPATH) < 0)
+    return -1;
+
+  begin_op();
+  if ((ip_src = namei(src)) == 0)
+  {
+    end_op();
+    return -1;
+  }
+  ilock(ip_src);
+  if (ip_src->type != T_FILE)
+  {
+    iunlockput(ip_src);
+    end_op();
+    return -1;
+  }
+
+  if ((ip_dst = create_exclusive(dst, T_FILE, 0, 0)) == 0)
+  {
+    iunlockput(ip_src);
+    end_op();
+    return -1;
+  }
+
+  if (iclone(ip_src, ip_dst) < 0)
+  {
+    iunlockput(ip_dst);
+    iunlockput(ip_src);
+    end_op();
+    return -1;
+  }
+
+  iunlockput(ip_dst);
+  iunlockput(ip_src);
+  end_op();
   return 0;
 }
 
@@ -363,6 +410,39 @@ static struct inode *create(char *path, char type, short major, short minor)
 
   iunlockput(dp);
   
+  return ip;
+}
+
+static struct inode *create_exclusive(char *path, char type, short major, short minor)
+{
+  struct inode *ip, *dp;
+  char name[DIRSIZ];
+
+  if ((dp = nameiparent(path, name)) == 0)
+    return 0;
+
+  ilock(dp);
+
+  if ((ip = dirlookup(dp, name, 0)) != 0)
+  {
+    iput(ip);
+    iunlockput(dp);
+    return 0;
+  }
+
+  if ((ip = ialloc(dp->dev, type)) == 0)
+    panic("create_exclusive: ialloc");
+  ilock(ip);
+  ip->major = major;
+  ip->minor = minor;
+  ip->nlink = 1;
+  ip->type = type;
+  iupdate(ip);
+
+  if (dirlink(dp, name, ip->inum) < 0)
+    panic("create_exclusive: dirlink");
+
+  iunlockput(dp);
   return ip;
 }
 
