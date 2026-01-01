@@ -5,6 +5,8 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
+#include "proc.h"
 
 /*
  * the kernel's page table.
@@ -428,6 +430,37 @@ void uvmclear(pagetable_t pagetable, uint64 va)
   *pte &= ~PTE_U;
 }
 
+static int
+ensure_user_page(pagetable_t pagetable, uint64 va, int cause)
+{
+  struct proc *p = myproc();
+  if (p == 0 || p->pagetable != pagetable)
+    return -1;
+
+  int mmret = mmap_handler(va, cause);
+  if (mmret == 0)
+    return 0;
+  if (mmret < 0)
+    return -1;
+
+  if (PGROUNDUP(p->trapframe->sp) - 1 < va && va < p->sz)
+  {
+    char *pa = kalloc();
+    if (pa == 0)
+      return -1;
+    memset(pa, 0, PGSIZE);
+    if (mappages(pagetable, PGROUNDDOWN(va), PGSIZE, (uint64)pa,
+                 PTE_R | PTE_W | PTE_X | PTE_U) != 0)
+    {
+      kfree(pa);
+      return -1;
+    }
+    return 0;
+  }
+
+  return -1;
+}
+
 // Copy from kernel to user.
 // Copy len bytes from src to virtual address dstva in a given page table.
 // Return 0 on success, -1 on error.
@@ -439,6 +472,12 @@ int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
   {
     va0 = PGROUNDDOWN(dstva);
     pa0 = walkaddr(pagetable, va0);
+    if (pa0 == 0)
+    {
+      if (ensure_user_page(pagetable, va0, 15) < 0)
+        return -1;
+      pa0 = walkaddr(pagetable, va0);
+    }
     // 处理COW页面的情况
     if (cowpage(pagetable, va0) == 0)
     {
@@ -472,6 +511,12 @@ int copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
     va0 = PGROUNDDOWN(srcva);
     pa0 = walkaddr(pagetable, va0);
     if (pa0 == 0)
+    {
+      if (ensure_user_page(pagetable, va0, 13) < 0)
+        return -1;
+      pa0 = walkaddr(pagetable, va0);
+    }
+    if (pa0 == 0)
       return -1;
     n = PGSIZE - (srcva - va0);
     if (n > len)
@@ -500,6 +545,12 @@ int copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   {
     va0 = PGROUNDDOWN(srcva);
     pa0 = walkaddr(pagetable, va0);
+    if (pa0 == 0)
+    {
+      if (ensure_user_page(pagetable, va0, 13) < 0)
+        return -1;
+      pa0 = walkaddr(pagetable, va0);
+    }
     if (pa0 == 0)
       return -1;
     n = PGSIZE - (srcva - va0);

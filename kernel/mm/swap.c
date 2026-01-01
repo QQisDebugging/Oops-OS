@@ -7,6 +7,7 @@
 #include "fs.h"
 #include "buf.h"
 #include "proc.h"
+#include "fcntl.h"
 
 extern struct superblock sb;
 
@@ -84,13 +85,14 @@ swapinit(void)
 }
 
 static int
-vma_contains(struct proc *p, uint64 va)
+vma_skip_swap(struct proc *p, uint64 va)
 {
   for (int i = 0; i < NVMA; i++) {
     if (p->vma[i].used &&
         p->vma[i].addr <= va &&
         va < p->vma[i].addr + p->vma[i].len) {
-      return 1;
+      // Only skip MAP_SHARED pages to preserve file-backed semantics.
+      return (p->vma[i].flags == MAP_SHARED);
     }
   }
   return 0;
@@ -112,9 +114,26 @@ swapout(void)
   start = hand_va;
   release(&swaplock);
 
-  for (int pass = 0; pass < 2; pass++) {
-    uint64 begin = (pass == 0) ? PGROUNDDOWN(start) : 0;
-    uint64 end = (pass == 0) ? p->sz : PGROUNDDOWN(start);
+  uint64 limit = PGROUNDDOWN(start);
+  if (limit > p->sz)
+    limit = p->sz;
+  for (int pass = 0; pass < 3; pass++) {
+    uint64 begin;
+    uint64 end;
+    int ignore_a = 0;
+    if (pass == 0) {
+      begin = PGROUNDDOWN(start);
+      if (begin > p->sz)
+        begin = p->sz;
+      end = p->sz;
+    } else if (pass == 1) {
+      begin = 0;
+      end = limit;
+    } else {
+      begin = 0;
+      end = p->sz;
+      ignore_a = 1;
+    }
 
     for (uint64 va = begin; va < end; va += PGSIZE) {
       pte_t *pte = walk(p->pagetable, va, 0);
@@ -124,8 +143,14 @@ swapout(void)
         continue;
       if ((*pte & PTE_U) == 0)
         continue;
-      if (vma_contains(p, va))
+      if (vma_skip_swap(p, va))
         continue;
+      if (!ignore_a && (*pte & PTE_A))
+      {
+        *pte &= ~PTE_A;
+        sfence_vma();
+        continue;
+      }
 
       uint64 pa = PTE2PA(*pte);
       if (krefcnt((void *)pa) != 1)

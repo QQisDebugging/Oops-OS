@@ -42,36 +42,37 @@ void *shmgetat(uint64 key, uint64 num)
     pagetable_t pagetable;
     void *phyaddr[MAX_SHM_PGNUM];
     uint64 shm = 0;
+    struct proc *p = myproc();
 
     // 检查输入是否合法
     if (key < 0 || key >= 8 || num < 0 || MAX_SHM_PGNUM < num)
         return (void *)-1;
 
     acquire(&shmlock);
-    pagetable = proc->pagetable; // 获取当前进程的页表
-    shm = proc->shm;
+    pagetable = p->pagetable; // 获取当前进程的页表
+    shm = p->shm;
 
     // 情况1：如果当前进程已经映射了该key的共享内存，直接返回地址
-    if (proc->shmkeymask >> key & 1)
+    if (p->shmkeymask >> key & 1)
     {
 
         // printf("qingkuang1\n");
         // release(&shmlock);
-        // return proc->shmva[key];
+        // return p->shmva[key];
     }
 
     // 情况2：如果系统还未创建此key对应的共享内存，则分配内存并映射
     if (shmtab[key].refcount == 0)
     {
         // printf("qingkuang2\n");
-        shm = allocshm(pagetable, shm, shm - num * PGSIZE, proc->sz, phyaddr);
+        shm = allocshm(pagetable, shm, shm - num * PGSIZE, p->sz, phyaddr);
         if (shm == 0)
         {
             release(&shmlock);
             return (void *)-1;
         }
         // 新分配的内存映射到进程空间
-        proc->shmva[key] = (void *)shm;
+        p->shmva[key] = (void *)shm;
         shmadd(key, num, phyaddr); // 将新内存区信息填入shmtab[8]数组
     }
     else
@@ -85,19 +86,19 @@ void *shmgetat(uint64 key, uint64 num)
 
         num = shmtab[key].pagenum;
         // mapshm方法新建映射
-        if ((shm = mapshm(pagetable, shm, shm, proc->sz, phyaddr)) == 0)
+        if ((shm = mapshm(pagetable, shm, shm, p->sz, phyaddr)) == 0)
         {
             release(&shmlock);
             return (void *)-1;
         }
 
-        proc->shmva[key] = (void *)shm;
+        p->shmva[key] = (void *)shm;
         shmtab[key].refcount++; // 引用计数+1
     }
 
-    proc->shm = shm;
-    proc->shmkeymask |= 1 << key; // 更新共享内存键的标志
-    // printf("proc->shmkeymask:%d\n", proc->shmkeymask);
+    p->shm = shm;
+    p->shmkeymask |= 1 << key; // 更新共享内存键的标志
+    // printf("p->shmkeymask:%d\n", p->shmkeymask);
     release(&shmlock);
     // printf("分配到shm:%d\n", shm);
     return (void *)shm; // 返回共享内存的地址
