@@ -62,3 +62,4 @@
 #define SYS_dmsgrcv 61
 #define SYS_fallocate 62
 #define SYS_fclone 63
+#define SYS_lseek 64

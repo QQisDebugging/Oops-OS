@@ -10,4 +10,9 @@
 #define PROT_EXEC 0x4
 #define MAP_SHARED 0x01
 #define MAP_PRIVATE 0x02
-#define O_NOFOLLOW 0x004     
+#define O_NOFOLLOW 0x004
+
+// lseek whence values
+#define SEEK_SET 0  // 从文件开头计算偏移
+#define SEEK_CUR 1  // 从当前位置计算偏移
+#define SEEK_END 2  // 从文件末尾计算偏移     

@@ -44,6 +44,13 @@ int geti(const char*,uint64);
 int recoveri(uint,uint64);
 int fallocate(int, int, int);
 int fclone(const char *, const char *);
+int lseek(int fd, int offset, int whence);
+
+// lseek whence values
+#define SEEK_SET 0  // 从文件开头计算偏移
+#define SEEK_CUR 1  // 从当前位置计算偏移
+#define SEEK_END 2  // 从文件末尾计算偏移
+
 // 信号量
 int sem_create(int);
 int sem_free(int);

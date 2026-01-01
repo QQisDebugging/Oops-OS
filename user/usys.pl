@@ -76,3 +76,4 @@ entry("clone");
 entry("join");
 entry("fallocate");
 entry("fclone");
+entry("lseek");
