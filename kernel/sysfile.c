@@ -1,4 +1,4 @@
-//
+﻿//
 // File-system system calls.
 // Mostly argument checking, since we don't trust
 // user code, and calls into file.c and fs.c.
@@ -147,6 +147,94 @@ sys_lseek(void)
 
   iunlock(f->ip);
   return newoff;
+}
+// truncate - 按路径截断文件到指定长度
+// 参数: path - 文件路径
+//       length - 目标长度
+// 返回: 成功返回0，失败返回-1
+uint64
+sys_truncate(void)
+{
+  char path[MAXPATH];
+  int length;
+  struct inode *ip;
+
+  if (argstr(0, path, MAXPATH) < 0 || argint(1, &length) < 0)
+    return -1;
+
+  if (length < 0)
+    return -1;
+
+  begin_op();
+  if ((ip = namei(path)) == 0) {
+    end_op();
+    return -1;
+  }
+
+  ilock(ip);
+
+  // 只支持普通文件
+  if (ip->type != T_FILE) {
+    iunlockput(ip);
+    end_op();
+    return -1;
+  }
+
+  // 截断或扩展文件
+  ip->size = (uint)length;
+  iupdate(ip);
+
+  iunlockput(ip);
+  end_op();
+  return 0;
+}
+
+// ftruncate - 按文件描述符截断文件到指定长度
+// 参数: fd - 文件描述符
+//       length - 目标长度
+// 返回: 成功返回0，失败返回-1
+uint64
+sys_ftruncate(void)
+{
+  struct file *f;
+  int length;
+
+  if (argfd(0, 0, &f) < 0 || argint(1, &length) < 0)
+    return -1;
+
+  if (length < 0)
+    return -1;
+
+  // 只支持普通文件
+  if (f->type != FD_INODE)
+    return -1;
+
+  // 检查是否可写
+  if (f->writable == 0)
+    return -1;
+
+  begin_op();
+  ilock(f->ip);
+
+  // 只支持普通文件类型
+  if (f->ip->type != T_FILE) {
+    iunlock(f->ip);
+    end_op();
+    return -1;
+  }
+
+  // 截断或扩展文件
+  f->ip->size = (uint)length;
+  iupdate(f->ip);
+
+  // 如果当前偏移量超过新大小，调整偏移量
+  if (f->off > (uint)length) {
+    f->off = (uint)length;
+  }
+
+  iunlock(f->ip);
+  end_op();
+  return 0;
 }
 
 uint64

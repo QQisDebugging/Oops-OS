@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+﻿#!/usr/bin/perl -w
 
 # Generate usys.S, the stubs for syscalls.
 
@@ -77,3 +77,5 @@ entry("join");
 entry("fallocate");
 entry("fclone");
 entry("lseek");
+entry("truncate");
+entry("ftruncate");
