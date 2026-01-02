@@ -195,6 +195,7 @@ UPROGS=\
 	$U/test/_pitest\
 	$U/test/_lseektest\
 	$U/test/_truncatetest\
+	$U/test/_renametest\
 	$U/program/_statistics
 
 

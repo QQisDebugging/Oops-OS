@@ -198,6 +198,7 @@ extern uint64 sys_fclone(void);
 extern uint64 sys_lseek(void);
 extern uint64 sys_truncate(void);
 extern uint64 sys_ftruncate(void);
+extern uint64 sys_rename(void);
 extern uint64 sys_rt_set(void);
 extern uint64 sys_rt_clear(void);
 static uint64 (*syscalls[])(void) = {
@@ -279,6 +280,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_lseek] sys_lseek,
     [SYS_truncate] sys_truncate,
     [SYS_ftruncate] sys_ftruncate,
+    [SYS_rename] sys_rename,
     [SYS_rt_set] sys_rt_set,
     [SYS_rt_clear] sys_rt_clear,
 };
@@ -361,6 +363,7 @@ static char *syscall_names[] = {
     [SYS_lseek] "sys_lseek",
     [SYS_truncate] "sys_truncate",
     [SYS_ftruncate] "sys_ftruncate",
+    [SYS_rename] "sys_rename",
     [SYS_rt_set] "sys_rt_set",
     [SYS_rt_clear] "sys_rt_clear",
 };

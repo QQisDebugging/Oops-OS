@@ -91,5 +91,6 @@ entry("thread_exit");
 entry("lseek");
 entry("truncate");
 entry("ftruncate");
+entry("rename");
 entry("rt_set");
 entry("rt_clear");

@@ -51,6 +51,7 @@ int fclone(const char *, const char *);
 int lseek(int fd, int offset, int whence);
 int truncate(const char *path, int length);
 int ftruncate(int fd, int length);
+int rename(const char *oldpath, const char *newpath);
 
 // lseek whence values
 #define SEEK_SET 0  // 从文件开头计算偏移
