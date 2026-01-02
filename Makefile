@@ -157,6 +157,7 @@ UPROGS=\
 	$U/test/_mmapswaptest\
 	$U/test/_swapperftest\
 	$U/test/_swapconctest\
+	$U/test/_swapthrashtest\
 	$U/test/_demandloadtest\
 	$U/program/_execve\
 	$U/program/_getparentpid\

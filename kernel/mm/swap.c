@@ -11,14 +11,21 @@
 #include "fcntl.h"
 
 extern struct superblock sb;
+extern uint ticks;
+extern struct spinlock tickslock;
 
 #define SWAP_BLOCKS_PER_PAGE (PGSIZE / BSIZE)
+#define SWAP_THRASH_WINDOW 20
+#define SWAP_THRASH_EVENTS 64
+#define SWAP_THRASH_SLEEP 2
 
 static struct spinlock swapmap_lock;
 static uint swapstart;
 static uint8 swapmap[SWAP_PAGES];
 static uint swap_hint;
 static int swapready;
+static uint swap_window_start;
+static uint swap_events;
 
 static int
 swap_alloc(void)
@@ -73,6 +80,26 @@ swap_read(uint64 slot, char *dst)
   }
 }
 
+static void
+swap_throttle(void)
+{
+  acquire(&tickslock);
+  uint now = ticks;
+  if (now - swap_window_start >= SWAP_THRASH_WINDOW) {
+    swap_window_start = now;
+    swap_events = 0;
+  }
+  swap_events++;
+  if (swap_events >= SWAP_THRASH_EVENTS) {
+    uint until = now + SWAP_THRASH_SLEEP;
+    while (ticks < until)
+      sleep(&ticks, &tickslock);
+    swap_window_start = ticks;
+    swap_events = 0;
+  }
+  release(&tickslock);
+}
+
 void
 swapinit(void)
 {
@@ -85,6 +112,8 @@ swapinit(void)
   initlock(&swapmap_lock, "swapmap");
   swap_hint = 0;
   swapready = 1;
+  swap_window_start = 0;
+  swap_events = 0;
 }
 
 static struct vm_area *
@@ -177,6 +206,7 @@ swapout(void)
             if (next >= sz)
               next = 0;
             p->swap_hand = next;
+            swap_throttle();
             return 0;
           }
 
@@ -197,6 +227,7 @@ swapout(void)
           if (next >= sz)
             next = 0;
           p->swap_hand = next;
+          swap_throttle();
           return 0;
         }
       }
@@ -236,6 +267,7 @@ swapin(pagetable_t pagetable, uint64 va)
   flags = (flags & ~PTE_S) | PTE_V;
   *pte = PA2PTE(mem) | flags;
   sfence_vma();
+  swap_throttle();
 
   return 0;
 }
