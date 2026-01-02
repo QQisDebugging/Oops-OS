@@ -884,6 +884,8 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
 {
   uint tot, m;
   struct buf *bp;
+  uint blkaddr;
+  static char zeros[BSIZE];
 
   if(off > ip->size || off + n < off)
     return 0;
@@ -891,13 +893,20 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
     n = ip->size - off;
 
   for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
-    bp = bread(ip->dev, bmap(ip, off/BSIZE, 0));
+    blkaddr = bmap_nalloc(ip, off/BSIZE);
     m = min(n - tot, BSIZE - off%BSIZE);
-    if(either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
+    if(blkaddr == 0){
+      // Sparse hole: return zeros without reading disk.
+      if(either_copyout(user_dst, dst, zeros + (off % BSIZE), m) == -1)
+        break;
+    } else {
+      bp = bread(ip->dev, blkaddr);
+      if(either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
+        brelse(bp);
+        break;
+      }
       brelse(bp);
-      break;
     }
-    brelse(bp);
   }
   return tot;
 }
@@ -956,6 +965,98 @@ falloc(struct inode *ip, uint startb, uint endb, uint newsize, int keep_size)
     ip->size = newsize;
     need_update = 1;
   }
+  if(need_update)
+    iupdate(ip);
+  return 0;
+}
+
+// Punch a hole in the file, releasing blocks in [startb, endb).
+// File size remains unchanged; reading the hole returns zeros.
+// Caller must hold ip->lock.
+int
+ipunch(struct inode *ip, uint startb, uint endb)
+{
+  uint bn;
+  struct buf *bp;
+  uint *a;
+  int need_update = 0;
+
+  if(ip->type != T_FILE)
+    return -1;
+
+  for(bn = startb; bn < endb; bn++){
+    if(bn < NDIRECT){
+      // Direct block.
+      if(ip->addrs[bn]){
+        bfree(ip->dev, ip->addrs[bn]);
+        ip->addrs[bn] = 0;
+        need_update = 1;
+      }
+    } else if(bn < NDIRECT + NINDIRECT){
+      // Single indirect block.
+      uint idx = bn - NDIRECT;
+      if(ip->addrs[NDIRECT] == 0)
+        continue;
+      bp = bread(ip->dev, ip->addrs[NDIRECT]);
+      a = (uint*)bp->data;
+      if(a[idx]){
+        bfree(ip->dev, a[idx]);
+        a[idx] = 0;
+        log_write(bp);
+      }
+      // Check if entire indirect block is empty.
+      int empty = addr_block_empty(a, NINDIRECT);
+      brelse(bp);
+      if(empty){
+        bfree(ip->dev, ip->addrs[NDIRECT]);
+        ip->addrs[NDIRECT] = 0;
+        need_update = 1;
+      }
+    } else if(bn < NDIRECT + NINDIRECT + NDINDIRECT){
+      // Double indirect block.
+      uint dbn = bn - NDIRECT - NINDIRECT;
+      uint level2_idx = dbn / NADDR_PER_BLOCK;
+      uint level1_idx = dbn % NADDR_PER_BLOCK;
+
+      if(ip->addrs[NDIRECT + 1] == 0)
+        continue;
+      bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
+      a = (uint*)bp->data;
+      if(a[level2_idx] == 0){
+        brelse(bp);
+        continue;
+      }
+      uint l1_bno = a[level2_idx];
+      brelse(bp);
+
+      struct buf *bp1 = bread(ip->dev, l1_bno);
+      uint *a1 = (uint*)bp1->data;
+      if(a1[level1_idx]){
+        bfree(ip->dev, a1[level1_idx]);
+        a1[level1_idx] = 0;
+        log_write(bp1);
+      }
+      int empty1 = addr_block_empty(a1, NADDR_PER_BLOCK);
+      brelse(bp1);
+
+      if(empty1){
+        // Free level-1 indirect block.
+        bfree(ip->dev, l1_bno);
+        bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
+        a = (uint*)bp->data;
+        a[level2_idx] = 0;
+        log_write(bp);
+        int empty2 = addr_block_empty(a, NADDR_PER_BLOCK);
+        brelse(bp);
+        if(empty2){
+          bfree(ip->dev, ip->addrs[NDIRECT + 1]);
+          ip->addrs[NDIRECT + 1] = 0;
+          need_update = 1;
+        }
+      }
+    }
+  }
+
   if(need_update)
     iupdate(ip);
   return 0;

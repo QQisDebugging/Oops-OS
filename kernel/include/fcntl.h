@@ -4,6 +4,7 @@
 #define O_CREATE 0x200
 #define O_TRUNC 0x400
 #define FALLOC_KEEP_SIZE 0x001
+#define FALLOC_FL_PUNCH_HOLE 0x002  // 释放指定范围的块（稀疏文件打洞）
 #define PROT_NONE 0x0
 #define PROT_READ 0x1
 #define PROT_WRITE 0x2

@@ -46,13 +46,17 @@ int connect(uint32, uint16, uint16);
 //恢复被删除的文件
 int geti(const char*,uint64);
 int recoveri(uint,uint64);
-int fallocate(int, int, int);
+int fallocate(int fd, int offset, int len, int flags);
 int fclone(const char *, const char *);
 int lseek(int fd, int offset, int whence);
 int truncate(const char *path, int length);
 int ftruncate(int fd, int length);
 int rename(const char *oldpath, const char *newpath);
 int dedup(const char *srcpath, const char *dstpath);
+
+// fallocate flags
+#define FALLOC_KEEP_SIZE     0x001
+#define FALLOC_FL_PUNCH_HOLE 0x002
 
 // lseek whence values
 #define SEEK_SET 0  // 从文件开头计算偏移

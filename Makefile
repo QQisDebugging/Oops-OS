@@ -198,6 +198,7 @@ UPROGS=\
 	$U/test/_truncatetest\
 	$U/test/_renametest\
 	$U/test/_deduptest\
+	$U/test/_punchtest\
 	$U/program/_statistics
 
 

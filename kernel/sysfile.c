@@ -245,21 +245,51 @@ uint64
 sys_fallocate(void)
 {
   struct file *f;
-  int size;
+  int offset;
+  int len;
   int flags;
 
-  if (argfd(0, 0, &f) < 0 || argint(1, &size) < 0 || argint(2, &flags) < 0)
+  if (argfd(0, 0, &f) < 0 || argint(1, &offset) < 0 || argint(2, &len) < 0 || argint(3, &flags) < 0)
     return -1;
-  if (size < 0)
+  if (offset < 0 || len < 0)
     return -1;
-  if (flags & ~FALLOC_KEEP_SIZE)
+  if (flags & ~(FALLOC_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
     return -1;
   if (f->type != FD_INODE || f->ip->type != T_FILE)
     return -1;
   if (f->writable == 0)
     return -1;
 
-  uint target = (uint)size;
+  // PUNCH_HOLE mode: release blocks in [offset, offset+len).
+  if (flags & FALLOC_FL_PUNCH_HOLE) {
+    uint startb = offset / BSIZE;
+    uint endb = (offset + len + BSIZE - 1) / BSIZE;
+    uint maxblocks = (MAXOPBLOCKS - 1 - 2) / 2;
+    if (maxblocks < 1)
+      maxblocks = 1;
+
+    uint b = startb;
+    while (b < endb) {
+      uint chunk = endb - b;
+      if (chunk > maxblocks)
+        chunk = maxblocks;
+
+      begin_op();
+      ilock(f->ip);
+      if (ipunch(f->ip, b, b + chunk) < 0) {
+        iunlock(f->ip);
+        end_op();
+        return -1;
+      }
+      iunlock(f->ip);
+      end_op();
+      b += chunk;
+    }
+    return 0;
+  }
+
+  // Pre-allocation mode.
+  uint target = (uint)(offset + len);
 
   ilock(f->ip);
   uint cur_size = f->ip->size;
