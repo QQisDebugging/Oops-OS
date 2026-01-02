@@ -449,6 +449,24 @@ isdirempty(struct inode *dp)
   return 1;
 }
 
+// Update directory's ".." entry to point to newparent.
+// Caller must hold dir->lock.
+static int
+set_dotdot(struct inode *dir, uint newparent)
+{
+  struct dirent de;
+
+  // ".." is the second dirent after "." in xv6-style directories.
+  if(readi(dir, 0, (uint64)&de, sizeof(de), sizeof(de)) != sizeof(de))
+    return -1;
+  if(namecmp(de.name, "..") != 0)
+    return -1;
+  de.inum = newparent;
+  if(writei(dir, 0, (uint64)&de, sizeof(de), sizeof(de)) != sizeof(de))
+    return -1;
+  return 0;
+}
+
 uint64
 sys_unlink(void)
 {
@@ -509,8 +527,8 @@ bad:
   return -1;
 }
 
-// rename - 重命名（或移动）文件。
-// 说明：目前仅支持重命名非目录项（T_FILE/T_DEVICE/T_SYMLINK）。
+// rename - 重命名（或移动）路径。
+// 说明：支持非目录项 rename；目录仅支持重命名/移动到一个不存在的目标名（不支持覆盖已有目录项）。
 // 语义：
 // - new 已存在且为非目录项：覆盖 new（原 inode nlink--）。
 // - new 已存在且指向同一 inode：等价于 unlink(old)。
@@ -530,6 +548,7 @@ sys_rename(void)
   int ip_locked = 0;
   int ip2_locked = 0;
   int same_parent = 0;
+  int isdir = 0;
 
   if(argstr(0, old, MAXPATH) < 0 || argstr(1, new, MAXPATH) < 0)
     return -1;
@@ -572,13 +591,16 @@ sys_rename(void)
     goto out;
   ilock(ip);
   ip_locked = 1;
-  if(ip->type == T_DIR)
-    goto out;
+  isdir = (ip->type == T_DIR);
 
   ip2 = dirlookup(newdp, newname, &off_new);
   if(ip2){
     ilock(ip2);
     ip2_locked = 1;
+    // Directory renames do not support overwriting an existing entry.
+    if(isdir)
+      goto out;
+    // File renames do not support overwriting a directory.
     if(ip2->type == T_DIR)
       goto out;
 
@@ -620,6 +642,18 @@ sys_rename(void)
     // Different parent: need a new directory entry.
     if(dirlink(newdp, newname, ip->inum) < 0)
       goto out;
+
+    if(isdir){
+      // Moving a directory changes parent link counts and "..".
+      newdp->nlink++;
+      iupdate(newdp);
+      olddp->nlink--;
+      iupdate(olddp);
+
+      if(set_dotdot(ip, newdp->inum) < 0)
+        goto out;
+      iupdate(ip);
+    }
   }
 
   // Clear old directory entry.

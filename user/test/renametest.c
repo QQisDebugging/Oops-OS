@@ -170,6 +170,53 @@ test_cross_dir_move(void)
 }
 
 static void
+test_dir_rename_move(void)
+{
+  printf("test_dir_rename_move...\n");
+
+  // clean
+  unlink("b/c/file");
+  unlink("b/c");
+  unlink("b");
+  unlink("c/file");
+  unlink("c");
+  unlink("a/file");
+  unlink("a");
+
+  if(mkdir("a") < 0)
+    fail("mkdir a");
+  int fd = open("a/file", O_CREATE | O_RDWR);
+  if(fd < 0)
+    fail("create a/file");
+  write_all(fd, "D");
+  close(fd);
+
+  // same-parent rename: a -> c
+  if(rename("a", "c") < 0)
+    fail("rename dir a->c");
+  fd = open("c/file", O_RDONLY);
+  if(fd < 0)
+    fail("open c/file");
+  close(fd);
+
+  if(mkdir("b") < 0)
+    fail("mkdir b");
+
+  // cross-parent move: c -> b/c
+  if(rename("c", "b/c") < 0)
+    fail("move dir c -> b/c");
+  fd = open("b/c/file", O_RDONLY);
+  if(fd < 0)
+    fail("open b/c/file");
+  close(fd);
+
+  unlink("b/c/file");
+  unlink("b/c");
+  unlink("b");
+  printf("test_dir_rename_move passed\n");
+}
+
+static void
 test_failures(void)
 {
   int r;
@@ -211,6 +258,7 @@ main(void)
   test_basic_rename();
   test_overwrite_rename();
   test_cross_dir_move();
+  test_dir_rename_move();
   test_failures();
   printf("renametest: all tests passed!\n");
   exit(0);
