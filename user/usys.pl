@@ -92,3 +92,4 @@ entry("lseek");
 entry("truncate");
 entry("ftruncate");
 entry("rename");
+entry("dedup");

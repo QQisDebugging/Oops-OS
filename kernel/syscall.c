@@ -199,6 +199,7 @@ extern uint64 sys_lseek(void);
 extern uint64 sys_truncate(void);
 extern uint64 sys_ftruncate(void);
 extern uint64 sys_rename(void);
+extern uint64 sys_dedup(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -279,6 +280,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_truncate] sys_truncate,
     [SYS_ftruncate] sys_ftruncate,
     [SYS_rename] sys_rename,
+    [SYS_dedup] sys_dedup,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -360,6 +362,7 @@ static char *syscall_names[] = {
     [SYS_truncate] "sys_truncate",
     [SYS_ftruncate] "sys_ftruncate",
     [SYS_rename] "sys_rename",
+    [SYS_dedup] "sys_dedup",
 };
 void syscall(void)
 {
