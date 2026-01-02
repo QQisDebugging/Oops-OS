@@ -141,6 +141,9 @@ int wait(uint64);
 void wakeup(void *);
 void wakeupOneProc(void *chan); // 信号量机制需要
 void yield(void);
+void pi_donate(int owner_pid, int donated_prio);
+void pi_recalc(int owner_pid);
+int deadlock_detect(void *chan);
 int either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void procdump(void);
@@ -148,6 +151,10 @@ int cps(void);
 void procnum(uint64 *dst);
 int mlfq_tick(void);
 void mlfq_boost(uint);
+int rt_set(int pid, int period, int runtime, int deadline);
+int rt_clear(int pid);
+int rt_tick(void);
+int rt_should_preempt(void);
 int clone(uint64 ,uint64 ,uint64 );
 int join(uint64);
 // swtch.S
@@ -169,6 +176,8 @@ void acquiresleep(struct sleeplock *);
 void releasesleep(struct sleeplock *);
 int holdingsleep(struct sleeplock *);
 void initsleeplock(struct sleeplock *, char *);
+int sleeplock_max_waiter_for_pid(int pid);
+int sleeplock_owner(void *chan);
 
 // string.c
 int memcmp(const void *, const void *, uint);

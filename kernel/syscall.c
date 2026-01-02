@@ -200,6 +200,8 @@ extern uint64 sys_truncate(void);
 extern uint64 sys_ftruncate(void);
 extern uint64 sys_rename(void);
 extern uint64 sys_dedup(void);
+extern uint64 sys_rt_set(void);
+extern uint64 sys_rt_clear(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -281,6 +283,8 @@ static uint64 (*syscalls[])(void) = {
     [SYS_ftruncate] sys_ftruncate,
     [SYS_rename] sys_rename,
     [SYS_dedup] sys_dedup,
+    [SYS_rt_set] sys_rt_set,
+    [SYS_rt_clear] sys_rt_clear,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -363,6 +367,8 @@ static char *syscall_names[] = {
     [SYS_ftruncate] "sys_ftruncate",
     [SYS_rename] "sys_rename",
     [SYS_dedup] "sys_dedup",
+    [SYS_rt_set] "sys_rt_set",
+    [SYS_rt_clear] "sys_rt_clear",
 };
 void syscall(void)
 {
@@ -387,5 +393,4 @@ void syscall(void)
     p->trapframe->a0 = -1;
   }
 }
-
 

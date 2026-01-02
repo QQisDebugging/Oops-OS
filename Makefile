@@ -186,11 +186,14 @@ UPROGS=\
 	$U/test/_semtest\
 	$U/test/_semandtest\
 	$U/test/_semsettest\
+	$U/test/_deadlocktest\
 	$U/test/_dmsgtest\
 	$U/test/_monitortest\
 	$U/test/_threadtest\
 	$U/test/_cstest\
 	$U/test/_schedtest\
+	$U/test/_llftest\
+	$U/test/_pitest\
 	$U/test/_lseektest\
 	$U/test/_truncatetest\
 	$U/test/_renametest\
@@ -239,7 +242,7 @@ qemu: $K/kernel fs.img
 qemu-gdb: $K/kernel .gdbinit fs.img
 	@echo "*** Now run 'gdb' in another window." 1>&2
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
-SERVERPORT = $(shell expr `id -u` % 5000 + 25099)
+SERVERPORT = $(shell expr `id -u` % 5000 + 26099)
 
 server:
 	python3 ./user/test/server.py $(SERVERPORT)

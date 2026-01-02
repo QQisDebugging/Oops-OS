@@ -24,6 +24,27 @@ uint64 sys_setPriority(void)
   return setPriority(pid, priority);
 }
 
+uint64 sys_rt_set(void)
+{
+  int pid, period, runtime, deadline;
+  if (argint(0, &pid) < 0 || argint(1, &period) < 0 ||
+      argint(2, &runtime) < 0 || argint(3, &deadline) < 0)
+  {
+    return -1;
+  }
+  return rt_set(pid, period, runtime, deadline);
+}
+
+uint64 sys_rt_clear(void)
+{
+  int pid;
+  if (argint(0, &pid) < 0)
+  {
+    return -1;
+  }
+  return rt_clear(pid);
+}
+
 uint64
 sys_exit(void)
 {
@@ -291,8 +312,8 @@ int sys_sem_create()
     {
       sems[id].allocated = 1;
       sems[id].resource_count = n_sem; // 分配资源
+      sems[id].owner = 0;
       sem_used_count++;
-      printf("创建了 %d sem\n", id);
       release(&sems[id].lock);
       return id; // 返回信号量索引
     }
@@ -323,8 +344,8 @@ int sys_sem_free()
   }
   sems[id].allocated = 0;
   sems[id].resource_count = 0; // 清除资源计数
+  sems[id].owner = 0;
   sem_used_count--;
-  printf("释放 %d sem\n", id);
   release(&sems[id].lock);
 
   return 0;
@@ -347,12 +368,27 @@ int sys_sem_p()
     return -1;
   }
 
+  int pid = myproc()->pid;
   sems[id].resource_count--;
   if (sems[id].resource_count < 0)
   {
+    if (deadlock_detect(&sems[id]))
+    {
+      sems[id].resource_count++;
+      release(&sems[id].lock);
+      return -1;
+    }
     sems[id].waiters++;
     sleep(&sems[id], &sems[id].lock); // 使用信号量锁进行休眠
     sems[id].waiters--;
+  }
+  if (sems[id].resource_count == 0)
+  {
+    sems[id].owner = pid;
+  }
+  else if (sems[id].resource_count > 0)
+  {
+    sems[id].owner = 0;
   }
   release(&sems[id].lock); // 释放信号量锁
   return 0;
@@ -438,12 +474,25 @@ int sys_sem_p_multi()
       for (int i = 0; i < n; i++)
       {
         sems[ids[i]].resource_count--;
+        if (sems[ids[i]].resource_count == 0)
+          sems[ids[i]].owner = myproc()->pid;
+        else if (sems[ids[i]].resource_count > 0)
+          sems[ids[i]].owner = 0;
       }
       for (int i = 0; i < n; i++)
       {
         release(&sems[ids[i]].lock);
       }
       return 0;
+    }
+
+    if (deadlock_detect(&sems[wait_id]))
+    {
+      for (int i = 0; i < n; i++)
+      {
+        release(&sems[ids[i]].lock);
+      }
+      return -1;
     }
 
     for (int i = 0; i < n; i++)
@@ -494,6 +543,7 @@ int sys_sem_v()
   }
 
   sems[id].resource_count++;
+  sems[id].owner = 0;
   if (sems[id].resource_count <= 0 || sems[id].waiters > 0)
   {
     wakeupOneProc(&sems[id]); // 唤醒一个等待的进程
@@ -553,12 +603,14 @@ int sys_semset_create()
         semsets[id].sems[i].allocated = 1;
         semsets[id].sems[i].resource_count = vals[i];
         semsets[id].sems[i].waiters = 0;
+        semsets[id].sems[i].owner = 0;
       }
       for (int i = n; i < SEMSET_MAX_SIZE; i++)
       {
         semsets[id].sems[i].allocated = 0;
         semsets[id].sems[i].resource_count = 0;
         semsets[id].sems[i].waiters = 0;
+        semsets[id].sems[i].owner = 0;
       }
       release(&semsets[id].lock);
       return id;
@@ -604,6 +656,7 @@ int sys_semset_free()
     set->sems[i].allocated = 0;
     set->sems[i].resource_count = 0;
     set->sems[i].waiters = 0;
+    set->sems[i].owner = 0;
     release(&set->sems[i].lock);
   }
 
@@ -643,9 +696,23 @@ int sys_semset_p()
   s->resource_count--;
   if (s->resource_count < 0)
   {
+    if (deadlock_detect(s))
+    {
+      s->resource_count++;
+      release(&s->lock);
+      return -1;
+    }
     s->waiters++;
     sleep(s, &s->lock);
     s->waiters--;
+  }
+  if (s->resource_count == 0)
+  {
+    s->owner = myproc()->pid;
+  }
+  else if (s->resource_count > 0)
+  {
+    s->owner = 0;
   }
   release(&s->lock);
   return 0;
@@ -677,6 +744,7 @@ int sys_semset_v()
   }
 
   s->resource_count++;
+  s->owner = 0;
   if (s->resource_count <= 0 || s->waiters > 0)
   {
     wakeupOneProc(s);
@@ -778,12 +846,25 @@ int sys_semset_p_multi()
       for (int i = 0; i < n; i++)
       {
         set->sems[idxs[i]].resource_count--;
+        if (set->sems[idxs[i]].resource_count == 0)
+          set->sems[idxs[i]].owner = myproc()->pid;
+        else if (set->sems[idxs[i]].resource_count > 0)
+          set->sems[idxs[i]].owner = 0;
       }
       for (int i = 0; i < n; i++)
       {
         release(&set->sems[idxs[i]].lock);
       }
       return 0;
+    }
+
+    if (deadlock_detect(&set->sems[wait_idx]))
+    {
+      for (int i = 0; i < n; i++)
+      {
+        release(&set->sems[idxs[i]].lock);
+      }
+      return -1;
     }
 
     for (int i = 0; i < n; i++)
@@ -827,6 +908,7 @@ int sys_mon_create()
       m->locked = 0;
       m->owner = 0;
       m->waiters = 0;
+      m->pi_waiter_max = 0;
       for (int i = 0; i < MONITOR_COND_MAX; i++)
       {
         m->conds[i].allocated = 0;
@@ -864,6 +946,7 @@ int sys_mon_free()
     }
   }
   m->allocated = 0;
+  m->pi_waiter_max = 0;
   release(&m->lock);
   return 0;
 }
@@ -892,12 +975,25 @@ int sys_mon_enter()
       release(&m->lock);
       return -1;
     }
+    if (deadlock_detect(m))
+    {
+      release(&m->lock);
+      return -1;
+    }
+    int donor = myproc()->priority;
+    if (myproc()->pi_boost > donor)
+      donor = myproc()->pi_boost;
+    if (donor > m->pi_waiter_max)
+      m->pi_waiter_max = donor;
+    if (m->owner > 0)
+      pi_donate(m->owner, donor);
     m->waiters++;
     sleep(m, &m->lock);
     m->waiters--;
   }
   m->locked = 1;
   m->owner = pid;
+  m->pi_waiter_max = 0;
   release(&m->lock);
   return 0;
 }
@@ -921,8 +1017,10 @@ int sys_mon_exit()
   }
   m->locked = 0;
   m->owner = 0;
+  m->pi_waiter_max = 0;
   wakeupOneProc(m);
   release(&m->lock);
+  pi_recalc(pid);
   return 0;
 }
 

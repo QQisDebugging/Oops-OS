@@ -2679,8 +2679,18 @@ int run(void f(char *), char *s)
 {
   int pid;
   int xstatus;
+  int quiet = 1;
+  int p[2];
 
   printf("test %s: ", s);
+  if (quiet)
+  {
+    if (pipe(p) < 0)
+    {
+      printf("runtest: pipe error\n");
+      exit(1);
+    }
+  }
   if ((pid = fork()) < 0)
   {
     printf("runtest: fork error\n");
@@ -2688,11 +2698,28 @@ int run(void f(char *), char *s)
   }
   if (pid == 0)
   {
+    if (quiet)
+    {
+      close(p[0]);
+      close(1);
+      close(2);
+      dup(p[1]);
+      dup(p[1]);
+      close(p[1]);
+    }
     f(s);
     exit(0);
   }
   else
   {
+    if (quiet)
+    {
+      close(p[1]);
+      char buf[256];
+      while (read(p[0], buf, sizeof(buf)) > 0)
+        ;
+      close(p[0]);
+    }
     wait(&xstatus);
     if (xstatus != 0)
       printf("FAILED\n");
@@ -2704,7 +2731,7 @@ int run(void f(char *), char *s)
 
 void semtest_run(char *s)
 {
-  char *argv[] = {"semtest", 0};
+  char *argv[] = {"semtest", "-q", 0};
   exec("semtest", argv);
   printf("%s: exec semtest failed\n", s);
   exit(1);
@@ -2712,7 +2739,7 @@ void semtest_run(char *s)
 
 void semandtest_run(char *s)
 {
-  char *argv[] = {"semandtest", 0};
+  char *argv[] = {"semandtest", "-q", 0};
   exec("semandtest", argv);
   printf("%s: exec semandtest failed\n", s);
   exit(1);
@@ -2720,9 +2747,17 @@ void semandtest_run(char *s)
 
 void semsettest_run(char *s)
 {
-  char *argv[] = {"semsettest", 0};
+  char *argv[] = {"semsettest", "-q", 0};
   exec("semsettest", argv);
   printf("%s: exec semsettest failed\n", s);
+  exit(1);
+}
+
+void deadlocktest_run(char *s)
+{
+  char *argv[] = {"deadlocktest", "-q", 0};
+  exec("deadlocktest", argv);
+  printf("%s: exec deadlocktest failed\n", s);
   exit(1);
 }
 
@@ -2750,19 +2785,19 @@ void threadtest_run(char *s)
   exit(1);
 }
 
-void schedtest_run(char *s)
-{
-  char *argv[] = {"schedtest", 0};
-  exec("schedtest", argv);
-  printf("%s: exec schedtest failed\n", s);
-  exit(1);
-}
-
 void monitortest_run(char *s)
 {
   char *argv[] = {"monitortest", 0};
   exec("monitortest", argv);
   printf("%s: exec monitortest failed\n", s);
+  exit(1);
+}
+
+void pitest_run(char *s)
+{
+  char *argv[] = {"pitest", 0};
+  exec("pitest", argv);
+  printf("%s: exec pitest failed\n", s);
   exit(1);
 }
 
@@ -2929,11 +2964,12 @@ int main(int argc, char *argv[])
       {semtest_run, "semtest"},
       {semandtest_run, "semandtest"},
       {semsettest_run, "semsettest"},
+      {deadlocktest_run, "deadlocktest"},
       {dmsgtest_run, "dmsgtest"},
       {threadtest_run, "threadtest"},
-      {schedtest_run, "schedtest"},
       {cstest_run, "cstest"},
       {monitortest_run, "monitortest"},
+      {pitest_run, "pitest"},
       {0, 0},
   };
 

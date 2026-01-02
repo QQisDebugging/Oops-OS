@@ -166,10 +166,17 @@ void usertrap(void)
       }
     }
 #if defined(SCHED_MLFQ)
-    if (mlfq_tick())
+    if (rt_tick())
+      yield();
+    else if (rt_should_preempt())
+      yield();
+    else if (mlfq_tick())
       yield();
 #else
-    yield();
+    if (rt_tick() || rt_should_preempt())
+      yield();
+    else
+      yield();
 #endif
   }
 
@@ -246,10 +253,17 @@ void kerneltrap()
   if (which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
   {
 #if defined(SCHED_MLFQ)
-    if (mlfq_tick())
+    if (rt_tick())
+      yield();
+    else if (rt_should_preempt())
+      yield();
+    else if (mlfq_tick())
       yield();
 #else
-    yield();
+    if (rt_tick() || rt_should_preempt())
+      yield();
+    else
+      yield();
 #endif
   }
 

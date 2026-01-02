@@ -143,8 +143,17 @@ struct proc
   int wait_time;            // 等待CPU的时间
   int cpu_time;             // CPU上运行的时间
   int dyn_priority;         // 动态优先级
+  int pi_boost;             // inherited priority boost
   int mlfq_level;           // MLFQ level (0 is highest)
   int mlfq_ticks;           // ticks consumed in current time slice
+  int rt_policy;            // real-time scheduling class
+  int rt_period;            // period in ticks
+  int rt_runtime;           // runtime budget in ticks
+  int rt_deadline;          // relative deadline in ticks
+  int rt_release;           // current period release tick
+  int rt_deadline_tick;     // absolute deadline tick
+  int rt_remaining;         // remaining runtime budget
+  int rt_misses;            // deadline miss count
   struct proc *pthread;     // 父线程
   void *ustack;             // 用户线程栈
   uint shm;        // 本进程共享内存区域的下边界

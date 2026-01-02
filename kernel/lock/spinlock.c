@@ -29,6 +29,7 @@ void initsem()
     sems[i].allocated = 0;      // 标记为未分配
     sems[i].resource_count = 0; // 初始化资源计数
     sems[i].waiters = 0;
+    sems[i].owner = 0;
   }
 }
 
@@ -45,6 +46,7 @@ void initsemset()
       semsets[i].sems[j].allocated = 0;
       semsets[i].sems[j].resource_count = 0;
       semsets[i].sems[j].waiters = 0;
+      semsets[i].sems[j].owner = 0;
     }
   }
 }
@@ -58,6 +60,7 @@ void initmonitor()
     monitors[i].locked = 0;
     monitors[i].owner = 0;
     monitors[i].waiters = 0;
+    monitors[i].pi_waiter_max = 0;
     for (int j = 0; j < MONITOR_COND_MAX; j++)
     {
       monitors[i].conds[j].allocated = 0;
@@ -151,4 +154,3 @@ void pop_off(void)
   if (c->noff == 0 && c->intena) // 如果当前所有锁已释放而且上锁之前是开中断
     intr_on();
 }
-

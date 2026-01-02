@@ -2,10 +2,13 @@
 #include "stat.h"
 #include "user/user.h"
 
+static int verbose = 1;
+
 static void
 fail(const char *msg)
 {
-  printf("semtest: %s\n", msg);
+  if (verbose)
+    printf("semtest: %s\n", msg);
   exit(1);
 }
 
@@ -162,12 +165,16 @@ test_many_increments(void)
 int
 main(int argc, char *argv[])
 {
+  if (argc > 1 && strcmp(argv[1], "-q") == 0)
+    verbose = 0;
+
   test_invalid_args();
   test_use_after_free();
   test_blocking_sem();
   test_free_waiter();
   test_multiple_waiters();
   test_many_increments();
-  printf("semtest: ok\n");
+  if (verbose)
+    printf("semtest: ok\n");
   exit(0);
 }

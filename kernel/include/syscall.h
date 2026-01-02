@@ -79,3 +79,5 @@
 #define SYS_ftruncate 78
 #define SYS_rename 79
 #define SYS_dedup 80
+#define SYS_rt_set 81
+#define SYS_rt_clear 82

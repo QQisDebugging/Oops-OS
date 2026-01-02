@@ -93,3 +93,5 @@ entry("truncate");
 entry("ftruncate");
 entry("rename");
 entry("dedup");
+entry("rt_set");
+entry("rt_clear");

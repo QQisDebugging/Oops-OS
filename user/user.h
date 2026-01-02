@@ -30,6 +30,8 @@ int cps(void);
 int trace(int);
 int sysinfo(struct sysinfo *);
 int setPriority(int pid, int priority);
+int rt_set(int pid, int period, int runtime, int deadline);
+int rt_clear(int pid);
 int execve(const char *path, char *argv[], char *envp[]);
 int getparentpid(void);
 int print_pgtable(void);

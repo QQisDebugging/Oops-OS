@@ -27,3 +27,5 @@
 #define MLFQ_SLICE_L1 2           // time slice for level 1
 #define MLFQ_SLICE_L2 4           // time slice for level 2
 #define MLFQ_SLICE_L3 8           // time slice for level 3
+#define SCHED_NORMAL 0            // normal scheduler class
+#define SCHED_RT_LLF 1            // real-time LLF scheduler class
