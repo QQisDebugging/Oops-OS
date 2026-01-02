@@ -192,6 +192,7 @@ UPROGS=\
 	$U/test/_schedtest\
 	$U/test/_lseektest\
 	$U/test/_truncatetest\
+	$U/test/_renametest\
 	$U/program/_statistics
 
 

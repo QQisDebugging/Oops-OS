@@ -509,6 +509,162 @@ bad:
   return -1;
 }
 
+// rename - 重命名（或移动）文件。
+// 说明：目前仅支持重命名非目录项（T_FILE/T_DEVICE/T_SYMLINK）。
+// 语义：
+// - new 已存在且为非目录项：覆盖 new（原 inode nlink--）。
+// - new 已存在且指向同一 inode：等价于 unlink(old)。
+// - old 与 new 同目录且 new 不存在：就地修改目录项名称（不需要新槽位）。
+uint64
+sys_rename(void)
+{
+  char old[MAXPATH], new[MAXPATH];
+  char oldname[DIRSIZ], newname[DIRSIZ];
+  struct inode *olddp = 0, *newdp = 0;
+  struct inode *ip = 0, *ip2 = 0;
+  struct dirent de;
+  uint off_old = 0, off_new = 0;
+  int ret = -1;
+  int olddp_locked = 0;
+  int newdp_locked = 0;
+  int ip_locked = 0;
+  int ip2_locked = 0;
+  int same_parent = 0;
+
+  if(argstr(0, old, MAXPATH) < 0 || argstr(1, new, MAXPATH) < 0)
+    return -1;
+  if(strncmp(old, new, MAXPATH) == 0)
+    return 0;
+
+  begin_op();
+
+  if((olddp = nameiparent(old, oldname)) == 0)
+    goto out;
+  if((newdp = nameiparent(new, newname)) == 0)
+    goto out;
+
+  // Cannot rename "." or "..".
+  if(namecmp(oldname, ".") == 0 || namecmp(oldname, "..") == 0 ||
+     namecmp(newname, ".") == 0 || namecmp(newname, "..") == 0)
+    goto out;
+  if(olddp->dev != newdp->dev)
+    goto out;
+
+  same_parent = (olddp == newdp);
+
+  // Lock parent inodes in a stable order to avoid deadlock.
+  if(same_parent){
+    ilock(olddp);
+    olddp_locked = 1;
+  } else if(olddp->inum < newdp->inum){
+    ilock(olddp);
+    olddp_locked = 1;
+    ilock(newdp);
+    newdp_locked = 1;
+  } else {
+    ilock(newdp);
+    newdp_locked = 1;
+    ilock(olddp);
+    olddp_locked = 1;
+  }
+
+  if((ip = dirlookup(olddp, oldname, &off_old)) == 0)
+    goto out;
+  ilock(ip);
+  ip_locked = 1;
+  if(ip->type == T_DIR)
+    goto out;
+
+  ip2 = dirlookup(newdp, newname, &off_new);
+  if(ip2){
+    ilock(ip2);
+    ip2_locked = 1;
+    if(ip2->type == T_DIR)
+      goto out;
+
+    // If new already refers to the same inode, just unlink old.
+    if(ip2->inum == ip->inum){
+      memset(&de, 0, sizeof(de));
+      if(writei(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+        panic("rename: clear old");
+      ip->nlink--;
+      iupdate(ip);
+      ret = 0;
+      goto out;
+    }
+
+    // Overwrite new's directory entry to point to ip.
+    if(readi(newdp, 0, (uint64)&de, off_new, sizeof(de)) != sizeof(de))
+      panic("rename: read new");
+    de.inum = ip->inum;
+    if(writei(newdp, 0, (uint64)&de, off_new, sizeof(de)) != sizeof(de))
+      panic("rename: write new");
+
+    // Drop the overwritten target inode link.
+    if(ip2->nlink < 1)
+      panic("rename: target nlink < 1");
+    ip2->nlink--;
+    iupdate(ip2);
+  } else {
+    // new doesn't exist.
+    if(same_parent){
+      // Rename in-place within the same directory.
+      if(readi(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+        panic("rename: read old");
+      memmove(de.name, newname, DIRSIZ);
+      if(writei(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+        panic("rename: write old");
+      ret = 0;
+      goto out;
+    }
+    // Different parent: need a new directory entry.
+    if(dirlink(newdp, newname, ip->inum) < 0)
+      goto out;
+  }
+
+  // Clear old directory entry.
+  memset(&de, 0, sizeof(de));
+  if(writei(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+    panic("rename: clear old");
+  ret = 0;
+
+out:
+  if(ip2){
+    if(ip2_locked)
+      iunlock(ip2);
+    iput(ip2);
+  }
+  if(ip){
+    if(ip_locked)
+      iunlock(ip);
+    iput(ip);
+  }
+
+  if(same_parent){
+    if(olddp){
+      if(olddp_locked)
+        iunlock(olddp);
+      iput(olddp);
+    }
+    if(newdp && newdp != olddp)
+      iput(newdp);
+  } else {
+    if(olddp){
+      if(olddp_locked)
+        iunlock(olddp);
+      iput(olddp);
+    }
+    if(newdp){
+      if(newdp_locked)
+        iunlock(newdp);
+      iput(newdp);
+    }
+  }
+
+  end_op();
+  return ret;
+}
+
 
 static struct inode *create(char *path, char type, short major, short minor)
 {
