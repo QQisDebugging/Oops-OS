@@ -198,6 +198,8 @@ extern uint64 sys_fclone(void);
 extern uint64 sys_lseek(void);
 extern uint64 sys_truncate(void);
 extern uint64 sys_ftruncate(void);
+extern uint64 sys_rename(void);
+extern uint64 sys_dedup(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -277,6 +279,8 @@ static uint64 (*syscalls[])(void) = {
     [SYS_lseek] sys_lseek,
     [SYS_truncate] sys_truncate,
     [SYS_ftruncate] sys_ftruncate,
+    [SYS_rename] sys_rename,
+    [SYS_dedup] sys_dedup,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -357,6 +361,8 @@ static char *syscall_names[] = {
     [SYS_lseek] "sys_lseek",
     [SYS_truncate] "sys_truncate",
     [SYS_ftruncate] "sys_ftruncate",
+    [SYS_rename] "sys_rename",
+    [SYS_dedup] "sys_dedup",
 };
 void syscall(void)
 {
@@ -368,7 +374,7 @@ void syscall(void)
   if (num > 0 && num < NELEM(syscalls) && syscalls[num])
   {
     p->trapframe->a0 = syscalls[num]();
-    if ((p->trace_mask & (1 << num)) != 0)
+    if (num < 64 && (p->trace_mask & (1ULL << num)) != 0)
     {
       syscall_name = syscall_names[num];
       printf("%d: syscall %s -> %d", p->pid, syscall_name, p->trapframe->a0);

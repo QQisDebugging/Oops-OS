@@ -77,3 +77,5 @@
 #define SYS_lseek 76
 #define SYS_truncate 77
 #define SYS_ftruncate 78
+#define SYS_rename 79
+#define SYS_dedup 80

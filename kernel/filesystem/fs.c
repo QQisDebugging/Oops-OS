@@ -561,6 +561,106 @@ bmap(struct inode *ip, uint bn, int for_write)
   return addr;
 }
 
+// Like bmap(), but does not allocate blocks.
+// Returns 0 if the block is not mapped.
+static uint
+bmap_nalloc(struct inode *ip, uint bn)
+{
+  uint addr;
+  struct buf *bp;
+  uint *a;
+
+  if(bn < NDIRECT)
+    return ip->addrs[bn];
+
+  bn -= NDIRECT;
+  if(bn < NINDIRECT){
+    if((addr = ip->addrs[NDIRECT]) == 0)
+      return 0;
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+    addr = a[bn];
+    brelse(bp);
+    return addr;
+  }
+
+  bn -= NINDIRECT;
+  if(bn < NDINDIRECT){
+    int level2_idx = bn / NADDR_PER_BLOCK;
+    int level1_idx = bn % NADDR_PER_BLOCK;
+    uint l1;
+
+    if((addr = ip->addrs[NDIRECT + 1]) == 0)
+      return 0;
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+    l1 = a[level2_idx];
+    brelse(bp);
+    if(l1 == 0)
+      return 0;
+
+    bp = bread(ip->dev, l1);
+    a = (uint*)bp->data;
+    addr = a[level1_idx];
+    brelse(bp);
+    return addr;
+  }
+
+  return 0;
+}
+
+// Set an existing block mapping to addr. Never allocates metadata blocks.
+// Returns: 1 if inode needs iupdate(), 0 if already logged, -1 on failure.
+static int
+bmap_set_existing(struct inode *ip, uint bn, uint addr)
+{
+  struct buf *bp;
+  uint *a;
+  uint b;
+
+  if(bn < NDIRECT){
+    ip->addrs[bn] = addr;
+    return 1;
+  }
+
+  bn -= NDIRECT;
+  if(bn < NINDIRECT){
+    if((b = ip->addrs[NDIRECT]) == 0)
+      return -1;
+    bp = bread(ip->dev, b);
+    a = (uint*)bp->data;
+    a[bn] = addr;
+    log_write(bp);
+    brelse(bp);
+    return 0;
+  }
+
+  bn -= NINDIRECT;
+  if(bn < NDINDIRECT){
+    int level2_idx = bn / NADDR_PER_BLOCK;
+    int level1_idx = bn % NADDR_PER_BLOCK;
+    uint l1;
+
+    if((b = ip->addrs[NDIRECT + 1]) == 0)
+      return -1;
+    bp = bread(ip->dev, b);
+    a = (uint*)bp->data;
+    l1 = a[level2_idx];
+    brelse(bp);
+    if(l1 == 0)
+      return -1;
+
+    bp = bread(ip->dev, l1);
+    a = (uint*)bp->data;
+    a[level1_idx] = addr;
+    log_write(bp);
+    brelse(bp);
+    return 0;
+  }
+
+  return -1;
+}
+
 // Truncate inode (discard contents).
 // Caller must hold ip->lock.
 void
@@ -784,6 +884,8 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
 {
   uint tot, m;
   struct buf *bp;
+  uint blkaddr;
+  static char zeros[BSIZE];
 
   if(off > ip->size || off + n < off)
     return 0;
@@ -791,13 +893,20 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
     n = ip->size - off;
 
   for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
-    bp = bread(ip->dev, bmap(ip, off/BSIZE, 0));
+    blkaddr = bmap_nalloc(ip, off/BSIZE);
     m = min(n - tot, BSIZE - off%BSIZE);
-    if(either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
+    if(blkaddr == 0){
+      // Sparse hole: return zeros without reading disk.
+      if(either_copyout(user_dst, dst, zeros + (off % BSIZE), m) == -1)
+        break;
+    } else {
+      bp = bread(ip->dev, blkaddr);
+      if(either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
+        brelse(bp);
+        break;
+      }
       brelse(bp);
-      break;
     }
-    brelse(bp);
   }
   return tot;
 }
@@ -856,6 +965,98 @@ falloc(struct inode *ip, uint startb, uint endb, uint newsize, int keep_size)
     ip->size = newsize;
     need_update = 1;
   }
+  if(need_update)
+    iupdate(ip);
+  return 0;
+}
+
+// Punch a hole in the file, releasing blocks in [startb, endb).
+// File size remains unchanged; reading the hole returns zeros.
+// Caller must hold ip->lock.
+int
+ipunch(struct inode *ip, uint startb, uint endb)
+{
+  uint bn;
+  struct buf *bp;
+  uint *a;
+  int need_update = 0;
+
+  if(ip->type != T_FILE)
+    return -1;
+
+  for(bn = startb; bn < endb; bn++){
+    if(bn < NDIRECT){
+      // Direct block.
+      if(ip->addrs[bn]){
+        bfree(ip->dev, ip->addrs[bn]);
+        ip->addrs[bn] = 0;
+        need_update = 1;
+      }
+    } else if(bn < NDIRECT + NINDIRECT){
+      // Single indirect block.
+      uint idx = bn - NDIRECT;
+      if(ip->addrs[NDIRECT] == 0)
+        continue;
+      bp = bread(ip->dev, ip->addrs[NDIRECT]);
+      a = (uint*)bp->data;
+      if(a[idx]){
+        bfree(ip->dev, a[idx]);
+        a[idx] = 0;
+        log_write(bp);
+      }
+      // Check if entire indirect block is empty.
+      int empty = addr_block_empty(a, NINDIRECT);
+      brelse(bp);
+      if(empty){
+        bfree(ip->dev, ip->addrs[NDIRECT]);
+        ip->addrs[NDIRECT] = 0;
+        need_update = 1;
+      }
+    } else if(bn < NDIRECT + NINDIRECT + NDINDIRECT){
+      // Double indirect block.
+      uint dbn = bn - NDIRECT - NINDIRECT;
+      uint level2_idx = dbn / NADDR_PER_BLOCK;
+      uint level1_idx = dbn % NADDR_PER_BLOCK;
+
+      if(ip->addrs[NDIRECT + 1] == 0)
+        continue;
+      bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
+      a = (uint*)bp->data;
+      if(a[level2_idx] == 0){
+        brelse(bp);
+        continue;
+      }
+      uint l1_bno = a[level2_idx];
+      brelse(bp);
+
+      struct buf *bp1 = bread(ip->dev, l1_bno);
+      uint *a1 = (uint*)bp1->data;
+      if(a1[level1_idx]){
+        bfree(ip->dev, a1[level1_idx]);
+        a1[level1_idx] = 0;
+        log_write(bp1);
+      }
+      int empty1 = addr_block_empty(a1, NADDR_PER_BLOCK);
+      brelse(bp1);
+
+      if(empty1){
+        // Free level-1 indirect block.
+        bfree(ip->dev, l1_bno);
+        bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
+        a = (uint*)bp->data;
+        a[level2_idx] = 0;
+        log_write(bp);
+        int empty2 = addr_block_empty(a, NADDR_PER_BLOCK);
+        brelse(bp);
+        if(empty2){
+          bfree(ip->dev, ip->addrs[NDIRECT + 1]);
+          ip->addrs[NDIRECT + 1] = 0;
+          need_update = 1;
+        }
+      }
+    }
+  }
+
   if(need_update)
     iupdate(ip);
   return 0;
@@ -928,6 +1129,66 @@ iclone(struct inode *src, struct inode *dst)
 
   iupdate(dst);
   return 0;
+}
+
+// Deduplicate identical data blocks from dst against src.
+// For each block where both files have an allocated block with identical
+// content, make dst reference src's block and free dst's original block.
+// Caller must hold both inode locks.
+// Returns the number of blocks newly shared, or -1 on error.
+int
+idedup(struct inode *src, struct inode *dst)
+{
+  uint bn;
+  uint nblocks;
+  int shared = 0;
+  int need_iupdate = 0;
+
+  if(src->type != T_FILE || dst->type != T_FILE)
+    return -1;
+  if(src->dev != dst->dev)
+    return -1;
+  if(src->inum == dst->inum)
+    return 0;
+
+  nblocks = min((src->size + BSIZE - 1) / BSIZE,
+                (dst->size + BSIZE - 1) / BSIZE);
+
+  for(bn = 0; bn < nblocks; bn++){
+    uint s = bmap_nalloc(src, bn);
+    uint d = bmap_nalloc(dst, bn);
+    struct buf *bps;
+    struct buf *bpd;
+
+    if(s == 0 || d == 0 || s == d)
+      continue;
+
+    bps = bread(src->dev, s);
+    bpd = bread(dst->dev, d);
+    int eq = (memcmp(bps->data, bpd->data, BSIZE) == 0);
+    brelse(bps);
+    brelse(bpd);
+    if(!eq)
+      continue;
+
+    // Update dst mapping first while d is still reachable.
+    // After switching the pointer, drop the old block reference.
+    bref_inc(s);
+    int r = bmap_set_existing(dst, bn, s);
+    if(r < 0){
+      // Undo bref_inc().
+      bref_dec(s);
+      return -1;
+    }
+    if(r == 1)
+      need_iupdate = 1;
+    bfree(dst->dev, d);
+    shared++;
+  }
+
+  if(need_iupdate)
+    iupdate(dst);
+  return shared;
 }
 
 // Directories

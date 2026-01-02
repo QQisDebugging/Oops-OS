@@ -245,21 +245,51 @@ uint64
 sys_fallocate(void)
 {
   struct file *f;
-  int size;
+  int offset;
+  int len;
   int flags;
 
-  if (argfd(0, 0, &f) < 0 || argint(1, &size) < 0 || argint(2, &flags) < 0)
+  if (argfd(0, 0, &f) < 0 || argint(1, &offset) < 0 || argint(2, &len) < 0 || argint(3, &flags) < 0)
     return -1;
-  if (size < 0)
+  if (offset < 0 || len < 0)
     return -1;
-  if (flags & ~FALLOC_KEEP_SIZE)
+  if (flags & ~(FALLOC_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
     return -1;
   if (f->type != FD_INODE || f->ip->type != T_FILE)
     return -1;
   if (f->writable == 0)
     return -1;
 
-  uint target = (uint)size;
+  // PUNCH_HOLE mode: release blocks in [offset, offset+len).
+  if (flags & FALLOC_FL_PUNCH_HOLE) {
+    uint startb = offset / BSIZE;
+    uint endb = (offset + len + BSIZE - 1) / BSIZE;
+    uint maxblocks = (MAXOPBLOCKS - 1 - 2) / 2;
+    if (maxblocks < 1)
+      maxblocks = 1;
+
+    uint b = startb;
+    while (b < endb) {
+      uint chunk = endb - b;
+      if (chunk > maxblocks)
+        chunk = maxblocks;
+
+      begin_op();
+      ilock(f->ip);
+      if (ipunch(f->ip, b, b + chunk) < 0) {
+        iunlock(f->ip);
+        end_op();
+        return -1;
+      }
+      iunlock(f->ip);
+      end_op();
+      b += chunk;
+    }
+    return 0;
+  }
+
+  // Pre-allocation mode.
+  uint target = (uint)(offset + len);
 
   ilock(f->ip);
   uint cur_size = f->ip->size;
@@ -449,6 +479,57 @@ isdirempty(struct inode *dp)
   return 1;
 }
 
+// Update directory's ".." entry to point to newparent.
+// Caller must hold dir->lock.
+static int
+set_dotdot(struct inode *dir, uint newparent)
+{
+  struct dirent de;
+
+  // ".." is the second dirent after "." in xv6-style directories.
+  if(readi(dir, 0, (uint64)&de, sizeof(de), sizeof(de)) != sizeof(de))
+    return -1;
+  if(namecmp(de.name, "..") != 0)
+    return -1;
+  de.inum = newparent;
+  if(writei(dir, 0, (uint64)&de, sizeof(de), sizeof(de)) != sizeof(de))
+    return -1;
+  return 0;
+}
+
+// Return 1 if start is within (or equal to) the directory subtree rooted at inum.
+// start is treated as a directory inode (not necessarily locked).
+static int
+dir_is_descendant(struct inode *start, uint inum)
+{
+  struct inode *cur = idup(start);
+
+  for(;;){
+    struct inode *parent;
+    uint curinum;
+
+    ilock(cur);
+    if(cur->inum == inum){
+      iunlock(cur);
+      iput(cur);
+      return 1;
+    }
+    curinum = cur->inum;
+    parent = dirlookup(cur, "..", 0);
+    iunlock(cur);
+    iput(cur);
+
+    if(parent == 0)
+      return 0;
+    // Reached root (".." points to itself).
+    if(parent->inum == curinum){
+      iput(parent);
+      return 0;
+    }
+    cur = parent;
+  }
+}
+
 uint64
 sys_unlink(void)
 {
@@ -507,6 +588,280 @@ bad:
   iunlockput(dp);
   end_op();
   return -1;
+}
+
+// rename - 重命名（或移动）路径。
+// 说明：支持非目录项 rename；目录仅支持重命名/移动到一个不存在的目标名（不支持覆盖已有目录项）。
+// 语义：
+// - new 已存在且为非目录项：覆盖 new（原 inode nlink--）。
+// - new 已存在且指向同一 inode：等价于 unlink(old)。
+// - old 与 new 同目录且 new 不存在：就地修改目录项名称（不需要新槽位）。
+uint64
+sys_rename(void)
+{
+  char old[MAXPATH], new[MAXPATH];
+  char oldname[DIRSIZ], newname[DIRSIZ];
+  struct inode *olddp = 0, *newdp = 0;
+  struct inode *ip = 0, *ip2 = 0;
+  struct inode *ip_check = 0;
+  struct dirent de;
+  uint off_old = 0, off_new = 0;
+  int ret = -1;
+  int olddp_locked = 0;
+  int newdp_locked = 0;
+  int ip_locked = 0;
+  int ip2_locked = 0;
+  int same_parent = 0;
+  int isdir = 0;
+
+  if(argstr(0, old, MAXPATH) < 0 || argstr(1, new, MAXPATH) < 0)
+    return -1;
+  if(strncmp(old, new, MAXPATH) == 0)
+    return 0;
+
+  begin_op();
+
+  if((olddp = nameiparent(old, oldname)) == 0)
+    goto out;
+  if((newdp = nameiparent(new, newname)) == 0)
+    goto out;
+
+  // Cannot rename "." or "..".
+  if(namecmp(oldname, ".") == 0 || namecmp(oldname, "..") == 0 ||
+     namecmp(newname, ".") == 0 || namecmp(newname, "..") == 0)
+    goto out;
+  if(olddp->dev != newdp->dev)
+    goto out;
+
+  same_parent = (olddp == newdp);
+
+  // If moving a directory across parents, forbid moving into its own subtree.
+  // Do this check before taking multiple locks to avoid deadlocks.
+  if(!same_parent){
+    ip_check = namei(old);
+    if(ip_check == 0)
+      goto out;
+    ilock(ip_check);
+    isdir = (ip_check->type == T_DIR);
+    iunlock(ip_check);
+    if(isdir){
+      if(dir_is_descendant(newdp, ip_check->inum)){
+        iput(ip_check);
+        ip_check = 0;
+        goto out;
+      }
+    }
+    iput(ip_check);
+    ip_check = 0;
+  }
+
+  // Lock parent inodes in a stable order to avoid deadlock.
+  if(same_parent){
+    ilock(olddp);
+    olddp_locked = 1;
+  } else if(olddp->inum < newdp->inum){
+    ilock(olddp);
+    olddp_locked = 1;
+    ilock(newdp);
+    newdp_locked = 1;
+  } else {
+    ilock(newdp);
+    newdp_locked = 1;
+    ilock(olddp);
+    olddp_locked = 1;
+  }
+
+  if((ip = dirlookup(olddp, oldname, &off_old)) == 0)
+    goto out;
+  ilock(ip);
+  ip_locked = 1;
+  isdir = (ip->type == T_DIR);
+
+  ip2 = dirlookup(newdp, newname, &off_new);
+  if(ip2){
+    ilock(ip2);
+    ip2_locked = 1;
+
+    if(isdir){
+      // Directory can only replace an empty directory.
+      if(ip2->type != T_DIR)
+        goto out;
+      if(!isdirempty(ip2))
+        goto out;
+    } else {
+      // File renames do not support overwriting a directory.
+      if(ip2->type == T_DIR)
+        goto out;
+    }
+
+    // If new already refers to the same inode, just unlink old.
+    if(ip2->inum == ip->inum){
+      memset(&de, 0, sizeof(de));
+      if(writei(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+        panic("rename: clear old");
+      ip->nlink--;
+      iupdate(ip);
+      ret = 0;
+      goto out;
+    }
+
+    // Overwrite new's directory entry to point to ip.
+    if(readi(newdp, 0, (uint64)&de, off_new, sizeof(de)) != sizeof(de))
+      panic("rename: read new");
+    de.inum = ip->inum;
+    if(writei(newdp, 0, (uint64)&de, off_new, sizeof(de)) != sizeof(de))
+      panic("rename: write new");
+
+    // Drop the overwritten target inode link.
+    if(ip2->nlink < 1)
+      panic("rename: target nlink < 1");
+    ip2->nlink--;
+    iupdate(ip2);
+
+    if(isdir){
+      // Replacing an existing directory removes one directory from olddp.
+      olddp->nlink--;
+      iupdate(olddp);
+
+      if(!same_parent){
+        // When moving across parents, update "..".
+        if(set_dotdot(ip, newdp->inum) < 0)
+          goto out;
+        iupdate(ip);
+      }
+    }
+  } else {
+    // new doesn't exist.
+    if(same_parent){
+      // Rename in-place within the same directory.
+      if(readi(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+        panic("rename: read old");
+      memmove(de.name, newname, DIRSIZ);
+      if(writei(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+        panic("rename: write old");
+      ret = 0;
+      goto out;
+    }
+    // Different parent: need a new directory entry.
+    if(dirlink(newdp, newname, ip->inum) < 0)
+      goto out;
+
+    if(isdir){
+      // Moving a directory changes parent link counts and "..".
+      newdp->nlink++;
+      iupdate(newdp);
+      olddp->nlink--;
+      iupdate(olddp);
+
+      if(set_dotdot(ip, newdp->inum) < 0)
+        goto out;
+      iupdate(ip);
+    }
+  }
+
+  // Clear old directory entry.
+  memset(&de, 0, sizeof(de));
+  if(writei(olddp, 0, (uint64)&de, off_old, sizeof(de)) != sizeof(de))
+    panic("rename: clear old");
+  ret = 0;
+
+out:
+  if(ip2){
+    if(ip2_locked)
+      iunlock(ip2);
+    iput(ip2);
+  }
+  if(ip_check)
+    iput(ip_check);
+  if(ip){
+    if(ip_locked)
+      iunlock(ip);
+    iput(ip);
+  }
+
+  if(same_parent){
+    if(olddp){
+      if(olddp_locked)
+        iunlock(olddp);
+      iput(olddp);
+    }
+    if(newdp && newdp != olddp)
+      iput(newdp);
+  } else {
+    if(olddp){
+      if(olddp_locked)
+        iunlock(olddp);
+      iput(olddp);
+    }
+    if(newdp){
+      if(newdp_locked)
+        iunlock(newdp);
+      iput(newdp);
+    }
+  }
+
+  end_op();
+  return ret;
+}
+
+// dedup - 块级在线去重：将 dst 中与 src 内容相同的数据块改为共享 src 的块。
+// 返回值：新共享的数据块数量；失败返回 -1。
+uint64
+sys_dedup(void)
+{
+  char srcpath[MAXPATH], dstpath[MAXPATH];
+  struct inode *src = 0, *dst = 0;
+  int ret = -1;
+  int src_locked = 0;
+  int dst_locked = 0;
+
+  if(argstr(0, srcpath, MAXPATH) < 0 || argstr(1, dstpath, MAXPATH) < 0)
+    return -1;
+  if(strncmp(srcpath, dstpath, MAXPATH) == 0)
+    return 0;
+
+  begin_op();
+
+  if((src = namei(srcpath)) == 0)
+    goto out;
+  if((dst = namei(dstpath)) == 0)
+    goto out;
+  if(src->dev != dst->dev)
+    goto out;
+  if(src->inum == dst->inum){
+    ret = 0;
+    goto out;
+  }
+
+  // Stable lock order to avoid deadlock.
+  if(src->inum < dst->inum){
+    ilock(src);
+    src_locked = 1;
+    ilock(dst);
+    dst_locked = 1;
+  } else {
+    ilock(dst);
+    dst_locked = 1;
+    ilock(src);
+    src_locked = 1;
+  }
+
+  ret = idedup(src, dst);
+
+out:
+  if(src){
+    if(src_locked)
+      iunlock(src);
+    iput(src);
+  }
+  if(dst){
+    if(dst_locked)
+      iunlock(dst);
+    iput(dst);
+  }
+
+  end_op();
+  return ret;
 }
 
 

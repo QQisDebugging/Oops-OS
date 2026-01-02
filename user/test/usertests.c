@@ -2806,6 +2806,30 @@ void truncatetest_run(char *s)
   exit(1);
 }
 
+void renametest_run(char *s)
+{
+  char *argv[] = {"renametest", 0};
+  exec("renametest", argv);
+  printf("%s: exec renametest failed\n", s);
+  exit(1);
+}
+
+void deduptest_run(char *s)
+{
+  char *argv[] = {"deduptest", 0};
+  exec("deduptest", argv);
+  printf("%s: exec deduptest failed\n", s);
+  exit(1);
+}
+
+void punchtest_run(char *s)
+{
+  char *argv[] = {"punchtest", 0};
+  exec("punchtest", argv);
+  printf("%s: exec punchtest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -2895,6 +2919,9 @@ int main(int argc, char *argv[])
       {fallocatetest_run, "fallocatetest"},
       {fclonetest_run, "fclonetest"},
       {truncatetest_run, "truncatetest"},
+      {renametest_run, "renametest"},
+      {deduptest_run, "deduptest"},
+      {punchtest_run, "punchtest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},
