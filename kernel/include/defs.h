@@ -77,6 +77,7 @@ int readi(struct inode *, int, uint64, uint, uint);
 void stati(struct inode *, struct stat *);
 int writei(struct inode *, int, uint64, uint, uint);
 void itrunc(struct inode *);
+void itrunc_to(struct inode *, uint);
 int falloc(struct inode *, uint, uint, uint, int);
 int iclone(struct inode *, struct inode *);
 
