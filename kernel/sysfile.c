@@ -467,6 +467,39 @@ set_dotdot(struct inode *dir, uint newparent)
   return 0;
 }
 
+// Return 1 if start is within (or equal to) the directory subtree rooted at inum.
+// start is treated as a directory inode (not necessarily locked).
+static int
+dir_is_descendant(struct inode *start, uint inum)
+{
+  struct inode *cur = idup(start);
+
+  for(;;){
+    struct inode *parent;
+    uint curinum;
+
+    ilock(cur);
+    if(cur->inum == inum){
+      iunlock(cur);
+      iput(cur);
+      return 1;
+    }
+    curinum = cur->inum;
+    parent = dirlookup(cur, "..", 0);
+    iunlock(cur);
+    iput(cur);
+
+    if(parent == 0)
+      return 0;
+    // Reached root (".." points to itself).
+    if(parent->inum == curinum){
+      iput(parent);
+      return 0;
+    }
+    cur = parent;
+  }
+}
+
 uint64
 sys_unlink(void)
 {
@@ -540,6 +573,7 @@ sys_rename(void)
   char oldname[DIRSIZ], newname[DIRSIZ];
   struct inode *olddp = 0, *newdp = 0;
   struct inode *ip = 0, *ip2 = 0;
+  struct inode *ip_check = 0;
   struct dirent de;
   uint off_old = 0, off_new = 0;
   int ret = -1;
@@ -571,6 +605,26 @@ sys_rename(void)
 
   same_parent = (olddp == newdp);
 
+  // If moving a directory across parents, forbid moving into its own subtree.
+  // Do this check before taking multiple locks to avoid deadlocks.
+  if(!same_parent){
+    ip_check = namei(old);
+    if(ip_check == 0)
+      goto out;
+    ilock(ip_check);
+    isdir = (ip_check->type == T_DIR);
+    iunlock(ip_check);
+    if(isdir){
+      if(dir_is_descendant(newdp, ip_check->inum)){
+        iput(ip_check);
+        ip_check = 0;
+        goto out;
+      }
+    }
+    iput(ip_check);
+    ip_check = 0;
+  }
+
   // Lock parent inodes in a stable order to avoid deadlock.
   if(same_parent){
     ilock(olddp);
@@ -597,12 +651,18 @@ sys_rename(void)
   if(ip2){
     ilock(ip2);
     ip2_locked = 1;
-    // Directory renames do not support overwriting an existing entry.
-    if(isdir)
-      goto out;
-    // File renames do not support overwriting a directory.
-    if(ip2->type == T_DIR)
-      goto out;
+
+    if(isdir){
+      // Directory can only replace an empty directory.
+      if(ip2->type != T_DIR)
+        goto out;
+      if(!isdirempty(ip2))
+        goto out;
+    } else {
+      // File renames do not support overwriting a directory.
+      if(ip2->type == T_DIR)
+        goto out;
+    }
 
     // If new already refers to the same inode, just unlink old.
     if(ip2->inum == ip->inum){
@@ -627,6 +687,19 @@ sys_rename(void)
       panic("rename: target nlink < 1");
     ip2->nlink--;
     iupdate(ip2);
+
+    if(isdir){
+      // Replacing an existing directory removes one directory from olddp.
+      olddp->nlink--;
+      iupdate(olddp);
+
+      if(!same_parent){
+        // When moving across parents, update "..".
+        if(set_dotdot(ip, newdp->inum) < 0)
+          goto out;
+        iupdate(ip);
+      }
+    }
   } else {
     // new doesn't exist.
     if(same_parent){
@@ -668,6 +741,8 @@ out:
       iunlock(ip2);
     iput(ip2);
   }
+  if(ip_check)
+    iput(ip_check);
   if(ip){
     if(ip_locked)
       iunlock(ip);

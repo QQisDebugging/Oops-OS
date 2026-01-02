@@ -217,6 +217,68 @@ test_dir_rename_move(void)
 }
 
 static void
+test_dir_replace_empty(void)
+{
+  printf("test_dir_replace_empty...\n");
+
+  unlink("b/f");
+  unlink("b");
+  unlink("a/f");
+  unlink("a");
+
+  if(mkdir("a") < 0)
+    fail("mkdir a");
+  int fd = open("a/f", O_CREATE | O_RDWR);
+  if(fd < 0)
+    fail("create a/f");
+  write_all(fd, "X");
+  close(fd);
+
+  if(mkdir("b") < 0)
+    fail("mkdir b");
+
+  // Replace empty dir b with non-empty dir a.
+  if(rename("a", "b") < 0)
+    fail("rename dir a->b (replace empty) failed");
+
+  fd = open("b/f", O_RDONLY);
+  if(fd < 0)
+    fail("open b/f after replace");
+  close(fd);
+
+  fd = open("a/f", O_RDONLY);
+  if(fd >= 0)
+    fail("a should not exist after replace");
+
+  unlink("b/f");
+  unlink("b");
+  printf("test_dir_replace_empty passed\n");
+}
+
+static void
+test_dir_move_into_subtree_fail(void)
+{
+  printf("test_dir_move_into_subtree_fail...\n");
+
+  unlink("a/sub/a");
+  unlink("a/sub");
+  unlink("a");
+
+  if(mkdir("a") < 0)
+    fail("mkdir a");
+  if(mkdir("a/sub") < 0)
+    fail("mkdir a/sub");
+
+  // Moving a into a/sub/a would create a cycle; must fail.
+  if(rename("a", "a/sub/a") != -1)
+    fail("rename dir into its subtree should fail");
+
+  unlink("a/sub");
+  unlink("a");
+  printf("test_dir_move_into_subtree_fail passed\n");
+}
+
+static void
 test_failures(void)
 {
   int r;
@@ -259,6 +321,8 @@ main(void)
   test_overwrite_rename();
   test_cross_dir_move();
   test_dir_rename_move();
+  test_dir_replace_empty();
+  test_dir_move_into_subtree_fail();
   test_failures();
   printf("renametest: all tests passed!\n");
   exit(0);
