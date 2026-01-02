@@ -21,7 +21,8 @@ main(void)
     exit(1);
   }
 
-  if(fallocate(fd, TESTSIZE, 0) < 0){
+  // fallocate(fd, offset, len, flags) - pre-allocate TESTSIZE bytes from offset 0
+  if(fallocate(fd, 0, TESTSIZE, 0) < 0){
     printf("fallocatetest: fallocate failed\n");
     close(fd);
     exit(1);
@@ -77,7 +78,8 @@ main(void)
     unlink(TESTFILE);
     exit(1);
   }
-  if(fallocate(fd, TESTSIZE, FALLOC_KEEP_SIZE) < 0){
+  // Test FALLOC_KEEP_SIZE: pre-allocate but keep size at 1
+  if(fallocate(fd, 0, TESTSIZE, FALLOC_KEEP_SIZE) < 0){
     printf("fallocatetest: fallocate keep size failed\n");
     close(fd);
     unlink(TESTFILE);

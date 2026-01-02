@@ -2822,6 +2822,14 @@ void deduptest_run(char *s)
   exit(1);
 }
 
+void punchtest_run(char *s)
+{
+  char *argv[] = {"punchtest", 0};
+  exec("punchtest", argv);
+  printf("%s: exec punchtest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -2913,6 +2921,7 @@ int main(int argc, char *argv[])
       {truncatetest_run, "truncatetest"},
       {renametest_run, "renametest"},
       {deduptest_run, "deduptest"},
+      {punchtest_run, "punchtest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},
