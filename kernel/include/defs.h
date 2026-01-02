@@ -146,6 +146,10 @@ int cps(void);
 void procnum(uint64 *dst);
 int mlfq_tick(void);
 void mlfq_boost(uint);
+int rt_set(int pid, int period, int runtime, int deadline);
+int rt_clear(int pid);
+int rt_tick(void);
+int rt_should_preempt(void);
 int clone(uint64 ,uint64 ,uint64 );
 int join(uint64);
 // swtch.S

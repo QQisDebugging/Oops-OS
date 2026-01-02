@@ -24,6 +24,27 @@ uint64 sys_setPriority(void)
   return setPriority(pid, priority);
 }
 
+uint64 sys_rt_set(void)
+{
+  int pid, period, runtime, deadline;
+  if (argint(0, &pid) < 0 || argint(1, &period) < 0 ||
+      argint(2, &runtime) < 0 || argint(3, &deadline) < 0)
+  {
+    return -1;
+  }
+  return rt_set(pid, period, runtime, deadline);
+}
+
+uint64 sys_rt_clear(void)
+{
+  int pid;
+  if (argint(0, &pid) < 0)
+  {
+    return -1;
+  }
+  return rt_clear(pid);
+}
+
 uint64
 sys_exit(void)
 {

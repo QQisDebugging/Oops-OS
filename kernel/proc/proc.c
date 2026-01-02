@@ -32,6 +32,13 @@ static void freeproc(struct proc *p);
 static struct proc *tgroup_leader(struct proc *p);
 static void freethread(struct proc *p, struct proc *leader);
 static void tgroup_kill_and_reap(struct proc *leader);
+static uint rt_now(void);
+static void rt_reset_locked(struct proc *p);
+static void rt_setup_locked(struct proc *p, int period, int runtime, int deadline, uint now);
+static void rt_refresh_locked(struct proc *p, uint now);
+static int rt_eligible_locked(struct proc *p, uint now);
+static int rt_laxity_locked(struct proc *p, uint now);
+static struct proc *rt_pick(uint now);
 
 extern char trampoline[]; // trampoline.S
 
@@ -65,6 +72,223 @@ int setPriority(int pid, int priority)
   }
   // 找不到该pid，错误
   return -1; // 这里不需要释放锁，因为从未获取过
+}
+
+static uint
+rt_now(void)
+{
+  return ticks;
+}
+
+static void
+rt_reset_locked(struct proc *p)
+{
+  p->rt_policy = SCHED_NORMAL;
+  p->rt_period = 0;
+  p->rt_runtime = 0;
+  p->rt_deadline = 0;
+  p->rt_release = 0;
+  p->rt_deadline_tick = 0;
+  p->rt_remaining = 0;
+  p->rt_misses = 0;
+}
+
+static void
+rt_setup_locked(struct proc *p, int period, int runtime, int deadline, uint now)
+{
+  p->rt_policy = SCHED_RT_LLF;
+  p->rt_period = period;
+  p->rt_runtime = runtime;
+  p->rt_deadline = deadline;
+  p->rt_release = now;
+  p->rt_deadline_tick = now + deadline;
+  p->rt_remaining = runtime;
+  p->rt_misses = 0;
+}
+
+static void
+rt_refresh_locked(struct proc *p, uint now)
+{
+  if (p->rt_policy != SCHED_RT_LLF)
+    return;
+  if (p->rt_period <= 0 || p->rt_deadline <= 0 || p->rt_runtime <= 0)
+    return;
+
+  while (now >= (uint)(p->rt_release + p->rt_period))
+  {
+    if (p->rt_remaining > 0)
+      p->rt_misses++;
+    p->rt_release += p->rt_period;
+    p->rt_deadline_tick = p->rt_release + p->rt_deadline;
+    p->rt_remaining = p->rt_runtime;
+  }
+
+  if (p->rt_remaining < 0)
+    p->rt_remaining = 0;
+}
+
+static int
+rt_eligible_locked(struct proc *p, uint now)
+{
+  if (p->rt_policy != SCHED_RT_LLF)
+    return 0;
+  if (p->rt_remaining <= 0)
+    return 0;
+  if ((uint)p->rt_release > now)
+    return 0;
+  return 1;
+}
+
+static int
+rt_laxity_locked(struct proc *p, uint now)
+{
+  return (int)p->rt_deadline_tick - (int)now - p->rt_remaining;
+}
+
+static struct proc *
+rt_pick(uint now)
+{
+  struct proc *p;
+  struct proc *best = 0;
+  int best_laxity = 0;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state == RUNNABLE && p->rt_policy == SCHED_RT_LLF)
+    {
+      rt_refresh_locked(p, now);
+      if (rt_eligible_locked(p, now))
+      {
+        int laxity = rt_laxity_locked(p, now);
+        if (best == 0 || laxity < best_laxity)
+        {
+          if (best)
+            release(&best->lock);
+          best = p;
+          best_laxity = laxity;
+          continue;
+        }
+      }
+    }
+    release(&p->lock);
+  }
+
+  return best;
+}
+
+int rt_set(int pid, int period, int runtime, int deadline)
+{
+  struct proc *p;
+  if (period <= 0 || runtime <= 0 || deadline <= 0)
+    return -1;
+  if (runtime > deadline || deadline > period)
+    return -1;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    if (p->pid == pid)
+    {
+      acquire(&p->lock);
+      rt_setup_locked(p, period, runtime, deadline, rt_now());
+      release(&p->lock);
+      return 0;
+    }
+  }
+  return -1;
+}
+
+int rt_clear(int pid)
+{
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    if (p->pid == pid)
+    {
+      acquire(&p->lock);
+      rt_reset_locked(p);
+      release(&p->lock);
+      return 0;
+    }
+  }
+  return -1;
+}
+
+int rt_tick(void)
+{
+  struct proc *p = myproc();
+  if (p == 0 || p->rt_policy != SCHED_RT_LLF)
+    return 0;
+
+  acquire(&p->lock);
+  if (p->state != RUNNING)
+  {
+    release(&p->lock);
+    return 0;
+  }
+  if (p->rt_policy == SCHED_RT_LLF)
+  {
+    release(&p->lock);
+    return 0;
+  }
+  uint now = rt_now();
+  rt_refresh_locked(p, now);
+  if (p->rt_remaining > 0)
+    p->rt_remaining--;
+  if (p->rt_remaining <= 0)
+  {
+    p->rt_remaining = 0;
+    release(&p->lock);
+    return 1;
+  }
+  release(&p->lock);
+  return 0;
+}
+
+int rt_should_preempt(void)
+{
+  struct proc *p;
+  struct proc *cur = myproc();
+  uint now = rt_now();
+  int cur_laxity = 0x7fffffff;
+  int cur_rt = 0;
+
+  if (cur && cur->rt_policy == SCHED_RT_LLF)
+  {
+    acquire(&cur->lock);
+    if (cur->state == RUNNING)
+    {
+      rt_refresh_locked(cur, now);
+      if (rt_eligible_locked(cur, now))
+      {
+        cur_laxity = rt_laxity_locked(cur, now);
+        cur_rt = 1;
+      }
+    }
+    release(&cur->lock);
+  }
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state == RUNNABLE && p->rt_policy == SCHED_RT_LLF)
+    {
+      rt_refresh_locked(p, now);
+      if (rt_eligible_locked(p, now))
+      {
+        int laxity = rt_laxity_locked(p, now);
+        release(&p->lock);
+        if (!cur_rt)
+          return 1;
+        if (laxity < cur_laxity)
+          return 1;
+        continue;
+      }
+    }
+    release(&p->lock);
+  }
+
+  return 0;
 }
 
 // initialize the proc table at boot time.
@@ -177,6 +401,7 @@ static struct proc *allocproc(void)
   p->dyn_priority = 10;
   p->mlfq_level = 0;
   p->mlfq_ticks = 0;
+  rt_reset_locked(p);
   p->trace_mask = 0; // 设定掩码为0
   p->shm = KERNBASE; // 初始化shm，刚开始shm与kernbase重合
   p->shmkeymask = 0; // 初始化shmkeymask
@@ -284,6 +509,7 @@ freethread(struct proc *p, struct proc *leader)
   p->alarm_ticks = 0;
   p->alarm_goingoff = 0;
   memset(&p->vma, 0, sizeof(p->vma));
+  rt_reset_locked(p);
   p->state = UNUSED;
   if (leader && leader->tgroup_ref > 0)
     leader->tgroup_ref--;
@@ -373,6 +599,7 @@ static void freeproc(struct proc *p)
   p->alarm_goingoff = 0;
   p->mlfq_level = 0;
   p->mlfq_ticks = 0;
+  rt_reset_locked(p);
   p->state = UNUSED;
   // 释放进程
   shmrelease(p->pagetable, p->shm, p->shmkeymask);
@@ -914,6 +1141,16 @@ void scheduler(void)
   for (;;)
   {
     intr_on();         // 启用中断
+    struct proc *rt = rt_pick(rt_now());
+    if (rt)
+    {
+      rt->state = RUNNING;
+      c->proc = rt;
+      swtch(&c->context, &rt->context);
+      c->proc = 0;
+      release(&rt->lock);
+      continue;
+    }
     pmax = 0;          // 重置优先级最高的进程
     priority_max = -1; // 重置最高优先级
 
@@ -921,7 +1158,7 @@ void scheduler(void)
     for (p = proc; p < &proc[NPROC]; p++)
     {
       acquire(&p->lock);
-      if (p->state == RUNNABLE)
+      if (p->state == RUNNABLE && p->rt_policy == SCHED_NORMAL)
       {
         p->wait_time++;
         p->dyn_priority = p->priority + (p->wait_time / 5) - (p->cpu_time / 5);
@@ -976,6 +1213,17 @@ void scheduler(void)
     int found = 0;
 
     intr_on();
+    struct proc *rt = rt_pick(rt_now());
+    if (rt)
+    {
+      rt->state = RUNNING;
+      rt->mlfq_ticks = 0;
+      c->proc = rt;
+      swtch(&c->context, &rt->context);
+      c->proc = 0;
+      release(&rt->lock);
+      continue;
+    }
 
     for (int level = 0; level < MLFQ_LEVELS; level++)
     {
@@ -989,7 +1237,7 @@ void scheduler(void)
           cand->mlfq_level = 0;
         if (cand->mlfq_level >= MLFQ_LEVELS)
           cand->mlfq_level = MLFQ_LEVELS - 1;
-        if (cand->state == RUNNABLE && cand->mlfq_level == level)
+        if (cand->state == RUNNABLE && cand->mlfq_level == level && cand->rt_policy == SCHED_NORMAL)
         {
           mlfq_rr_next[level] = (idx + 1) % NPROC;
           p = cand;
@@ -1346,6 +1594,10 @@ int clone(uint64 fcn, uint64 arg, uint64 stack)
   np->trace_mask = leader->trace_mask;
   np->mlfq_level = leader->mlfq_level;
   np->mlfq_ticks = 0;
+  if (leader->rt_policy == SCHED_RT_LLF)
+    rt_setup_locked(np, leader->rt_period, leader->rt_runtime, leader->rt_deadline, rt_now());
+  else
+    rt_reset_locked(np);
 
   np->shm = leader->shm;
   np->shmkeymask = leader->shmkeymask;

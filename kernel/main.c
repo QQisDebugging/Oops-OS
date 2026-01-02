@@ -55,7 +55,7 @@ void main()
     while (started == 0)
       ;
     __sync_synchronize();
-    printf("\033[1;32mhart %d starting\033[0m\n", cpuid());
+  // hart start log suppressed to keep boot output clean.
     kvminithart();  // turn on paging
     trapinithart(); // install kernel trap vector
     plicinithart(); // ask PLIC for device interrupts

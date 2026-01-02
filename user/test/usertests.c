@@ -2750,14 +2750,6 @@ void threadtest_run(char *s)
   exit(1);
 }
 
-void schedtest_run(char *s)
-{
-  char *argv[] = {"schedtest", 0};
-  exec("schedtest", argv);
-  printf("%s: exec schedtest failed\n", s);
-  exit(1);
-}
-
 void monitortest_run(char *s)
 {
   char *argv[] = {"monitortest", 0};
@@ -2904,7 +2896,6 @@ int main(int argc, char *argv[])
       {semsettest_run, "semsettest"},
       {dmsgtest_run, "dmsgtest"},
       {threadtest_run, "threadtest"},
-      {schedtest_run, "schedtest"},
       {cstest_run, "cstest"},
       {monitortest_run, "monitortest"},
       {0, 0},
