@@ -183,8 +183,8 @@ uint64 sys_cps(void)
 
 uint64 sys_trace(void)
 { // 为当前进程的trace_mask赋值
-  int n;
-  if (argint(0, &n) < 0)
+  uint64 n;
+  if (argaddr(0, &n) < 0)
   { // n赋值为p->trapframe->a0，a0来自于进程用户空间，用与传参
     return -1;
   }

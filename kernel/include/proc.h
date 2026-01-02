@@ -137,7 +137,7 @@ struct proc
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  int trace_mask;
+  uint64 trace_mask;
   struct vm_area vma[NVMA]; // 虚拟内存区域
   int priority;             //(0-20)进程优先级
   int wait_time;            // 等待CPU的时间

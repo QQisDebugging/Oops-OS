@@ -175,6 +175,7 @@ UPROGS=\
 	$U/test/_nettest\
 	$U/test/_msgtest\
 	$U/program/_chmod\
+	$U/program/_dedup\
 	$U/test/_chmodtest\
 	$U/program/_savei\
 	$U/program/_recoveri\
