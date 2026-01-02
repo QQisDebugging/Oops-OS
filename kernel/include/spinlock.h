@@ -46,8 +46,8 @@ struct monitor
   int locked;
   int owner;
   int waiters;
+  int pi_waiter_max;
   struct condvar conds[MONITOR_COND_MAX];
 };
 
 extern struct monitor monitors[MONITOR_MAX_NUM];
-

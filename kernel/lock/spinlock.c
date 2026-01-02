@@ -58,6 +58,7 @@ void initmonitor()
     monitors[i].locked = 0;
     monitors[i].owner = 0;
     monitors[i].waiters = 0;
+    monitors[i].pi_waiter_max = 0;
     for (int j = 0; j < MONITOR_COND_MAX; j++)
     {
       monitors[i].conds[j].allocated = 0;
@@ -151,4 +152,3 @@ void pop_off(void)
   if (c->noff == 0 && c->intena) // 如果当前所有锁已释放而且上锁之前是开中断
     intr_on();
 }
-

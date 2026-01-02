@@ -2758,6 +2758,14 @@ void monitortest_run(char *s)
   exit(1);
 }
 
+void pitest_run(char *s)
+{
+  char *argv[] = {"pitest", 0};
+  exec("pitest", argv);
+  printf("%s: exec pitest failed\n", s);
+  exit(1);
+}
+
 void swaptest_run(char *s)
 {
   char *argv[] = {"swaptest", 0};
@@ -2898,6 +2906,7 @@ int main(int argc, char *argv[])
       {threadtest_run, "threadtest"},
       {cstest_run, "cstest"},
       {monitortest_run, "monitortest"},
+      {pitest_run, "pitest"},
       {0, 0},
   };
 

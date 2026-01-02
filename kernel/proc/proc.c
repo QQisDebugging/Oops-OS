@@ -350,6 +350,92 @@ myproc(void)
   return p;
 }
 
+#if defined(SCHED_DYNPRIO)
+static int
+pi_effective_base(struct proc *p)
+{
+  int base = p->priority;
+  if (p->pi_boost > base)
+    base = p->pi_boost;
+  if (base < 0)
+    base = 0;
+  if (base > 20)
+    base = 20;
+  return base;
+}
+#endif
+
+void
+pi_donate(int owner_pid, int donated_prio)
+{
+  if (owner_pid <= 0)
+    return;
+  if (donated_prio < 0)
+    donated_prio = 0;
+  if (donated_prio > 20)
+    donated_prio = 20;
+
+  for (struct proc *p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->pid == owner_pid && p->state != UNUSED)
+    {
+      if (donated_prio > p->pi_boost)
+        p->pi_boost = donated_prio;
+#if defined(SCHED_MLFQ)
+      if (donated_prio > p->priority)
+      {
+        p->mlfq_level = 0;
+        p->mlfq_ticks = 0;
+      }
+#endif
+      release(&p->lock);
+      return;
+    }
+    release(&p->lock);
+  }
+}
+
+static int
+monitor_max_waiter_for_pid(int pid)
+{
+  int max = 0;
+
+  for (int i = 0; i < MONITOR_MAX_NUM; i++)
+  {
+    struct monitor *m = &monitors[i];
+    acquire(&m->lock);
+    if (m->allocated && m->locked && m->owner == pid && m->pi_waiter_max > max)
+      max = m->pi_waiter_max;
+    release(&m->lock);
+  }
+  return max;
+}
+
+void
+pi_recalc(int owner_pid)
+{
+  if (owner_pid <= 0)
+    return;
+
+  int max = monitor_max_waiter_for_pid(owner_pid);
+  int sl_max = sleeplock_max_waiter_for_pid(owner_pid);
+  if (sl_max > max)
+    max = sl_max;
+
+  for (struct proc *p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->pid == owner_pid && p->state != UNUSED)
+    {
+      p->pi_boost = max;
+      release(&p->lock);
+      return;
+    }
+    release(&p->lock);
+  }
+}
+
 int allocpid()
 {
   int pid;
@@ -399,6 +485,7 @@ static struct proc *allocproc(void)
   p->cpu_time = 0;
   p->wait_time = 0;
   p->dyn_priority = 10;
+  p->pi_boost = 0;
   p->mlfq_level = 0;
   p->mlfq_ticks = 0;
   rt_reset_locked(p);
@@ -562,6 +649,7 @@ monitor_release_on_exit(struct proc *p)
     {
       m->locked = 0;
       m->owner = 0;
+      m->pi_waiter_max = 0;
       wakeupOneProc(m);
     }
     release(&m->lock);
@@ -599,6 +687,7 @@ static void freeproc(struct proc *p)
   p->alarm_goingoff = 0;
   p->mlfq_level = 0;
   p->mlfq_ticks = 0;
+  p->pi_boost = 0;
   rt_reset_locked(p);
   p->state = UNUSED;
   // 释放进程
@@ -1161,7 +1250,8 @@ void scheduler(void)
       if (p->state == RUNNABLE && p->rt_policy == SCHED_NORMAL)
       {
         p->wait_time++;
-        p->dyn_priority = p->priority + (p->wait_time / 5) - (p->cpu_time / 5);
+        int base_prio = pi_effective_base(p);
+        p->dyn_priority = base_prio + (p->wait_time / 5) - (p->cpu_time / 5);
 
         // 限制动态优先级范围在 [0, 20]
         if (p->dyn_priority < 0)

@@ -182,6 +182,7 @@ make qemu SCHED=DYNPRIO
 ```bash
 schedtest
 llftest
+pitest
 ```
 
 

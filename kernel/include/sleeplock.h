@@ -6,5 +6,5 @@ struct sleeplock {
   // For debugging:
   char *name;        // Name of lock.
   int pid;           // Process holding lock
+  int pi_waiter_max; // max donated priority from waiters
 };
-

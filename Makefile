@@ -191,6 +191,7 @@ UPROGS=\
 	$U/test/_cstest\
 	$U/test/_schedtest\
 	$U/test/_llftest\
+	$U/test/_pitest\
 	$U/test/_lseektest\
 	$U/test/_truncatetest\
 	$U/program/_statistics

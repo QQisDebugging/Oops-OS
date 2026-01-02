@@ -848,6 +848,7 @@ int sys_mon_create()
       m->locked = 0;
       m->owner = 0;
       m->waiters = 0;
+      m->pi_waiter_max = 0;
       for (int i = 0; i < MONITOR_COND_MAX; i++)
       {
         m->conds[i].allocated = 0;
@@ -885,6 +886,7 @@ int sys_mon_free()
     }
   }
   m->allocated = 0;
+  m->pi_waiter_max = 0;
   release(&m->lock);
   return 0;
 }
@@ -913,12 +915,20 @@ int sys_mon_enter()
       release(&m->lock);
       return -1;
     }
+    int donor = myproc()->priority;
+    if (myproc()->pi_boost > donor)
+      donor = myproc()->pi_boost;
+    if (donor > m->pi_waiter_max)
+      m->pi_waiter_max = donor;
+    if (m->owner > 0)
+      pi_donate(m->owner, donor);
     m->waiters++;
     sleep(m, &m->lock);
     m->waiters--;
   }
   m->locked = 1;
   m->owner = pid;
+  m->pi_waiter_max = 0;
   release(&m->lock);
   return 0;
 }
@@ -942,8 +952,10 @@ int sys_mon_exit()
   }
   m->locked = 0;
   m->owner = 0;
+  m->pi_waiter_max = 0;
   wakeupOneProc(m);
   release(&m->lock);
+  pi_recalc(pid);
   return 0;
 }
 
