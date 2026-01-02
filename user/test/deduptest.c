@@ -51,6 +51,8 @@ main(int argc, char *argv[])
   const char *dst = "dedup_dst";
   int nblocks = NDIRECT + 4; // force single-indirect blocks
 
+  printf("deduptest starting\n");
+
   unlink(src);
   unlink(dst);
 
@@ -72,12 +74,16 @@ main(int argc, char *argv[])
   close(fd1);
   close(fd2);
 
+  printf("  created test files with %d blocks\n", nblocks);
+
   uint srci[14], dsti[14];
   xassert(geti(src, (uint64)srci) == 0, "geti src failed");
   xassert(geti(dst, (uint64)dsti) == 0, "geti dst failed");
 
   int shared = dedup(src, dst);
   xassert(shared >= 0, "dedup syscall failed");
+
+  printf("  dedup returned: %d blocks shared\n", shared);
 
   // Re-read inode mapping after dedup.
   uint dsti2[14];
@@ -118,6 +124,7 @@ main(int argc, char *argv[])
   }
 
   // COW sanity: modify a shared block in dst; src should remain unchanged.
+  printf("  testing COW isolation...\n");
   int modbn = 1;
   xassert(modbn < nblocks && (modbn % 3) != 0, "bad modbn selection");
 
