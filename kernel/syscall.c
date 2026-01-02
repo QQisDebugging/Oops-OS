@@ -199,8 +199,13 @@ extern uint64 sys_lseek(void);
 extern uint64 sys_truncate(void);
 extern uint64 sys_ftruncate(void);
 extern uint64 sys_rename(void);
+extern uint64 sys_dedup(void);
 extern uint64 sys_rt_set(void);
 extern uint64 sys_rt_clear(void);
+extern uint64 sys_banker_init(void);
+extern uint64 sys_banker_set_max(void);
+extern uint64 sys_banker_request(void);
+extern uint64 sys_banker_release(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -281,8 +286,13 @@ static uint64 (*syscalls[])(void) = {
     [SYS_truncate] sys_truncate,
     [SYS_ftruncate] sys_ftruncate,
     [SYS_rename] sys_rename,
+    [SYS_dedup] sys_dedup,
     [SYS_rt_set] sys_rt_set,
     [SYS_rt_clear] sys_rt_clear,
+    [SYS_banker_init] sys_banker_init,
+    [SYS_banker_set_max] sys_banker_set_max,
+    [SYS_banker_request] sys_banker_request,
+    [SYS_banker_release] sys_banker_release,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -364,8 +374,13 @@ static char *syscall_names[] = {
     [SYS_truncate] "sys_truncate",
     [SYS_ftruncate] "sys_ftruncate",
     [SYS_rename] "sys_rename",
+    [SYS_dedup] "sys_dedup",
     [SYS_rt_set] "sys_rt_set",
     [SYS_rt_clear] "sys_rt_clear",
+    [SYS_banker_init] "sys_banker_init",
+    [SYS_banker_set_max] "sys_banker_set_max",
+    [SYS_banker_request] "sys_banker_request",
+    [SYS_banker_release] "sys_banker_release",
 };
 void syscall(void)
 {
@@ -377,7 +392,7 @@ void syscall(void)
   if (num > 0 && num < NELEM(syscalls) && syscalls[num])
   {
     p->trapframe->a0 = syscalls[num]();
-    if ((p->trace_mask & (1 << num)) != 0)
+    if (num < 64 && (p->trace_mask & (1ULL << num)) != 0)
     {
       syscall_name = syscall_names[num];
       printf("%d: syscall %s -> %d", p->pid, syscall_name, p->trapframe->a0);
@@ -390,4 +405,3 @@ void syscall(void)
     p->trapframe->a0 = -1;
   }
 }
-

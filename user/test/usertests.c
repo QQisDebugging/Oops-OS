@@ -2849,6 +2849,14 @@ void renametest_run(char *s)
   exit(1);
 }
 
+void deduptest_run(char *s)
+{
+  char *argv[] = {"deduptest", 0};
+  exec("deduptest", argv);
+  printf("%s: exec deduptest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -2939,6 +2947,7 @@ int main(int argc, char *argv[])
       {fclonetest_run, "fclonetest"},
       {truncatetest_run, "truncatetest"},
       {renametest_run, "renametest"},
+      {deduptest_run, "deduptest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

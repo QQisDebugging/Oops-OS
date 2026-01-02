@@ -774,6 +774,66 @@ out:
   return ret;
 }
 
+// dedup - 块级在线去重：将 dst 中与 src 内容相同的数据块改为共享 src 的块。
+// 返回值：新共享的数据块数量；失败返回 -1。
+uint64
+sys_dedup(void)
+{
+  char srcpath[MAXPATH], dstpath[MAXPATH];
+  struct inode *src = 0, *dst = 0;
+  int ret = -1;
+  int src_locked = 0;
+  int dst_locked = 0;
+
+  if(argstr(0, srcpath, MAXPATH) < 0 || argstr(1, dstpath, MAXPATH) < 0)
+    return -1;
+  if(strncmp(srcpath, dstpath, MAXPATH) == 0)
+    return 0;
+
+  begin_op();
+
+  if((src = namei(srcpath)) == 0)
+    goto out;
+  if((dst = namei(dstpath)) == 0)
+    goto out;
+  if(src->dev != dst->dev)
+    goto out;
+  if(src->inum == dst->inum){
+    ret = 0;
+    goto out;
+  }
+
+  // Stable lock order to avoid deadlock.
+  if(src->inum < dst->inum){
+    ilock(src);
+    src_locked = 1;
+    ilock(dst);
+    dst_locked = 1;
+  } else {
+    ilock(dst);
+    dst_locked = 1;
+    ilock(src);
+    src_locked = 1;
+  }
+
+  ret = idedup(src, dst);
+
+out:
+  if(src){
+    if(src_locked)
+      iunlock(src);
+    iput(src);
+  }
+  if(dst){
+    if(dst_locked)
+      iunlock(dst);
+    iput(dst);
+  }
+
+  end_op();
+  return ret;
+}
+
 
 static struct inode *create(char *path, char type, short major, short minor)
 {
