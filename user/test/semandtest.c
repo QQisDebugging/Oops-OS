@@ -2,10 +2,13 @@
 #include "stat.h"
 #include "user/user.h"
 
+static int verbose = 1;
+
 static void
 fail(const char *msg)
 {
-  printf("semandtest: %s\n", msg);
+  if (verbose)
+    printf("semandtest: %s\n", msg);
   exit(1);
 }
 
@@ -19,13 +22,21 @@ test_deadlock_without_and(void)
   if (a < 0 || b < 0 || ready < 0 || go < 0)
     fail("sem_create failed");
 
+  sh_var_write(0);
+
   int pid1 = fork();
   if (pid1 == 0)
   {
     sem_p(a);
     sem_v(ready);
     sem_p(go);
-    sem_p(b);
+    if (sem_p(b) < 0)
+    {
+      int v = sh_var_read();
+      sh_var_write(v + 1);
+      sem_v(a);
+      exit(0);
+    }
     exit(2);
   }
 
@@ -35,7 +46,14 @@ test_deadlock_without_and(void)
     sem_p(b);
     sem_v(ready);
     sem_p(go);
-    sem_p(a);
+    sleep(5);
+    if (sem_p(a) < 0)
+    {
+      int v = sh_var_read();
+      sh_var_write(v + 1);
+      sem_v(b);
+      exit(0);
+    }
     exit(2);
   }
 
@@ -45,15 +63,19 @@ test_deadlock_without_and(void)
   sem_v(go);
   sleep(10);
 
-  kill(pid1);
-  kill(pid2);
+  if (sh_var_read() == 0)
+  {
+    kill(pid1);
+    kill(pid2);
+  }
 
   int x1 = 0, x2 = 0;
   wait(&x1);
   wait(&x2);
-  if (x1 == 2 || x2 == 2)
+  if (sh_var_read() == 0)
     fail("deadlock not triggered");
-  printf("semandtest: deadlock detected\n");
+  if (verbose)
+    printf("semandtest: deadlock detected\n");
 
   sem_v(a);
   sem_v(b);
@@ -96,7 +118,8 @@ test_and_sem(void)
   wait(&x2);
   if (x1 != 0 || x2 != 0)
     fail("sem_p_multi failed");
-  printf("semandtest: AND completed\n");
+  if (verbose)
+    printf("semandtest: AND completed\n");
   if (sem_free(a) != 0 || sem_free(b) != 0)
     fail("sem_free failed");
 }
@@ -104,8 +127,11 @@ test_and_sem(void)
 int
 main(int argc, char *argv[])
 {
+  if (argc > 1 && strcmp(argv[1], "-q") == 0)
+    verbose = 0;
   test_deadlock_without_and();
   test_and_sem();
-  printf("semandtest: ok\n");
+  if (verbose)
+    printf("semandtest: ok\n");
   exit(0);
 }

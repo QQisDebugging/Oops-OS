@@ -39,6 +39,18 @@ sleeplock_max_waiter_for_pid(int pid)
   return max;
 }
 
+int
+sleeplock_owner(void *chan)
+{
+  for (int i = 0; i < sleeplock_count; i++)
+  {
+    struct sleeplock *lk = sleeplocks[i];
+    if (chan == (void *)lk)
+      return lk->pid;
+  }
+  return 0;
+}
+
 void
 initsleeplock(struct sleeplock *lk, char *name)
 {
@@ -94,5 +106,4 @@ holdingsleep(struct sleeplock *lk)
   release(&lk->lk);
   return r;
 }
-
 

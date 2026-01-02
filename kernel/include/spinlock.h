@@ -17,6 +17,7 @@ struct sem
   struct spinlock lock; // 内核自旋锁
   int resource_count;   // 资源计数
   int waiters;          // number of waiting processes
+  int owner;            // owner pid (best-effort for deadlock detection)
   int allocated;        // 是否被分配 1已分配，0未分配
 };
 extern struct sem sems[SEM_MAX_NUM]; // 系统最多有128个信号量

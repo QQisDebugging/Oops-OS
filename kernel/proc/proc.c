@@ -436,6 +436,69 @@ pi_recalc(int owner_pid)
   }
 }
 
+static int
+owner_of_chan(void *chan)
+{
+  if (chan == 0)
+    return 0;
+
+  for (int i = 0; i < SEM_MAX_NUM; i++)
+  {
+    if (chan == (void *)&sems[i])
+      return sems[i].owner;
+  }
+
+  for (int i = 0; i < SEMSET_MAX_NUM; i++)
+  {
+    if (semsets[i].allocated == 0)
+      continue;
+    for (int j = 0; j < semsets[i].count; j++)
+    {
+      if (chan == (void *)&semsets[i].sems[j])
+        return semsets[i].sems[j].owner;
+    }
+  }
+
+  for (int i = 0; i < MONITOR_MAX_NUM; i++)
+  {
+    if (chan == (void *)&monitors[i])
+      return monitors[i].owner;
+  }
+
+  return sleeplock_owner(chan);
+}
+
+int
+deadlock_detect(void *chan)
+{
+  struct proc *start = myproc();
+  if (start == 0 || chan == 0)
+    return 0;
+
+  int pid = owner_of_chan(chan);
+  for (int depth = 0; pid > 0 && depth < NPROC; depth++)
+  {
+    if (pid == start->pid)
+      return 1;
+
+    struct proc *p = 0;
+    for (struct proc *q = proc; q < &proc[NPROC]; q++)
+    {
+      if (q->pid == pid && q->state != UNUSED)
+      {
+        p = q;
+        break;
+      }
+    }
+    if (p == 0 || p->state != SLEEPING || p->chan == 0)
+      return 0;
+
+    pid = owner_of_chan(p->chan);
+  }
+
+  return 0;
+}
+
 int allocpid()
 {
   int pid;

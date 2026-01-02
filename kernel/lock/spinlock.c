@@ -29,6 +29,7 @@ void initsem()
     sems[i].allocated = 0;      // 标记为未分配
     sems[i].resource_count = 0; // 初始化资源计数
     sems[i].waiters = 0;
+    sems[i].owner = 0;
   }
 }
 
@@ -45,6 +46,7 @@ void initsemset()
       semsets[i].sems[j].allocated = 0;
       semsets[i].sems[j].resource_count = 0;
       semsets[i].sems[j].waiters = 0;
+      semsets[i].sems[j].owner = 0;
     }
   }
 }

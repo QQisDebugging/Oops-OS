@@ -185,6 +185,7 @@ UPROGS=\
 	$U/test/_semtest\
 	$U/test/_semandtest\
 	$U/test/_semsettest\
+	$U/test/_deadlocktest\
 	$U/test/_dmsgtest\
 	$U/test/_monitortest\
 	$U/test/_threadtest\
