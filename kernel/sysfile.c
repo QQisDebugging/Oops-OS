@@ -165,6 +165,9 @@ sys_truncate(void)
   if (length < 0)
     return -1;
 
+  if ((uint)length > MAXFILE * BSIZE)
+    return -1;
+
   begin_op();
   if ((ip = namei(path)) == 0) {
     end_op();
@@ -181,8 +184,7 @@ sys_truncate(void)
   }
 
   // 截断或扩展文件
-  ip->size = (uint)length;
-  iupdate(ip);
+  itrunc_to(ip, (uint)length);
 
   iunlockput(ip);
   end_op();
@@ -205,6 +207,9 @@ sys_ftruncate(void)
   if (length < 0)
     return -1;
 
+  if ((uint)length > MAXFILE * BSIZE)
+    return -1;
+
   // 只支持普通文件
   if (f->type != FD_INODE)
     return -1;
@@ -223,9 +228,8 @@ sys_ftruncate(void)
     return -1;
   }
 
-  // 截断或扩展文件
-  f->ip->size = (uint)length;
-  iupdate(f->ip);
+  // 截断或扩展文件（会释放多余数据块）
+  itrunc_to(f->ip, (uint)length);
 
   // 如果当前偏移量超过新大小，调整偏移量
   if (f->off > (uint)length) {

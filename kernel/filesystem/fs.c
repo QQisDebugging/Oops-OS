@@ -615,6 +615,153 @@ itrunc(struct inode *ip)
   iupdate(ip);
 }
 
+static int
+addr_block_empty(uint *a, int n)
+{
+  for(int i = 0; i < n; i++){
+    if(a[i])
+      return 0;
+  }
+  return 1;
+}
+
+static void
+free_indirect_block(int dev, uint ind_bno)
+{
+  if(ind_bno == 0)
+    return;
+  struct buf *bp = bread(dev, ind_bno);
+  uint *a = (uint*)bp->data;
+  for(int j = 0; j < NADDR_PER_BLOCK; j++){
+    if(a[j])
+      bfree(dev, a[j]);
+  }
+  brelse(bp);
+  bfree(dev, ind_bno);
+}
+
+// Truncate inode to a specific size, freeing blocks beyond newsize.
+// Caller must hold ip->lock.
+void
+itrunc_to(struct inode *ip, uint newsize)
+{
+  if(newsize >= ip->size){
+    ip->size = newsize;
+    iupdate(ip);
+    return;
+  }
+
+  uint new_nblocks = (newsize + BSIZE - 1) / BSIZE;
+
+  // Direct blocks.
+  for(uint i = new_nblocks; i < NDIRECT; i++){
+    if(ip->addrs[i]){
+      bfree(ip->dev, ip->addrs[i]);
+      ip->addrs[i] = 0;
+    }
+  }
+
+  // Single indirect blocks.
+  if(new_nblocks <= NDIRECT){
+    if(ip->addrs[NDIRECT]){
+      free_indirect_block(ip->dev, ip->addrs[NDIRECT]);
+      ip->addrs[NDIRECT] = 0;
+    }
+  } else if(ip->addrs[NDIRECT]){
+    uint keep = new_nblocks - NDIRECT;
+    struct buf *bp = bread(ip->dev, ip->addrs[NDIRECT]);
+    uint *a = (uint*)bp->data;
+    int changed = 0;
+    for(uint j = keep; j < NINDIRECT; j++){
+      if(a[j]){
+        bfree(ip->dev, a[j]);
+        a[j] = 0;
+        changed = 1;
+      }
+    }
+    int empty = addr_block_empty(a, NINDIRECT);
+    if(changed && !empty)
+      log_write(bp);
+    brelse(bp);
+    if(empty){
+      bfree(ip->dev, ip->addrs[NDIRECT]);
+      ip->addrs[NDIRECT] = 0;
+    }
+  }
+
+  // Double indirect blocks.
+  if(new_nblocks <= NDIRECT + NINDIRECT){
+    if(ip->addrs[NDIRECT + 1]){
+      struct buf *bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
+      uint *a = (uint*)bp->data;
+      for(int i = 0; i < NADDR_PER_BLOCK; i++){
+        if(a[i])
+          free_indirect_block(ip->dev, a[i]);
+      }
+      brelse(bp);
+      bfree(ip->dev, ip->addrs[NDIRECT + 1]);
+      ip->addrs[NDIRECT + 1] = 0;
+    }
+  } else if(ip->addrs[NDIRECT + 1]){
+    uint dkeep = new_nblocks - (NDIRECT + NINDIRECT);
+    uint keep2 = dkeep / NADDR_PER_BLOCK;
+    uint keep1 = dkeep % NADDR_PER_BLOCK;
+    struct buf *bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
+    uint *a = (uint*)bp->data;
+    int changed = 0;
+
+    // Free all level-1 blocks after keep2.
+    for(uint i = keep2 + 1; i < NADDR_PER_BLOCK; i++){
+      if(a[i]){
+        free_indirect_block(ip->dev, a[i]);
+        a[i] = 0;
+        changed = 1;
+      }
+    }
+
+    // Handle keep2 block.
+    if(keep2 < NADDR_PER_BLOCK && a[keep2]){
+      if(keep1 == 0){
+        free_indirect_block(ip->dev, a[keep2]);
+        a[keep2] = 0;
+        changed = 1;
+      } else {
+        struct buf *bp1 = bread(ip->dev, a[keep2]);
+        uint *a1 = (uint*)bp1->data;
+        int changed1 = 0;
+        for(uint j = keep1; j < NADDR_PER_BLOCK; j++){
+          if(a1[j]){
+            bfree(ip->dev, a1[j]);
+            a1[j] = 0;
+            changed1 = 1;
+          }
+        }
+        int empty1 = addr_block_empty(a1, NADDR_PER_BLOCK);
+        if(changed1 && !empty1)
+          log_write(bp1);
+        brelse(bp1);
+        if(empty1){
+          bfree(ip->dev, a[keep2]);
+          a[keep2] = 0;
+          changed = 1;
+        }
+      }
+    }
+
+    int empty = addr_block_empty(a, NADDR_PER_BLOCK);
+    if(changed && !empty)
+      log_write(bp);
+    brelse(bp);
+    if(empty){
+      bfree(ip->dev, ip->addrs[NDIRECT + 1]);
+      ip->addrs[NDIRECT + 1] = 0;
+    }
+  }
+
+  ip->size = newsize;
+  iupdate(ip);
+}
+
 // Copy stat information from inode.
 // Caller must hold ip->lock.
 void
