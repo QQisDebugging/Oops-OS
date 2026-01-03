@@ -1567,3 +1567,164 @@ sys_flock(void)
 
   return fileflock(f, operation);
 }
+
+// fsync - 将文件数据和元数据同步到磁盘
+uint64
+sys_fsync(void)
+{
+  struct file *f;
+
+  if(argfd(0, 0, &f) < 0)
+    return -1;
+
+  return filefsync(f, 0);
+}
+
+// fdatasync - 仅将文件数据同步到磁盘（不含元数据）
+uint64
+sys_fdatasync(void)
+{
+  struct file *f;
+
+  if(argfd(0, 0, &f) < 0)
+    return -1;
+
+  return filefsync(f, 1);
+}
+
+// setxattr - 设置文件扩展属性
+uint64
+sys_setxattr(void)
+{
+  char path[MAXPATH];
+  char name[64];
+  char value[256];
+  int size;
+  struct inode *ip;
+
+  if(argstr(0, path, MAXPATH) < 0)
+    return -1;
+  if(argstr(1, name, 64) < 0)
+    return -1;
+  if(argint(3, &size) < 0)
+    return -1;
+  if(size < 0 || size > 256)
+    return -1;
+  
+  uint64 vaddr;
+  if(argaddr(2, &vaddr) < 0)
+    return -1;
+  if(copyin(myproc()->pagetable, value, vaddr, size) < 0)
+    return -1;
+
+  begin_op();
+  if((ip = namei(path)) == 0) {
+    end_op();
+    return -1;
+  }
+  ilock(ip);
+  int ret = xattr_set(ip, name, value, size);
+  iunlock(ip);
+  iput(ip);
+  end_op();
+  return ret;
+}
+
+// getxattr - 获取文件扩展属性
+uint64
+sys_getxattr(void)
+{
+  char path[MAXPATH];
+  char name[64];
+  char value[256];
+  int size;
+  struct inode *ip;
+
+  if(argstr(0, path, MAXPATH) < 0)
+    return -1;
+  if(argstr(1, name, 64) < 0)
+    return -1;
+  if(argint(3, &size) < 0)
+    return -1;
+
+  begin_op();
+  if((ip = namei(path)) == 0) {
+    end_op();
+    return -1;
+  }
+  ilock(ip);
+  int ret = xattr_get(ip, name, value, size > 256 ? 256 : size);
+  iunlock(ip);
+  iput(ip);
+  end_op();
+
+  if(ret > 0 && size > 0) {
+    uint64 vaddr;
+    if(argaddr(2, &vaddr) < 0)
+      return -1;
+    if(copyout(myproc()->pagetable, vaddr, value, ret) < 0)
+      return -1;
+  }
+  return ret;
+}
+
+// listxattr - 列出文件所有扩展属性名
+uint64
+sys_listxattr(void)
+{
+  char path[MAXPATH];
+  char list[512];
+  int size;
+  struct inode *ip;
+
+  if(argstr(0, path, MAXPATH) < 0)
+    return -1;
+  if(argint(2, &size) < 0)
+    return -1;
+
+  begin_op();
+  if((ip = namei(path)) == 0) {
+    end_op();
+    return -1;
+  }
+  ilock(ip);
+  int ret = xattr_list(ip, list, size > 512 ? 512 : size);
+  iunlock(ip);
+  iput(ip);
+  end_op();
+
+  if(ret > 0 && size > 0) {
+    uint64 vaddr;
+    if(argaddr(1, &vaddr) < 0)
+      return -1;
+    if(copyout(myproc()->pagetable, vaddr, list, ret) < 0)
+      return -1;
+  }
+  return ret;
+}
+
+// removexattr - 删除文件扩展属性
+uint64
+sys_removexattr(void)
+{
+  char path[MAXPATH];
+  char name[64];
+  struct inode *ip;
+
+  if(argstr(0, path, MAXPATH) < 0)
+    return -1;
+  if(argstr(1, name, 64) < 0)
+    return -1;
+
+  begin_op();
+  if((ip = namei(path)) == 0) {
+    end_op();
+    return -1;
+  }
+  ilock(ip);
+  int ret = xattr_remove(ip, name);
+  iunlock(ip);
+  iput(ip);
+  end_op();
+  return ret;
+}

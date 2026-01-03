@@ -54,6 +54,12 @@ int ftruncate(int fd, int length);
 int rename(const char *oldpath, const char *newpath);
 int dedup(const char *srcpath, const char *dstpath);
 int flock(int fd, int operation);
+int fsync(int fd);
+int fdatasync(int fd);
+int setxattr(const char *path, const char *name, const void *value, int size);
+int getxattr(const char *path, const char *name, void *value, int size);
+int listxattr(const char *path, char *list, int size);
+int removexattr(const char *path, const char *name);
 
 // fallocate flags
 #define FALLOC_KEEP_SIZE     0x001

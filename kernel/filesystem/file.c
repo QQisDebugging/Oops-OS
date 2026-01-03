@@ -273,3 +273,34 @@ fileflock(struct file *f, int operation)
   return -1;  // 无效操作
 }
 
+// fsync - 将文件数据和元数据同步到磁盘
+// datasync: 0 = fsync（同步数据+元数据）, 1 = fdatasync（仅同步数据）
+// 返回：成功返回 0，失败返回 -1
+int
+filefsync(struct file *f, int datasync)
+{
+  struct inode *ip;
+
+  // 只支持对普通文件 fsync
+  if(f->type != FD_INODE)
+    return -1;
+
+  ip = f->ip;
+
+  begin_op();
+  ilock(ip);
+
+  if(!datasync) {
+    // fsync: 更新 inode 元数据到磁盘
+    iupdate(ip);
+  }
+
+  iunlock(ip);
+  end_op();
+
+  // end_op() 会触发日志提交，将所有挂起的写操作刷到磁盘
+  // 这确保了文件数据的持久性
+
+  return 0;
+}
+
