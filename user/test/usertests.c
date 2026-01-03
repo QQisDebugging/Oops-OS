@@ -2825,6 +2825,14 @@ void readaheadtest_run(char *s)
   exit(1);
 }
 
+void ballochinttest_run(char *s)
+{
+  char *argv[] = {"ballochinttest", "quiet", 0};
+  exec("ballochinttest", argv);
+  printf("%s: exec ballochinttest failed\n", s);
+  exit(1);
+}
+
 void fallocatetest_run(char *s)
 {
   char *argv[] = {"fallocatetest", 0};
@@ -2950,6 +2958,7 @@ int main(int argc, char *argv[])
       {sbrkmuch, "sbrkmuch"},
       {swaptest_run, "swaptest"},
       {readaheadtest_run, "readaheadtest"},
+      {ballochinttest_run, "ballochinttest"},
       {spooltest_run, "spooltest"},
       {demandloadtest_run, "demandloadtest"},
       {sbrkarg, "sbrkarg"},
