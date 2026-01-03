@@ -95,3 +95,7 @@ entry("rename");
 entry("dedup");
 entry("rt_set");
 entry("rt_clear");
+entry("banker_init");
+entry("banker_set_max");
+entry("banker_request");
+entry("banker_release");

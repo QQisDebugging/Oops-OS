@@ -13,6 +13,20 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+#define BANKER_RES_MAX BANKER_MAX_RES
+static void banker_init_state(void);
+
+struct banker_state
+{
+  struct spinlock lock;
+  int inited;
+  int nres;
+  int total[BANKER_RES_MAX];
+  int avail[BANKER_RES_MAX];
+};
+
+static struct banker_state banker;
+
 #if defined(SCHED_MLFQ)
 static const int mlfq_time_slice[MLFQ_LEVELS] = {
     MLFQ_SLICE_L0,
@@ -297,6 +311,7 @@ void procinit(void)
   struct proc *p;
 
   initlock(&pid_lock, "nextpid");
+  banker_init_state();
   for (p = proc; p < &proc[NPROC]; p++)
   {
     initlock(&p->lock, "proc");
@@ -499,6 +514,276 @@ deadlock_detect(void *chan)
   return 0;
 }
 
+static int
+banker_need_ok(struct proc *p, int *work)
+{
+  for (int r = 0; r < banker.nres; r++)
+  {
+    int need = p->bkr_max[r] - p->bkr_alloc[r];
+    if (need > work[r])
+      return 0;
+  }
+  return 1;
+}
+
+static int
+banker_is_safe_locked(void)
+{
+  int work[BANKER_RES_MAX];
+  int finish[NPROC];
+
+  for (int r = 0; r < banker.nres; r++)
+    work[r] = banker.avail[r];
+
+  for (int i = 0; i < NPROC; i++)
+  {
+    struct proc *p = &proc[i];
+    if (p->state == UNUSED || !p->bkr_active)
+      finish[i] = 1;
+    else
+      finish[i] = 0;
+  }
+
+  for (;;)
+  {
+    int progress = 0;
+    for (int i = 0; i < NPROC; i++)
+    {
+      if (finish[i])
+        continue;
+      struct proc *p = &proc[i];
+      if (banker_need_ok(p, work))
+      {
+        for (int r = 0; r < banker.nres; r++)
+          work[r] += p->bkr_alloc[r];
+        finish[i] = 1;
+        progress = 1;
+      }
+    }
+    if (!progress)
+      break;
+  }
+
+  for (int i = 0; i < NPROC; i++)
+  {
+    if (!finish[i])
+      return 0;
+  }
+  return 1;
+}
+
+static int
+banker_any_alloc_locked(void)
+{
+  for (int i = 0; i < NPROC; i++)
+  {
+    struct proc *p = &proc[i];
+    if (!p->bkr_active)
+      continue;
+    for (int r = 0; r < banker.nres; r++)
+    {
+      if (p->bkr_alloc[r] > 0)
+        return 1;
+    }
+  }
+  return 0;
+}
+
+static void
+banker_init_state(void)
+{
+  initlock(&banker.lock, "banker");
+  banker.inited = 0;
+  banker.nres = 0;
+  for (int r = 0; r < BANKER_RES_MAX; r++)
+  {
+    banker.total[r] = 0;
+    banker.avail[r] = 0;
+  }
+}
+
+int
+banker_init(int nres, int *total)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+  for (int r = 0; r < nres; r++)
+  {
+    if (total[r] < 0)
+      return -1;
+  }
+
+  acquire(&banker.lock);
+  if (banker.inited && banker_any_alloc_locked())
+  {
+    release(&banker.lock);
+    return -1;
+  }
+
+  banker.inited = 1;
+  banker.nres = nres;
+  for (int r = 0; r < BANKER_RES_MAX; r++)
+  {
+    banker.total[r] = 0;
+    banker.avail[r] = 0;
+  }
+  for (int r = 0; r < nres; r++)
+  {
+    banker.total[r] = total[r];
+    banker.avail[r] = total[r];
+  }
+
+  for (int i = 0; i < NPROC; i++)
+  {
+    struct proc *p = &proc[i];
+    p->bkr_active = 0;
+    for (int r = 0; r < BANKER_RES_MAX; r++)
+    {
+      p->bkr_max[r] = 0;
+      p->bkr_alloc[r] = 0;
+    }
+  }
+
+  release(&banker.lock);
+  return 0;
+}
+
+int
+banker_set_max(struct proc *p, int nres, int *max)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+
+  acquire(&banker.lock);
+  if (!banker.inited || nres != banker.nres)
+  {
+    release(&banker.lock);
+    return -1;
+  }
+  for (int r = 0; r < nres; r++)
+  {
+    if (max[r] < 0 || max[r] > banker.total[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+    if (max[r] < p->bkr_alloc[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+  }
+
+  if (!p->bkr_active)
+  {
+    for (int r = 0; r < BANKER_RES_MAX; r++)
+      p->bkr_alloc[r] = 0;
+  }
+  p->bkr_active = 1;
+  for (int r = 0; r < nres; r++)
+    p->bkr_max[r] = max[r];
+  for (int r = nres; r < BANKER_RES_MAX; r++)
+    p->bkr_max[r] = 0;
+
+  release(&banker.lock);
+  return 0;
+}
+
+int
+banker_request(struct proc *p, int nres, int *req)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+
+  acquire(&banker.lock);
+  if (!banker.inited || nres != banker.nres || !p->bkr_active)
+  {
+    release(&banker.lock);
+    return -1;
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    int need = p->bkr_max[r] - p->bkr_alloc[r];
+    if (req[r] < 0 || req[r] > need || req[r] > banker.avail[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    banker.avail[r] -= req[r];
+    p->bkr_alloc[r] += req[r];
+  }
+
+  if (!banker_is_safe_locked())
+  {
+    for (int r = 0; r < nres; r++)
+    {
+      banker.avail[r] += req[r];
+      p->bkr_alloc[r] -= req[r];
+    }
+    release(&banker.lock);
+    return -1;
+  }
+
+  release(&banker.lock);
+  return 0;
+}
+
+int
+banker_release(struct proc *p, int nres, int *rel)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+
+  acquire(&banker.lock);
+  if (!banker.inited || nres != banker.nres || !p->bkr_active)
+  {
+    release(&banker.lock);
+    return -1;
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    if (rel[r] < 0 || rel[r] > p->bkr_alloc[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    p->bkr_alloc[r] -= rel[r];
+    banker.avail[r] += rel[r];
+  }
+
+  release(&banker.lock);
+  return 0;
+}
+
+void
+banker_release_proc(struct proc *p)
+{
+  acquire(&banker.lock);
+  if (!banker.inited || !p->bkr_active)
+  {
+    release(&banker.lock);
+    return;
+  }
+  for (int r = 0; r < banker.nres; r++)
+  {
+    banker.avail[r] += p->bkr_alloc[r];
+    p->bkr_alloc[r] = 0;
+    p->bkr_max[r] = 0;
+  }
+  p->bkr_active = 0;
+  release(&banker.lock);
+}
+
 int allocpid()
 {
   int pid;
@@ -544,6 +829,12 @@ static struct proc *allocproc(void)
   p->dmsg_count = 0;
   p->dmsg_bytes = 0;
   p->dmsg_closed = 0;
+  p->bkr_active = 0;
+  for (int r = 0; r < BANKER_RES_MAX; r++)
+  {
+    p->bkr_max[r] = 0;
+    p->bkr_alloc[r] = 0;
+  }
   p->priority = 10; // 设定优先级为10
   p->cpu_time = 0;
   p->wait_time = 0;
@@ -725,6 +1016,7 @@ monitor_release_on_exit(struct proc *p)
 // p->lock must be held.
 static void freeproc(struct proc *p)
 {
+  banker_release_proc(p);
   if (p->trapframe)
     kfree((void *)p->trapframe);
   p->trapframe = 0;
