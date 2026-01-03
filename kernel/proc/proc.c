@@ -553,6 +553,7 @@ static struct proc *allocproc(void)
   p->mlfq_ticks = 0;
   rt_reset_locked(p);
   p->trace_mask = 0; // 设定掩码为0
+  p->swap_hand = 0;
   p->shm = KERNBASE; // 初始化shm，刚开始shm与kernbase重合
   p->shmkeymask = 0; // 初始化shmkeymask
   // Allocate a trapframe page.

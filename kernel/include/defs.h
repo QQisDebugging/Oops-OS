@@ -102,6 +102,7 @@ int swapout(void);
 int swapin(pagetable_t, uint64);
 void swapfree(uint64);
 int swapcopy(pagetable_t, uint64, pte_t);
+void swap_pbuf_stats(uint64 *hits, uint64 *misses, uint64 *cached);
 // log.c
 void initlog(int, struct superblock *);
 void log_write(struct buf *);
