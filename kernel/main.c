@@ -12,6 +12,7 @@ void main()
   if (cpuid() == 0)
   {
     consoleinit();
+    spoolinit();
     printfinit();
     printf("\033[1;32m");
     printf("\n");

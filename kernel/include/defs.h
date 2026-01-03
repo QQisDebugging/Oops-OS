@@ -43,6 +43,7 @@ void bunpin(struct buf *);
 
 // console.c
 void consoleinit(void);
+void spoolinit(void);
 void consoleintr(int);
 void consputc(int);
 

@@ -2809,6 +2809,14 @@ void swaptest_run(char *s)
   exit(1);
 }
 
+void spooltest_run(char *s)
+{
+  char *argv[] = {"spooltest", "quiet", 0};
+  exec("spooltest", argv);
+  printf("%s: exec spooltest failed\n", s);
+  exit(1);
+}
+
 void fallocatetest_run(char *s)
 {
   char *argv[] = {"fallocatetest", 0};
@@ -2933,6 +2941,7 @@ int main(int argc, char *argv[])
       {bsstest, "bsstest"},
       {sbrkmuch, "sbrkmuch"},
       {swaptest_run, "swaptest"},
+      {spooltest_run, "spooltest"},
       {demandloadtest_run, "demandloadtest"},
       {sbrkarg, "sbrkarg"},
       {validatetest, "validatetest"},

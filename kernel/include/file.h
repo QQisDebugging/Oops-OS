@@ -50,3 +50,4 @@ struct devsw
 extern struct devsw devsw[];
 
 #define CONSOLE 1
+#define SPOOL 2

@@ -5,6 +5,7 @@ OBJS = \
   $K/asm/entry.o \
   $K/start.o \
   $K/driver/console.o \
+  $K/driver/spool.o \
   $K/lib/printf.o \
   $K/driver/uart.o \
   $K/mm/kalloc.o \
@@ -155,6 +156,7 @@ UPROGS=\
 	$U/test/_lazytest\
 	$U/test/_swaptest\
 	$U/test/_demandloadtest\
+	$U/test/_spooltest\
 	$U/program/_execve\
 	$U/program/_getparentpid\
 	$U/program/_print_pgtable\
