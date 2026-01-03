@@ -157,6 +157,7 @@ UPROGS=\
 	$U/test/_swaptest\
 	$U/test/_demandloadtest\
 	$U/test/_spooltest\
+	$U/test/_readaheadtest\
 	$U/program/_execve\
 	$U/program/_getparentpid\
 	$U/program/_print_pgtable\
