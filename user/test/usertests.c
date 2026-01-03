@@ -2865,6 +2865,14 @@ void punchtest_run(char *s)
   exit(1);
 }
 
+void flocktest_run(char *s)
+{
+  char *argv[] = {"flocktest", 0};
+  exec("flocktest", argv);
+  printf("%s: exec flocktest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -2957,6 +2965,7 @@ int main(int argc, char *argv[])
       {renametest_run, "renametest"},
       {deduptest_run, "deduptest"},
       {punchtest_run, "punchtest"},
+      {flocktest_run, "flocktest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

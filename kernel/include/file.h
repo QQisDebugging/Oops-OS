@@ -38,6 +38,10 @@ struct inode
   short nlink;
   uint size;
   uint addrs[NDIRECT + 2];
+
+  // 文件锁（flock）
+  int flock_type;        // 当前锁类型：0=无锁, LOCK_SH=共享锁, LOCK_EX=排他锁
+  int flock_count;       // 共享锁持有者数量
 };
 
 // map major device number to device functions.

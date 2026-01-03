@@ -12,6 +12,7 @@
 #include "file.h"
 #include "stat.h"
 #include "proc.h"
+#include "fcntl.h"
 
 struct devsw devsw[NDEV];
 struct {
@@ -19,10 +20,14 @@ struct {
   struct file file[NFILE];
 } ftable;
 
+// 文件锁全局锁，用于保护 inode 的 flock 字段
+struct spinlock flock_lock;
+
 void
 fileinit(void)
 {
   initlock(&ftable.lock, "ftable");
+  initlock(&flock_lock, "flock");
 }
 
 // Allocate a file structure.
@@ -196,5 +201,75 @@ filewrite(struct file *f, uint64 addr, int n)
   }
 
   return ret;
+}
+
+// flock - 对文件加锁/解锁
+// operation: LOCK_SH（共享锁）, LOCK_EX（排他锁）, LOCK_UN（解锁）
+//            可与 LOCK_NB（非阻塞）组合使用
+// 返回：成功返回 0，失败返回 -1
+int
+fileflock(struct file *f, int operation)
+{
+  struct inode *ip;
+  int nonblock = operation & LOCK_NB;
+  int op = operation & ~LOCK_NB;
+
+  // 只支持对普通文件加锁
+  if(f->type != FD_INODE)
+    return -1;
+  
+  ip = f->ip;
+
+  acquire(&flock_lock);
+
+  if(op == LOCK_UN) {
+    // 解锁操作
+    if(ip->flock_type == LOCK_SH) {
+      ip->flock_count--;
+      if(ip->flock_count == 0) {
+        ip->flock_type = 0;
+        wakeup(&ip->flock_type);
+      }
+    } else if(ip->flock_type == LOCK_EX) {
+      ip->flock_type = 0;
+      ip->flock_count = 0;
+      wakeup(&ip->flock_type);
+    }
+    release(&flock_lock);
+    return 0;
+  }
+
+  if(op == LOCK_SH) {
+    // 申请共享锁
+    while(ip->flock_type == LOCK_EX) {
+      if(nonblock) {
+        release(&flock_lock);
+        return -1;  // EWOULDBLOCK
+      }
+      sleep(&ip->flock_type, &flock_lock);
+    }
+    ip->flock_type = LOCK_SH;
+    ip->flock_count++;
+    release(&flock_lock);
+    return 0;
+  }
+
+  if(op == LOCK_EX) {
+    // 申请排他锁
+    while(ip->flock_type != 0) {
+      if(nonblock) {
+        release(&flock_lock);
+        return -1;  // EWOULDBLOCK
+      }
+      sleep(&ip->flock_type, &flock_lock);
+    }
+    ip->flock_type = LOCK_EX;
+    ip->flock_count = 1;
+    release(&flock_lock);
+    return 0;
+  }
+
+  release(&flock_lock);
+  return -1;  // 无效操作
 }
 

@@ -81,3 +81,4 @@
 #define SYS_dedup 80
 #define SYS_rt_set 81
 #define SYS_rt_clear 82
+#define SYS_flock 83

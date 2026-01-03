@@ -199,6 +199,7 @@ UPROGS=\
 	$U/test/_renametest\
 	$U/test/_deduptest\
 	$U/test/_punchtest\
+	$U/test/_flocktest\
 	$U/program/_statistics
 
 
