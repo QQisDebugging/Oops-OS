@@ -2908,7 +2908,6 @@ int main(int argc, char *argv[])
       {swaptest_run, "swaptest"},
       {mmapswaptest_run, "mmapswaptest"},
       {swapconctest_run, "swapconctest"},
-      {swapthrashtest_run, "swapthrashtest"},
       {swapbuftest_run, "swapbuftest"},
       {demandloadtest_run, "demandloadtest"},
       {sbrkarg, "sbrkarg"},

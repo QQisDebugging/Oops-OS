@@ -12,7 +12,7 @@ fail(const char *msg)
 }
 
 static void
-worker(uint64 amt, int rounds, int tag, int max_ticks)
+worker(uint64 amt, int rounds, int tag, int max_ticks, int verbose)
 {
   char *base = sbrk(0);
   if (sbrk(amt) != base)
@@ -23,14 +23,15 @@ worker(uint64 amt, int rounds, int tag, int max_ticks)
   if (step < 512)
     step = 512;
   int start = uptime();
+  int do_print = verbose || tag == 0;
   for (int r = 0; r < rounds; r++) {
-    if (tag == 0 && (r & 1) == 0) {
+    if (do_print && (r & 1) == 0) {
       printf("swapconctest: pid %d round %d/%d\n", getpid(), r + 1, rounds);
       printf("swapconctest: write phase\n");
     }
     for (uint64 i = 0; i < pages; i++) {
       base[i * PGSIZE] = (char)((i + r + tag) & 0xff);
-      if (tag == 0 && i != 0 && (i % step) == 0)
+      if (do_print && i != 0 && (i % step) == 0)
         printf("swapconctest: progress %d/%d\n", (int)i, (int)pages);
       if ((i & 255) == 0 && uptime() - start > max_ticks)
         fail("timeout");
@@ -38,13 +39,13 @@ worker(uint64 amt, int rounds, int tag, int max_ticks)
   }
 
   uint64 expect_off = (uint64)(rounds - 1 + tag);
-  if (tag == 0)
+  if (do_print)
     printf("swapconctest: verify phase\n");
   for (uint64 i = 0; i < pages; i++) {
     char v = base[i * PGSIZE];
     if (v != (char)((i + expect_off) & 0xff))
       fail("pattern mismatch");
-    if (tag == 0 && i != 0 && (i % step) == 0)
+    if (do_print && i != 0 && (i % step) == 0)
       printf("swapconctest: verify %d/%d\n", (int)i, (int)pages);
     if ((i & 255) == 0 && uptime() - start > max_ticks)
       fail("timeout");
@@ -61,6 +62,7 @@ main(int argc, char *argv[])
   int nprocs = 2;
   int rounds = 1;
   int max_ticks = 3000;
+  int verbose = 0;
 
   if (argc > 1)
     nprocs = atoi(argv[1]);
@@ -68,6 +70,8 @@ main(int argc, char *argv[])
     rounds = atoi(argv[2]);
   if (argc > 3)
     max_ticks = atoi(argv[3]);
+  if (argc > 4)
+    verbose = atoi(argv[4]);
 
   if (nprocs < 1)
     nprocs = 1;
@@ -95,12 +99,14 @@ main(int argc, char *argv[])
   uint64 amt = PGROUNDUP(total / nprocs);
 
   int start = uptime();
+  printf("swapconctest: start procs=%d rounds=%d max_ticks=%d verbose=%d\n",
+         nprocs, rounds, max_ticks, verbose ? 1 : 0);
   for (int i = 0; i < nprocs; i++) {
     int pid = fork();
     if (pid < 0)
       fail("fork failed");
     if (pid == 0)
-      worker(amt, rounds, i, max_ticks);
+      worker(amt, rounds, i, max_ticks, verbose);
   }
 
   for (int i = 0; i < nprocs; i++) {
