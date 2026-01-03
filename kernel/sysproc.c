@@ -176,6 +176,8 @@ uint64 sys_sysinfo(void)
   struct sysinfo info;
   freebytes(&info.freemem);
   procnum(&info.nproc);
+  swap_pbuf_stats(&info.swapbuf_hits, &info.swapbuf_misses,
+                  &info.swapbuf_cached);
 
   // 获取虚拟地址
   uint64 dstaddr;

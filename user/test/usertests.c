@@ -2798,6 +2798,14 @@ void swapthrashtest_run(char *s)
   exit(1);
 }
 
+void swapbuftest_run(char *s)
+{
+  char *argv[] = {"swapbuftest", 0};
+  exec("swapbuftest", argv);
+  printf("%s: exec swapbuftest failed\n", s);
+  exit(1);
+}
+
 void fallocatetest_run(char *s)
 {
   char *argv[] = {"fallocatetest", 0};
@@ -2901,6 +2909,7 @@ int main(int argc, char *argv[])
       {mmapswaptest_run, "mmapswaptest"},
       {swapconctest_run, "swapconctest"},
       {swapthrashtest_run, "swapthrashtest"},
+      {swapbuftest_run, "swapbuftest"},
       {demandloadtest_run, "demandloadtest"},
       {sbrkarg, "sbrkarg"},
       {validatetest, "validatetest"},

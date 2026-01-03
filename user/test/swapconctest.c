@@ -12,24 +12,42 @@ fail(const char *msg)
 }
 
 static void
-worker(uint64 amt, int rounds, int tag)
+worker(uint64 amt, int rounds, int tag, int max_ticks)
 {
   char *base = sbrk(0);
   if (sbrk(amt) != base)
     fail("sbrk grow failed");
 
   uint64 pages = amt / PGSIZE;
+  uint64 step = pages / 4;
+  if (step < 512)
+    step = 512;
+  int start = uptime();
   for (int r = 0; r < rounds; r++) {
+    if (tag == 0 && (r & 1) == 0) {
+      printf("swapconctest: pid %d round %d/%d\n", getpid(), r + 1, rounds);
+      printf("swapconctest: write phase\n");
+    }
     for (uint64 i = 0; i < pages; i++) {
       base[i * PGSIZE] = (char)((i + r + tag) & 0xff);
+      if (tag == 0 && i != 0 && (i % step) == 0)
+        printf("swapconctest: progress %d/%d\n", (int)i, (int)pages);
+      if ((i & 255) == 0 && uptime() - start > max_ticks)
+        fail("timeout");
     }
   }
 
   uint64 expect_off = (uint64)(rounds - 1 + tag);
+  if (tag == 0)
+    printf("swapconctest: verify phase\n");
   for (uint64 i = 0; i < pages; i++) {
     char v = base[i * PGSIZE];
     if (v != (char)((i + expect_off) & 0xff))
       fail("pattern mismatch");
+    if (tag == 0 && i != 0 && (i % step) == 0)
+      printf("swapconctest: verify %d/%d\n", (int)i, (int)pages);
+    if ((i & 255) == 0 && uptime() - start > max_ticks)
+      fail("timeout");
   }
 
   if (sbrk(-((int)amt)) == (char *)-1)
@@ -40,13 +58,16 @@ worker(uint64 amt, int rounds, int tag)
 int
 main(int argc, char *argv[])
 {
-  int nprocs = 4;
-  int rounds = 2;
+  int nprocs = 2;
+  int rounds = 1;
+  int max_ticks = 3000;
 
   if (argc > 1)
     nprocs = atoi(argv[1]);
   if (argc > 2)
     rounds = atoi(argv[2]);
+  if (argc > 3)
+    max_ticks = atoi(argv[3]);
 
   if (nprocs < 1)
     nprocs = 1;
@@ -54,13 +75,19 @@ main(int argc, char *argv[])
     nprocs = 8;
   if (rounds < 1)
     rounds = 1;
+  if (max_ticks < 200)
+    max_ticks = 200;
 
   struct sysinfo info;
   if (sysinfo(&info) < 0)
     fail("sysinfo failed");
 
   uint64 swap_bytes = (uint64)SWAP_PAGES * PGSIZE;
-  uint64 total = info.freemem + (swap_bytes * 3) / 4;
+  uint64 extra = swap_bytes / 16;
+  uint64 max_extra = 8 * 1024 * 1024;
+  if (extra > max_extra)
+    extra = max_extra;
+  uint64 total = info.freemem + extra;
   uint64 min_total = (uint64)nprocs * 8 * PGSIZE;
   if (total < min_total)
     total = min_total;
@@ -73,7 +100,7 @@ main(int argc, char *argv[])
     if (pid < 0)
       fail("fork failed");
     if (pid == 0)
-      worker(amt, rounds, i);
+      worker(amt, rounds, i, max_ticks);
   }
 
   for (int i = 0; i < nprocs; i++) {

@@ -18,6 +18,7 @@ extern struct spinlock tickslock;
 #define SWAP_THRASH_WINDOW 20
 #define SWAP_THRASH_EVENTS 64
 #define SWAP_THRASH_SLEEP 2
+#define SWAP_PBUF_SIZE 64
 
 static struct spinlock swapmap_lock;
 static uint swapstart;
@@ -26,6 +27,19 @@ static uint swap_hint;
 static int swapready;
 static uint swap_window_start;
 static uint swap_events;
+static struct spinlock swap_pbuf_lock;
+static uint swap_pbuf_hand;
+static uint swap_pbuf_cached;
+static uint64 swap_pbuf_hits;
+static uint64 swap_pbuf_misses;
+
+struct swap_pbuf_entry {
+  uint valid;
+  uint slot;
+  uint64 pa;
+};
+
+static struct swap_pbuf_entry swap_pbuf[SWAP_PBUF_SIZE];
 
 static int
 swap_alloc(void)
@@ -81,6 +95,56 @@ swap_read(uint64 slot, char *dst)
 }
 
 static void
+swap_pbuf_put(uint slot, uint64 pa)
+{
+  acquire(&swap_pbuf_lock);
+  uint idx = swap_pbuf_hand;
+  if (swap_pbuf[idx].valid) {
+    kfree((void *)swap_pbuf[idx].pa);
+    if (swap_pbuf_cached > 0)
+      swap_pbuf_cached--;
+  }
+  swap_pbuf[idx].valid = 1;
+  swap_pbuf[idx].slot = slot;
+  swap_pbuf[idx].pa = pa;
+  swap_pbuf_cached++;
+  swap_pbuf_hand = (idx + 1) % SWAP_PBUF_SIZE;
+  release(&swap_pbuf_lock);
+}
+
+static void *
+swap_pbuf_get(uint slot)
+{
+  void *pa = 0;
+
+  acquire(&swap_pbuf_lock);
+  for (uint i = 0; i < SWAP_PBUF_SIZE; i++) {
+    if (swap_pbuf[i].valid && swap_pbuf[i].slot == slot) {
+      pa = (void *)swap_pbuf[i].pa;
+      swap_pbuf[i].valid = 0;
+      if (swap_pbuf_cached > 0)
+        swap_pbuf_cached--;
+      swap_pbuf_hits++;
+      break;
+    }
+  }
+  if (pa == 0)
+    swap_pbuf_misses++;
+  release(&swap_pbuf_lock);
+  return pa;
+}
+
+void
+swap_pbuf_stats(uint64 *hits, uint64 *misses, uint64 *cached)
+{
+  acquire(&swap_pbuf_lock);
+  *hits = swap_pbuf_hits;
+  *misses = swap_pbuf_misses;
+  *cached = swap_pbuf_cached;
+  release(&swap_pbuf_lock);
+}
+
+static void
 swap_throttle(void)
 {
   acquire(&tickslock);
@@ -110,10 +174,15 @@ swapinit(void)
     panic("swapinit: swap blocks overflow");
 
   initlock(&swapmap_lock, "swapmap");
+  initlock(&swap_pbuf_lock, "swappbuf");
   swap_hint = 0;
   swapready = 1;
   swap_window_start = 0;
   swap_events = 0;
+  swap_pbuf_hand = 0;
+  swap_pbuf_cached = 0;
+  swap_pbuf_hits = 0;
+  swap_pbuf_misses = 0;
 }
 
 static struct vm_area *
@@ -221,7 +290,7 @@ swapout(void)
           *pte = SWAP2PTE(slot) | flags;
           sfence_vma();
 
-          kfree((void *)pa);
+          swap_pbuf_put(slot, pa);
 
           uint64 next = va + PGSIZE;
           if (next >= sz)
@@ -256,11 +325,14 @@ swapin(pagetable_t pagetable, uint64 va)
     return 1;
 
   uint64 slot = PTE2SWAP(*pte);
-  char *mem = kalloc();
+  char *mem = swap_pbuf_get(slot);
   if (mem == 0)
-    return -1;
-
-  swap_read(slot, mem);
+  {
+    mem = kalloc();
+    if (mem == 0)
+      return -1;
+    swap_read(slot, mem);
+  }
   swapfree(slot);
 
   uint flags = PTE_FLAGS(*pte);

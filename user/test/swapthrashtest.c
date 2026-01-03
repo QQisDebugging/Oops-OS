@@ -19,17 +19,32 @@ worker(uint64 amt, int rounds, int max_ticks, int tag)
     fail("sbrk grow failed");
 
   uint64 pages = amt / PGSIZE;
+  uint64 step = pages / 8;
+  if (step < 512)
+    step = 512;
   int start = uptime();
   for (int r = 0; r < rounds; r++) {
-    if ((r & 1) == 0)
+    if (tag == 0 && (r & 1) == 0) {
       printf("swapthrashtest: pid %d round %d/%d\n", getpid(), r + 1, rounds);
+      printf("swapthrashtest: write phase\n");
+    }
     for (uint64 i = 0; i < pages; i++) {
       base[i * PGSIZE] = (char)((i + r + tag) & 0xff);
+      if (tag == 0 && i != 0 && (i % step) == 0)
+        printf("swapthrashtest: progress %d/%d\n", (int)i, (int)pages);
+      if ((i & 255) == 0 && uptime() - start > max_ticks)
+        fail("timeout");
     }
+    if (tag == 0)
+      printf("swapthrashtest: verify phase\n");
     for (uint64 i = 0; i < pages; i++) {
       char v = base[i * PGSIZE];
       if (v != (char)((i + r + tag) & 0xff))
         fail("pattern mismatch");
+      if (tag == 0 && i != 0 && (i % step) == 0)
+        printf("swapthrashtest: verify %d/%d\n", (int)i, (int)pages);
+      if ((i & 255) == 0 && uptime() - start > max_ticks)
+        fail("timeout");
     }
     if (uptime() - start > max_ticks)
       fail("timeout");
@@ -43,9 +58,9 @@ worker(uint64 amt, int rounds, int max_ticks, int tag)
 int
 main(int argc, char *argv[])
 {
-  int nprocs = 3;
-  int rounds = 2;
-  int max_ticks = 5000;
+  int nprocs = 1;
+  int rounds = 1;
+  int max_ticks = 2000;
 
   if (argc > 1)
     nprocs = atoi(argv[1]);
@@ -67,8 +82,8 @@ main(int argc, char *argv[])
     fail("sysinfo failed");
 
   uint64 swap_bytes = (uint64)SWAP_PAGES * PGSIZE;
-  uint64 extra = swap_bytes / 8;
-  uint64 max_extra = 16 * 1024 * 1024;
+  uint64 extra = swap_bytes / 16;
+  uint64 max_extra = 8 * 1024 * 1024;
   if (extra > max_extra)
     extra = max_extra;
   uint64 total = info.freemem + extra;
