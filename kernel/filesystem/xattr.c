@@ -165,6 +165,21 @@ xattr_get(struct inode *ip, char *name, char *value, int size)
   return -1;  // 属性不存在
 }
 
+// 清除 inode 的所有扩展属性（在 inode 被删除时调用）
+void
+xattr_clear(struct inode *ip)
+{
+  struct xattr_inode *xi;
+
+  acquire(&xattr_table.lock);
+
+  xi = xattr_find_or_create(ip->dev, ip->inum, 0);
+  if(xi) {
+    xi->used = 0;  // 释放整个条目
+  }
+
+  release(&xattr_table.lock);
+}
 // 列出所有扩展属性名
 int
 xattr_list(struct inode *ip, char *list, int size)

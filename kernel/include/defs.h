@@ -66,6 +66,7 @@ int xattr_set(struct inode *, char *, char *, int);
 int xattr_get(struct inode *, char *, char *, int);
 int xattr_list(struct inode *, char *, int);
 int xattr_remove(struct inode *, char *);
+void xattr_clear(struct inode *);
 
 // fs.c
 void fsinit(int);

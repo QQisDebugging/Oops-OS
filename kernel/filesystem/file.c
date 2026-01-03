@@ -40,6 +40,7 @@ filealloc(void)
   for(f = ftable.file; f < ftable.file + NFILE; f++){
     if(f->ref == 0){
       f->ref = 1;
+      f->flock_held = 0;  // 初始化 flock 状态
       release(&ftable.lock);
       return f;
     }
@@ -76,7 +77,25 @@ fileclose(struct file *f)
   ff = *f;
   f->ref = 0;
   f->type = FD_NONE;
+  f->flock_held = 0;  // 清除 flock 状态
   release(&ftable.lock);
+
+  // 如果持有 flock 锁，先释放锁
+  if(ff.flock_held != 0 && ff.type == FD_INODE && ff.ip != 0) {
+    acquire(&flock_lock);
+    if(ff.ip->flock_type == LOCK_SH) {
+      ff.ip->flock_count--;
+      if(ff.ip->flock_count == 0) {
+        ff.ip->flock_type = 0;
+        wakeup(&ff.ip->flock_type);
+      }
+    } else if(ff.ip->flock_type == LOCK_EX) {
+      ff.ip->flock_type = 0;
+      ff.ip->flock_count = 0;
+      wakeup(&ff.ip->flock_type);
+    }
+    release(&flock_lock);
+  }
 
   if(ff.type == FD_PIPE){
     pipeclose(ff.pipe, ff.writable);
@@ -223,7 +242,11 @@ fileflock(struct file *f, int operation)
   acquire(&flock_lock);
 
   if(op == LOCK_UN) {
-    // 解锁操作
+    // 解锁操作：只有持有锁的文件描述符才能解锁
+    if(f->flock_held == 0) {
+      release(&flock_lock);
+      return 0;  // 没有持有锁，直接返回成功
+    }
     if(ip->flock_type == LOCK_SH) {
       ip->flock_count--;
       if(ip->flock_count == 0) {
@@ -235,8 +258,25 @@ fileflock(struct file *f, int operation)
       ip->flock_count = 0;
       wakeup(&ip->flock_type);
     }
+    f->flock_held = 0;
     release(&flock_lock);
     return 0;
+  }
+
+  // 如果已经持有锁，先释放旧锁（锁转换）
+  if(f->flock_held != 0 && f->flock_held != op) {
+    if(ip->flock_type == LOCK_SH) {
+      ip->flock_count--;
+      if(ip->flock_count == 0) {
+        ip->flock_type = 0;
+        wakeup(&ip->flock_type);
+      }
+    } else if(ip->flock_type == LOCK_EX) {
+      ip->flock_type = 0;
+      ip->flock_count = 0;
+      wakeup(&ip->flock_type);
+    }
+    f->flock_held = 0;
   }
 
   if(op == LOCK_SH) {
@@ -250,6 +290,7 @@ fileflock(struct file *f, int operation)
     }
     ip->flock_type = LOCK_SH;
     ip->flock_count++;
+    f->flock_held = LOCK_SH;
     release(&flock_lock);
     return 0;
   }
@@ -265,6 +306,7 @@ fileflock(struct file *f, int operation)
     }
     ip->flock_type = LOCK_EX;
     ip->flock_count = 1;
+    f->flock_held = LOCK_EX;
     release(&flock_lock);
     return 0;
   }

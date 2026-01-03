@@ -16,6 +16,7 @@ struct file
   struct sock *sock;
   uint off;          // FD_INODE
   short major;       // FD_DEVICE
+  char flock_held;   // 该文件描述符持有的 flock 类型：0=无, LOCK_SH, LOCK_EX
 };
 
 #define major(dev) ((dev) >> 16 & 0xFFFF)
