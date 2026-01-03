@@ -2761,6 +2761,14 @@ void deadlocktest_run(char *s)
   exit(1);
 }
 
+void bankertest_run(char *s)
+{
+  char *argv[] = {"bankertest", "-q", 0};
+  exec("bankertest", argv);
+  printf("%s: exec bankertest failed\n", s);
+  exit(1);
+}
+
 void dmsgtest_run(char *s)
 {
   char *argv[] = {"dmsgtest", 0};
@@ -2965,6 +2973,7 @@ int main(int argc, char *argv[])
       {semandtest_run, "semandtest"},
       {semsettest_run, "semsettest"},
       {deadlocktest_run, "deadlocktest"},
+      {bankertest_run, "bankertest"},
       {dmsgtest_run, "dmsgtest"},
       {threadtest_run, "threadtest"},
       {cstest_run, "cstest"},

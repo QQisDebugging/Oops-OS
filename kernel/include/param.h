@@ -21,6 +21,7 @@
 #define DMSG_QUEUE_MAX 16         // direct message queue length
 #define MONITOR_MAX_NUM 16        // monitor count
 #define MONITOR_COND_MAX 16       // condition variables per monitor
+#define BANKER_MAX_RES 8          // max resource types for banker
 #define MLFQ_LEVELS 4             // number of MLFQ levels
 #define MLFQ_BOOST_TICKS 200      // periodic priority boost interval
 #define MLFQ_SLICE_L0 1           // time slice for level 0

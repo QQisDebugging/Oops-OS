@@ -45,6 +45,66 @@ uint64 sys_rt_clear(void)
   return rt_clear(pid);
 }
 
+uint64 sys_banker_init(void)
+{
+  int n;
+  uint64 uarr;
+  int total[BANKER_MAX_RES];
+
+  if (argint(0, &n) < 0 || argaddr(1, &uarr) < 0)
+    return -1;
+  if (n <= 0 || n > BANKER_MAX_RES)
+    return -1;
+  if (copyin(myproc()->pagetable, (char *)total, uarr, n * sizeof(int)) < 0)
+    return -1;
+  return banker_init(n, total);
+}
+
+uint64 sys_banker_set_max(void)
+{
+  int n;
+  uint64 uarr;
+  int max[BANKER_MAX_RES];
+
+  if (argint(0, &n) < 0 || argaddr(1, &uarr) < 0)
+    return -1;
+  if (n <= 0 || n > BANKER_MAX_RES)
+    return -1;
+  if (copyin(myproc()->pagetable, (char *)max, uarr, n * sizeof(int)) < 0)
+    return -1;
+  return banker_set_max(myproc(), n, max);
+}
+
+uint64 sys_banker_request(void)
+{
+  int n;
+  uint64 uarr;
+  int req[BANKER_MAX_RES];
+
+  if (argint(0, &n) < 0 || argaddr(1, &uarr) < 0)
+    return -1;
+  if (n <= 0 || n > BANKER_MAX_RES)
+    return -1;
+  if (copyin(myproc()->pagetable, (char *)req, uarr, n * sizeof(int)) < 0)
+    return -1;
+  return banker_request(myproc(), n, req);
+}
+
+uint64 sys_banker_release(void)
+{
+  int n;
+  uint64 uarr;
+  int rel[BANKER_MAX_RES];
+
+  if (argint(0, &n) < 0 || argaddr(1, &uarr) < 0)
+    return -1;
+  if (n <= 0 || n > BANKER_MAX_RES)
+    return -1;
+  if (copyin(myproc()->pagetable, (char *)rel, uarr, n * sizeof(int)) < 0)
+    return -1;
+  return banker_release(myproc(), n, rel);
+}
+
 uint64
 sys_exit(void)
 {

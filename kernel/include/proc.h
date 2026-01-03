@@ -176,6 +176,9 @@ struct proc
   struct trapframe *alarm_trapframe;  // A copy of trapframe right before running alarm_handler
   int alarm_goingoff;          // Is an alarm currently going off and hasn't not yet returned? (prevent re-entrance of alarm_handler)
 
+  int bkr_active;                  // banker enabled for this process
+  int bkr_max[BANKER_MAX_RES];     // max claim per resource type
+  int bkr_alloc[BANKER_MAX_RES];   // allocated per resource type
 };
 
 extern struct proc proc[NPROC]; // 声明进程表（全局）
