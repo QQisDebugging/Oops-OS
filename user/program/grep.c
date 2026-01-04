@@ -34,6 +34,16 @@ void grep(char *pattern, int fd)
       memmove(buf, p, m);
     }
   }
+  if (m > 0)
+  {
+    buf[m] = '\0';
+    if (match(pattern, buf))
+    {
+      write(1, buf, m);
+      if (buf[m - 1] != '\n')
+        write(1, "\n", 1);
+    }
+  }
 }
 
 int main(int argc, char *argv[])

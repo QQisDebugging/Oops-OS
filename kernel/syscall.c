@@ -214,6 +214,9 @@ extern uint64 sys_getxattr(void);
 extern uint64 sys_listxattr(void);
 extern uint64 sys_removexattr(void);
 extern uint64 sys_midsched(void);
+extern uint64 sys_consctl(void);
+extern uint64 sys_consfg(void);
+extern uint64 sys_waitpid(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -309,6 +312,9 @@ static uint64 (*syscalls[])(void) = {
     [SYS_listxattr] sys_listxattr,
     [SYS_removexattr] sys_removexattr,
     [SYS_midsched] sys_midsched,
+    [SYS_consctl] sys_consctl,
+    [SYS_consfg] sys_consfg,
+    [SYS_waitpid] sys_waitpid,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -405,6 +411,9 @@ static char *syscall_names[] = {
     [SYS_listxattr] "sys_listxattr",
     [SYS_removexattr] "sys_removexattr",
     [SYS_midsched] "sys_midsched",
+    [SYS_consctl] "sys_consctl",
+    [SYS_consfg] "sys_consfg",
+    [SYS_waitpid] "sys_waitpid",
 };
 void syscall(void)
 {

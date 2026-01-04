@@ -132,6 +132,7 @@ mkfs/mkfs: mkfs/mkfs.c $K/include/fs.h $K/include/param.h
 
 UPROGS=\
 	$U/program/_cat\
+	$U/program/_cp\
 	$U/program/_echo\
 	$U/test/_forktest\
 	$U/program/_grep\
@@ -140,6 +141,12 @@ UPROGS=\
 	$U/program/_ln\
 	$U/program/_ls\
 	$U/program/_mkdir\
+	$U/program/_mv\
+	$U/program/_ps\
+	$U/program/_head\
+	$U/program/_tail\
+	$U/program/_rmdir\
+	$U/program/_touch\
 	$U/program/_rm\
 	$U/program/_sh\
 	$U/program/_pcand\

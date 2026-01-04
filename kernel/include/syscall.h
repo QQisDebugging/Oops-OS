@@ -93,3 +93,6 @@
 #define SYS_listxattr 92
 #define SYS_removexattr 93
 #define SYS_midsched 94
+#define SYS_consctl 95
+#define SYS_waitpid 96
+#define SYS_consfg 97
