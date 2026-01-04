@@ -54,10 +54,23 @@ int truncate(const char *path, int length);
 int ftruncate(int fd, int length);
 int rename(const char *oldpath, const char *newpath);
 int dedup(const char *srcpath, const char *dstpath);
+int flock(int fd, int operation);
+int fsync(int fd);
+int fdatasync(int fd);
+int setxattr(const char *path, const char *name, const void *value, int size);
+int getxattr(const char *path, const char *name, void *value, int size);
+int listxattr(const char *path, char *list, int size);
+int removexattr(const char *path, const char *name);
 
 // fallocate flags
 #define FALLOC_KEEP_SIZE     0x001
 #define FALLOC_FL_PUNCH_HOLE 0x002
+
+// flock 操作标志
+#define LOCK_SH   1   // 共享锁（读锁）
+#define LOCK_EX   2   // 排他锁（写锁）
+#define LOCK_UN   8   // 解锁
+#define LOCK_NB   4   // 非阻塞模式（可与 LOCK_SH/LOCK_EX 组合）
 
 // lseek whence values
 #define SEEK_SET 0  // 从文件开头计算偏移

@@ -203,6 +203,13 @@ extern uint64 sys_rename(void);
 extern uint64 sys_dedup(void);
 extern uint64 sys_rt_set(void);
 extern uint64 sys_rt_clear(void);
+extern uint64 sys_flock(void);
+extern uint64 sys_fsync(void);
+extern uint64 sys_fdatasync(void);
+extern uint64 sys_setxattr(void);
+extern uint64 sys_getxattr(void);
+extern uint64 sys_listxattr(void);
+extern uint64 sys_removexattr(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -287,6 +294,13 @@ static uint64 (*syscalls[])(void) = {
     [SYS_dedup] sys_dedup,
     [SYS_rt_set] sys_rt_set,
     [SYS_rt_clear] sys_rt_clear,
+    [SYS_flock] sys_flock,
+    [SYS_fsync] sys_fsync,
+    [SYS_fdatasync] sys_fdatasync,
+    [SYS_setxattr] sys_setxattr,
+    [SYS_getxattr] sys_getxattr,
+    [SYS_listxattr] sys_listxattr,
+    [SYS_removexattr] sys_removexattr,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -372,6 +386,13 @@ static char *syscall_names[] = {
     [SYS_dedup] "sys_dedup",
     [SYS_rt_set] "sys_rt_set",
     [SYS_rt_clear] "sys_rt_clear",
+    [SYS_flock] "sys_flock",
+    [SYS_fsync] "sys_fsync",
+    [SYS_fdatasync] "sys_fdatasync",
+    [SYS_setxattr] "sys_setxattr",
+    [SYS_getxattr] "sys_getxattr",
+    [SYS_listxattr] "sys_listxattr",
+    [SYS_removexattr] "sys_removexattr",
 };
 void syscall(void)
 {

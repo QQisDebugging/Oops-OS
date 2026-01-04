@@ -57,6 +57,16 @@ void fileinit(void);
 int fileread(struct file *, uint64, int n);
 int filestat(struct file *, uint64 addr);
 int filewrite(struct file *, uint64, int n);
+int fileflock(struct file *, int operation);
+int filefsync(struct file *, int datasync);
+
+// xattr.c
+void xattrinit(void);
+int xattr_set(struct inode *, char *, char *, int);
+int xattr_get(struct inode *, char *, char *, int);
+int xattr_list(struct inode *, char *, int);
+int xattr_remove(struct inode *, char *);
+void xattr_clear(struct inode *);
 
 // fs.c
 void fsinit(int);

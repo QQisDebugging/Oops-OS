@@ -22,6 +22,7 @@ OBJS = \
   $K/filesystem/bio.o \
   $K/filesystem/fs.o \
   $K/filesystem/log.o \
+  $K/filesystem/xattr.o \
   $K/lock/sleeplock.o \
   $K/filesystem/file.o \
   $K/proc/pipe.o \
@@ -206,6 +207,9 @@ UPROGS=\
 	$U/test/_renametest\
 	$U/test/_deduptest\
 	$U/test/_punchtest\
+	$U/test/_flocktest\
+	$U/test/_fsynctest\
+	$U/test/_xattrtest\
 	$U/program/_statistics
 
 
