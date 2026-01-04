@@ -106,3 +106,7 @@ entry("listxattr");
 entry("removexattr");
 entry("pread");
 entry("pwrite");
+entry("dup2");
+entry("readv");
+entry("writev");
+entry("access");

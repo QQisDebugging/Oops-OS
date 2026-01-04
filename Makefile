@@ -213,6 +213,9 @@ UPROGS=\
 	$U/test/_xattrtest\
 	$U/test/_fsinfotest\
 	$U/test/_preadwritetest\
+	$U/test/_dup2test\
+	$U/test/_readvwritevtest\
+	$U/test/_accesstest\
 	$U/program/_statistics
 
 

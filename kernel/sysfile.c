@@ -1936,3 +1936,199 @@ sys_pwrite(void)
 
   return total > 0 ? total : -1;
 }
+
+// dup2 - 复制文件描述符到指定编号
+// 如果 newfd 已打开，先关闭它
+// 返回: 成功返回 newfd，失败返回 -1
+uint64
+sys_dup2(void)
+{
+  struct file *f;
+  int oldfd, newfd;
+  struct proc *p = myproc();
+
+  if(argint(0, &oldfd) < 0 || argint(1, &newfd) < 0)
+    return -1;
+
+  // 验证 oldfd
+  if(oldfd < 0 || oldfd >= NOFILE || p->ofile[oldfd] == 0)
+    return -1;
+
+  // 验证 newfd 范围
+  if(newfd < 0 || newfd >= NOFILE)
+    return -1;
+
+  // 如果 oldfd == newfd，直接返回 newfd
+  if(oldfd == newfd)
+    return newfd;
+
+  f = p->ofile[oldfd];
+
+  // 如果 newfd 已打开，先关闭它
+  if(p->ofile[newfd]) {
+    fileclose(p->ofile[newfd]);
+    p->ofile[newfd] = 0;
+  }
+
+  // 复制文件描述符
+  filedup(f);
+  p->ofile[newfd] = f;
+
+  return newfd;
+}
+
+// iovec 结构体（用户态定义，内核需要匹配）
+struct iovec {
+  uint64 iov_base;  // 缓冲区地址
+  int    iov_len;   // 缓冲区长度
+};
+
+#define UIO_MAXIOV 16  // 最大 iovec 数量
+
+// readv - 分散读取，将数据读入多个缓冲区
+// 返回: 成功返回读取的总字节数，失败返回 -1
+uint64
+sys_readv(void)
+{
+  struct file *f;
+  uint64 uiov;
+  int iovcnt;
+  struct iovec iov[UIO_MAXIOV];
+  int total = 0;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &uiov) < 0 || argint(2, &iovcnt) < 0)
+    return -1;
+
+  if(iovcnt <= 0 || iovcnt > UIO_MAXIOV)
+    return -1;
+
+  // 从用户空间复制 iovec 数组
+  struct proc *p = myproc();
+  if(copyin(p->pagetable, (char*)iov, uiov, sizeof(struct iovec) * iovcnt) < 0)
+    return -1;
+
+  // 验证所有 iovec
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len < 0)
+      return -1;
+  }
+
+  // 逐个缓冲区读取
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len == 0)
+      continue;
+
+    int r = fileread(f, iov[i].iov_base, iov[i].iov_len);
+    if(r < 0) {
+      if(total > 0)
+        return total;
+      return -1;
+    }
+    total += r;
+
+    // 如果读取不足，说明到达文件末尾
+    if(r < iov[i].iov_len)
+      break;
+  }
+
+  return total;
+}
+
+// writev - 聚集写入，从多个缓冲区写入数据
+// 返回: 成功返回写入的总字节数，失败返回 -1
+uint64
+sys_writev(void)
+{
+  struct file *f;
+  uint64 uiov;
+  int iovcnt;
+  struct iovec iov[UIO_MAXIOV];
+  int total = 0;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &uiov) < 0 || argint(2, &iovcnt) < 0)
+    return -1;
+
+  if(iovcnt <= 0 || iovcnt > UIO_MAXIOV)
+    return -1;
+
+  // 从用户空间复制 iovec 数组
+  struct proc *p = myproc();
+  if(copyin(p->pagetable, (char*)iov, uiov, sizeof(struct iovec) * iovcnt) < 0)
+    return -1;
+
+  // 验证所有 iovec
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len < 0)
+      return -1;
+  }
+
+  // 逐个缓冲区写入
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len == 0)
+      continue;
+
+    int r = filewrite(f, iov[i].iov_base, iov[i].iov_len);
+    if(r < 0) {
+      if(total > 0)
+        return total;
+      return -1;
+    }
+    total += r;
+
+    // 如果写入不足，返回已写入的总数
+    if(r < iov[i].iov_len)
+      break;
+  }
+
+  return total;
+}
+
+// access 模式标志
+#define F_OK 0  // 测试文件是否存在
+#define R_OK 4  // 测试读权限
+#define W_OK 2  // 测试写权限
+#define X_OK 1  // 测试执行权限
+
+// access - 检查文件访问权限
+// 返回: 成功（有权限）返回 0，失败返回 -1
+uint64
+sys_access(void)
+{
+  char path[MAXPATH];
+  int mode;
+  struct inode *ip;
+
+  if(argstr(0, path, MAXPATH) < 0 || argint(1, &mode) < 0)
+    return -1;
+
+  begin_op();
+  if((ip = namei(path)) == 0) {
+    end_op();
+    return -1;  // 文件不存在
+  }
+
+  ilock(ip);
+
+  int result = 0;
+
+  // F_OK: 只检查文件是否存在
+  if(mode == F_OK) {
+    result = 0;  // 文件存在
+  } else {
+    // 检查权限位
+    // mode 字段: rwx (4=读, 2=写, 1=执行)
+    // ip->mode: rwx 格式
+    if((mode & R_OK) && !(ip->mode & 4))
+      result = -1;
+    if((mode & W_OK) && !(ip->mode & 2))
+      result = -1;
+    if((mode & X_OK) && !(ip->mode & 1))
+      result = -1;
+  }
+
+  iunlockput(ip);
+  end_op();
+
+  return result;
+}
+

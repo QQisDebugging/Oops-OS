@@ -65,6 +65,22 @@ int listxattr(const char *path, char *list, int size);
 int removexattr(const char *path, const char *name);
 int pread(int fd, void *buf, int count, int offset);
 int pwrite(int fd, const void *buf, int count, int offset);
+int dup2(int oldfd, int newfd);
+int access(const char *path, int mode);
+
+// iovec 结构体用于分散/聚集 I/O
+struct iovec {
+  void  *iov_base;  // 缓冲区起始地址
+  int    iov_len;   // 缓冲区长度
+};
+int readv(int fd, struct iovec *iov, int iovcnt);
+int writev(int fd, struct iovec *iov, int iovcnt);
+
+// access 模式标志
+#define F_OK 0  // 测试文件是否存在
+#define R_OK 4  // 测试读权限
+#define W_OK 2  // 测试写权限
+#define X_OK 1  // 测试执行权限
 
 // fallocate flags
 #define FALLOC_KEEP_SIZE     0x001

@@ -213,6 +213,10 @@ extern uint64 sys_listxattr(void);
 extern uint64 sys_removexattr(void);
 extern uint64 sys_pread(void);
 extern uint64 sys_pwrite(void);
+extern uint64 sys_dup2(void);
+extern uint64 sys_readv(void);
+extern uint64 sys_writev(void);
+extern uint64 sys_access(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -307,6 +311,10 @@ static uint64 (*syscalls[])(void) = {
     [SYS_removexattr] sys_removexattr,
     [SYS_pread] sys_pread,
     [SYS_pwrite] sys_pwrite,
+    [SYS_dup2] sys_dup2,
+    [SYS_readv] sys_readv,
+    [SYS_writev] sys_writev,
+    [SYS_access] sys_access,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -402,6 +410,10 @@ static char *syscall_names[] = {
     [SYS_removexattr] "sys_removexattr",
     [SYS_pread] "sys_pread",
     [SYS_pwrite] "sys_pwrite",
+    [SYS_dup2] "sys_dup2",
+    [SYS_readv] "sys_readv",
+    [SYS_writev] "sys_writev",
+    [SYS_access] "sys_access",
 };
 void syscall(void)
 {

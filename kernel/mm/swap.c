@@ -154,10 +154,10 @@ swap_throttle(void)
     swap_events = 0;
   }
   swap_events++;
-  if (swap_events >= SWAP_THRASH_EVENTS) {
-    uint until = now + SWAP_THRASH_SLEEP;
-    while (ticks < until)
-      sleep(&ticks, &tickslock);
+  // 提高阈值，减少并发时的过度睡眠
+  if (swap_events >= SWAP_THRASH_EVENTS * 2) {
+    // 只睡眠一次，不循环等待
+    sleep(&ticks, &tickslock);
     swap_window_start = ticks;
     swap_events = 0;
   }

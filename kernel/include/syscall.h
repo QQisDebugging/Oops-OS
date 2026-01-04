@@ -92,3 +92,7 @@
 #define SYS_fsinfo 91
 #define SYS_pread 92
 #define SYS_pwrite 93
+#define SYS_dup2 94
+#define SYS_readv 95
+#define SYS_writev 96
+#define SYS_access 97

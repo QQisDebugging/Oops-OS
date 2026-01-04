@@ -2945,6 +2945,30 @@ void preadwritetest_run(char *s)
   exit(1);
 }
 
+void dup2test_run(char *s)
+{
+  char *argv[] = {"dup2test", 0};
+  exec("dup2test", argv);
+  printf("%s: exec dup2test failed\n", s);
+  exit(1);
+}
+
+void readvwritevtest_run(char *s)
+{
+  char *argv[] = {"readvwritevtest", 0};
+  exec("readvwritevtest", argv);
+  printf("%s: exec readvwritevtest failed\n", s);
+  exit(1);
+}
+
+void accesstest_run(char *s)
+{
+  char *argv[] = {"accesstest", 0};
+  exec("accesstest", argv);
+  printf("%s: exec accesstest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -3046,6 +3070,9 @@ int main(int argc, char *argv[])
       {xattrtest_run, "xattrtest"},
       {fsinfotest_run, "fsinfotest"},
       {preadwritetest_run, "preadwritetest"},
+      {dup2test_run, "dup2test"},
+      {readvwritevtest_run, "readvwritevtest"},
+      {accesstest_run, "accesstest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},
