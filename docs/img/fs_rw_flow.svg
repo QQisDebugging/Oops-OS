@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="271pt" height="410pt" viewBox="0.00 0.00 271.00 410.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 405.6)">
+<title>fs_rw_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-405.6 267.08,-405.6 267.08,4 -4,4"/>
+<!-- App -->
+<g id="node1" class="node">
+<title>App</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M172.9,-401.6C172.9,-401.6 93.05,-401.6 93.05,-401.6 87.05,-401.6 81.05,-395.6 81.05,-389.6 81.05,-389.6 81.05,-377.6 81.05,-377.6 81.05,-371.6 87.05,-365.6 93.05,-365.6 93.05,-365.6 172.9,-365.6 172.9,-365.6 178.9,-365.6 184.9,-371.6 184.9,-377.6 184.9,-377.6 184.9,-389.6 184.9,-389.6 184.9,-395.6 178.9,-401.6 172.9,-401.6"/>
+<text xml:space="preserve" text-anchor="middle" x="132.98" y="-379.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">open/read/write</text>
+</g>
+<!-- Begin -->
+<g id="node2" class="node">
+<title>Begin</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M159.69,-329.6C159.69,-329.6 106.26,-329.6 106.26,-329.6 100.26,-329.6 94.26,-323.6 94.26,-317.6 94.26,-317.6 94.26,-305.6 94.26,-305.6 94.26,-299.6 100.26,-293.6 106.26,-293.6 106.26,-293.6 159.69,-293.6 159.69,-293.6 165.69,-293.6 171.69,-299.6 171.69,-305.6 171.69,-305.6 171.69,-317.6 171.69,-317.6 171.69,-323.6 165.69,-329.6 159.69,-329.6"/>
+<text xml:space="preserve" text-anchor="middle" x="132.98" y="-307.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">begin_op()</text>
+</g>
+<!-- App&#45;&gt;Begin -->
+<g id="edge1" class="edge">
+<title>App-&gt;Begin</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M132.98,-365.3C132.98,-358.2 132.98,-349.78 132.98,-341.78"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="136.48,-342.01 132.98,-332.01 129.48,-342.01 136.48,-342.01"/>
+</g>
+<!-- Namei -->
+<g id="node3" class="node">
+<title>Namei</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M172.19,-257.6C172.19,-257.6 93.77,-257.6 93.77,-257.6 87.77,-257.6 81.77,-251.6 81.77,-245.6 81.77,-245.6 81.77,-233.6 81.77,-233.6 81.77,-227.6 87.77,-221.6 93.77,-221.6 93.77,-221.6 172.19,-221.6 172.19,-221.6 178.19,-221.6 184.19,-227.6 184.19,-233.6 184.19,-233.6 184.19,-245.6 184.19,-245.6 184.19,-251.6 178.19,-257.6 172.19,-257.6"/>
+<text xml:space="preserve" text-anchor="middle" x="132.98" y="-235.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">namei() + ilock</text>
+</g>
+<!-- Begin&#45;&gt;Namei -->
+<g id="edge2" class="edge">
+<title>Begin-&gt;Namei</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M132.98,-293.3C132.98,-286.2 132.98,-277.78 132.98,-269.78"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="136.48,-270.01 132.98,-260.01 129.48,-270.01 136.48,-270.01"/>
+</g>
+<!-- Read -->
+<g id="node4" class="node">
+<title>Read</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M101.95,-182.8C101.95,-182.8 12,-182.8 12,-182.8 6,-182.8 0,-176.8 0,-170.8 0,-170.8 0,-158.8 0,-158.8 0,-152.8 6,-146.8 12,-146.8 12,-146.8 101.95,-146.8 101.95,-146.8 107.95,-146.8 113.95,-152.8 113.95,-158.8 113.95,-158.8 113.95,-170.8 113.95,-170.8 113.95,-176.8 107.95,-182.8 101.95,-182.8"/>
+<text xml:space="preserve" text-anchor="middle" x="56.98" y="-160.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">bmap/bread/readi</text>
+</g>
+<!-- Namei&#45;&gt;Read -->
+<g id="edge3" class="edge">
+<title>Namei-&gt;Read</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M114.97,-221.35C105.57,-212.35 93.89,-201.16 83.49,-191.19"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="86.08,-188.83 76.43,-184.44 81.23,-193.88 86.08,-188.83"/>
+</g>
+<!-- Write -->
+<g id="node5" class="node">
+<title>Write</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M251.08,-185.6C251.08,-185.6 168.88,-185.6 168.88,-185.6 162.88,-185.6 156.88,-179.6 156.88,-173.6 156.88,-173.6 156.88,-156 156.88,-156 156.88,-150 162.88,-144 168.88,-144 168.88,-144 251.08,-144 251.08,-144 257.08,-144 263.08,-150 263.08,-156 263.08,-156 263.08,-173.6 263.08,-173.6 263.08,-179.6 257.08,-185.6 251.08,-185.6"/>
+<text xml:space="preserve" text-anchor="middle" x="209.98" y="-169" font-family="Helvetica,Arial,sans-serif" font-size="14.00">bmap/balloc</text>
+<text xml:space="preserve" text-anchor="middle" x="209.98" y="-152.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">writei/log_write</text>
+</g>
+<!-- Namei&#45;&gt;Write -->
+<g id="edge5" class="edge">
+<title>Namei-&gt;Write</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M151.22,-221.35C159.89,-213.15 170.47,-203.15 180.26,-193.9"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="182.4,-196.69 187.26,-187.28 177.59,-191.6 182.4,-196.69"/>
+</g>
+<!-- End -->
+<g id="node6" class="node">
+<title>End</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M154.25,-108C154.25,-108 111.71,-108 111.71,-108 105.71,-108 99.71,-102 99.71,-96 99.71,-96 99.71,-84 99.71,-84 99.71,-78 105.71,-72 111.71,-72 111.71,-72 154.25,-72 154.25,-72 160.25,-72 166.25,-78 166.25,-84 166.25,-84 166.25,-96 166.25,-96 166.25,-102 160.25,-108 154.25,-108"/>
+<text xml:space="preserve" text-anchor="middle" x="132.98" y="-85.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">end_op()</text>
+</g>
+<!-- Read&#45;&gt;End -->
+<g id="edge4" class="edge">
+<title>Read-&gt;End</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M74.99,-146.55C84.38,-137.55 96.06,-126.36 106.47,-116.39"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="108.72,-119.08 113.52,-109.64 103.88,-114.03 108.72,-119.08"/>
+</g>
+<!-- Write&#45;&gt;End -->
+<g id="edge6" class="edge">
+<title>Write-&gt;End</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M188.53,-143.52C179.69,-135.17 169.36,-125.4 160.01,-116.56"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="162.43,-114.03 152.76,-109.7 157.62,-119.11 162.43,-114.03"/>
+</g>
+<!-- Commit -->
+<g id="node7" class="node">
+<title>Commit</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M174.92,-36C174.92,-36 91.03,-36 91.03,-36 85.03,-36 79.03,-30 79.03,-24 79.03,-24 79.03,-12 79.03,-12 79.03,-6 85.03,0 91.03,0 91.03,0 174.92,0 174.92,0 180.92,0 186.92,-6 186.92,-12 186.92,-12 186.92,-24 186.92,-24 186.92,-30 180.92,-36 174.92,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="132.98" y="-13.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">commit + install</text>
+</g>
+<!-- End&#45;&gt;Commit -->
+<g id="edge7" class="edge">
+<title>End-&gt;Commit</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M132.98,-71.7C132.98,-64.6 132.98,-56.18 132.98,-48.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="136.48,-48.41 132.98,-38.41 129.48,-48.41 136.48,-48.41"/>
+</g>
+</g>
+</svg>

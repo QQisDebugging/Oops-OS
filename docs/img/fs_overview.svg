@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="273pt" height="642pt" viewBox="0.00 0.00 273.00 642.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 637.6)">
+<title>fs_overview</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-637.6 269,-637.6 269,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_user</title>
+<path fill="none" stroke="#c0c0c0" d="M20,-471.2C20,-471.2 116,-471.2 116,-471.2 122,-471.2 128,-477.2 128,-483.2 128,-483.2 128,-613.6 128,-613.6 128,-619.6 122,-625.6 116,-625.6 116,-625.6 20,-625.6 20,-625.6 14,-625.6 8,-619.6 8,-613.6 8,-613.6 8,-483.2 8,-483.2 8,-477.2 14,-471.2 20,-471.2"/>
+<text xml:space="preserve" text-anchor="middle" x="68" y="-609" font-family="Helvetica,Arial,sans-serif" font-size="14.00">用户态</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_kernel</title>
+<path fill="none" stroke="#c0c0c0" d="M26,-92.8C26,-92.8 245,-92.8 245,-92.8 251,-92.8 257,-98.8 257,-104.8 257,-104.8 257,-451.2 257,-451.2 257,-457.2 251,-463.2 245,-463.2 245,-463.2 26,-463.2 26,-463.2 20,-463.2 14,-457.2 14,-451.2 14,-451.2 14,-104.8 14,-104.8 14,-98.8 20,-92.8 26,-92.8"/>
+<text xml:space="preserve" text-anchor="middle" x="135.5" y="-446.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">内核态</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_device</title>
+<path fill="none" stroke="#c0c0c0" d="M39,-8C39,-8 236,-8 236,-8 242,-8 248,-14 248,-20 248,-20 248,-72.8 248,-72.8 248,-78.8 242,-84.8 236,-84.8 236,-84.8 39,-84.8 39,-84.8 33,-84.8 27,-78.8 27,-72.8 27,-72.8 27,-20 27,-20 27,-14 33,-8 39,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="137.5" y="-68.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">设备层</text>
+</g>
+<!-- App -->
+<g id="node1" class="node">
+<title>App</title>
+<path fill="#fff8e1" stroke="#333333" stroke-width="1.2" d="M85,-592.8C85,-592.8 51,-592.8 51,-592.8 45,-592.8 39,-586.8 39,-580.8 39,-580.8 39,-568.8 39,-568.8 39,-562.8 45,-556.8 51,-556.8 51,-556.8 85,-556.8 85,-556.8 91,-556.8 97,-562.8 97,-568.8 97,-568.8 97,-580.8 97,-580.8 97,-586.8 91,-592.8 85,-592.8"/>
+<text xml:space="preserve" text-anchor="middle" x="68" y="-570.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">用户程序</text>
+</g>
+<!-- Syscalls -->
+<g id="node2" class="node">
+<title>Syscalls</title>
+<path fill="#fff8e1" stroke="#333333" stroke-width="1.2" d="M107.92,-520.8C107.92,-520.8 28.08,-520.8 28.08,-520.8 22.08,-520.8 16.08,-514.8 16.08,-508.8 16.08,-508.8 16.08,-491.2 16.08,-491.2 16.08,-485.2 22.08,-479.2 28.08,-479.2 28.08,-479.2 107.92,-479.2 107.92,-479.2 113.92,-479.2 119.92,-485.2 119.92,-491.2 119.92,-491.2 119.92,-508.8 119.92,-508.8 119.92,-514.8 113.92,-520.8 107.92,-520.8"/>
+<text xml:space="preserve" text-anchor="middle" x="68" y="-504.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">系统调用</text>
+<text xml:space="preserve" text-anchor="middle" x="68" y="-487.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">open/read/write</text>
+</g>
+<!-- App&#45;&gt;Syscalls -->
+<g id="edge1" class="edge">
+<title>App-&gt;Syscalls</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M68,-556.55C68,-549.43 68,-540.94 68,-532.77"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="71.5,-533.04 68,-523.04 64.5,-533.04 71.5,-533.04"/>
+</g>
+<!-- VFS -->
+<g id="node3" class="node">
+<title>VFS</title>
+<path fill="#e3f2fd" stroke="#333333" stroke-width="1.2" d="M83,-430.4C83,-430.4 53,-430.4 53,-430.4 47,-430.4 41,-424.4 41,-418.4 41,-418.4 41,-406.4 41,-406.4 41,-400.4 47,-394.4 53,-394.4 53,-394.4 83,-394.4 83,-394.4 89,-394.4 95,-400.4 95,-406.4 95,-406.4 95,-418.4 95,-418.4 95,-424.4 89,-430.4 83,-430.4"/>
+<text xml:space="preserve" text-anchor="middle" x="68" y="-408.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">VFS</text>
+</g>
+<!-- Syscalls&#45;&gt;VFS -->
+<g id="edge2" class="edge">
+<title>Syscalls-&gt;VFS</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M68,-478.71C68,-467.93 68,-454.47 68,-442.58"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="71.5,-442.75 68,-432.75 64.5,-442.75 71.5,-442.75"/>
+</g>
+<!-- Mnt -->
+<g id="node4" class="node">
+<title>Mnt</title>
+<path fill="#e3f2fd" stroke="#333333" stroke-width="1.2" d="M97.24,-358.4C97.24,-358.4 38.76,-358.4 38.76,-358.4 32.76,-358.4 26.76,-352.4 26.76,-346.4 26.76,-346.4 26.76,-328.8 26.76,-328.8 26.76,-322.8 32.76,-316.8 38.76,-316.8 38.76,-316.8 97.24,-316.8 97.24,-316.8 103.24,-316.8 109.24,-322.8 109.24,-328.8 109.24,-328.8 109.24,-346.4 109.24,-346.4 109.24,-352.4 103.24,-358.4 97.24,-358.4"/>
+<text xml:space="preserve" text-anchor="middle" x="68" y="-341.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">挂载表</text>
+<text xml:space="preserve" text-anchor="middle" x="68" y="-325" font-family="Helvetica,Arial,sans-serif" font-size="14.00">mount table</text>
+</g>
+<!-- VFS&#45;&gt;Mnt -->
+<g id="edge3" class="edge">
+<title>VFS-&gt;Mnt</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M68,-394.15C68,-387.03 68,-378.54 68,-370.37"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="71.5,-370.64 68,-360.64 64.5,-370.64 71.5,-370.64"/>
+</g>
+<!-- Xv6 -->
+<g id="node5" class="node">
+<title>Xv6</title>
+<path fill="#e3f2fd" stroke="#333333" stroke-width="1.2" d="M92.25,-280.8C92.25,-280.8 33.75,-280.8 33.75,-280.8 27.75,-280.8 21.75,-274.8 21.75,-268.8 21.75,-268.8 21.75,-256.8 21.75,-256.8 21.75,-250.8 27.75,-244.8 33.75,-244.8 33.75,-244.8 92.25,-244.8 92.25,-244.8 98.25,-244.8 104.25,-250.8 104.25,-256.8 104.25,-256.8 104.25,-268.8 104.25,-268.8 104.25,-274.8 98.25,-280.8 92.25,-280.8"/>
+<text xml:space="preserve" text-anchor="middle" x="63" y="-258.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">xv6 文件系统</text>
+</g>
+<!-- Mnt&#45;&gt;Xv6 -->
+<g id="edge4" class="edge">
+<title>Mnt-&gt;Xv6</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M66.61,-316.32C66.11,-309.03 65.53,-300.66 64.99,-292.78"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="68.48,-292.56 64.31,-282.82 61.5,-293.04 68.48,-292.56"/>
+</g>
+<!-- FAT -->
+<g id="node6" class="node">
+<title>FAT</title>
+<path fill="#e3f2fd" stroke="#333333" stroke-width="1.2" d="M236.97,-280.8C236.97,-280.8 159.03,-280.8 159.03,-280.8 153.03,-280.8 147.03,-274.8 147.03,-268.8 147.03,-268.8 147.03,-256.8 147.03,-256.8 147.03,-250.8 153.03,-244.8 159.03,-244.8 159.03,-244.8 236.97,-244.8 236.97,-244.8 242.97,-244.8 248.97,-250.8 248.97,-256.8 248.97,-256.8 248.97,-268.8 248.97,-268.8 248.97,-274.8 242.97,-280.8 236.97,-280.8"/>
+<text xml:space="preserve" text-anchor="middle" x="198" y="-258.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">FAT16 文件系统</text>
+</g>
+<!-- Mnt&#45;&gt;FAT -->
+<g id="edge5" class="edge">
+<title>Mnt-&gt;FAT</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M104.21,-316.32C120.51,-307.19 139.84,-296.37 156.7,-286.93"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="158.23,-290.08 165.25,-282.14 154.81,-283.97 158.23,-290.08"/>
+</g>
+<!-- Log -->
+<g id="node7" class="node">
+<title>Log</title>
+<path fill="#e3f2fd" stroke="#333333" stroke-width="1.2" d="M98.63,-208.8C98.63,-208.8 39.37,-208.8 39.37,-208.8 33.37,-208.8 27.37,-202.8 27.37,-196.8 27.37,-196.8 27.37,-184.8 27.37,-184.8 27.37,-178.8 33.37,-172.8 39.37,-172.8 39.37,-172.8 98.63,-172.8 98.63,-172.8 104.63,-172.8 110.63,-178.8 110.63,-184.8 110.63,-184.8 110.63,-196.8 110.63,-196.8 110.63,-202.8 104.63,-208.8 98.63,-208.8"/>
+<text xml:space="preserve" text-anchor="middle" x="69" y="-186.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">Log (WAL)</text>
+</g>
+<!-- Xv6&#45;&gt;Log -->
+<g id="edge6" class="edge">
+<title>Xv6-&gt;Log</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M64.48,-244.5C65.09,-237.4 65.81,-228.98 66.5,-220.98"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="69.97,-221.46 67.34,-211.2 63,-220.86 69.97,-221.46"/>
+</g>
+<!-- FatImg -->
+<g id="node10" class="node">
+<title>FatImg</title>
+<path fill="#e8f5e9" stroke="#333333" stroke-width="1.2" d="M227.97,-52C227.97,-52 164.03,-52 164.03,-52 158.03,-52 152.03,-46 152.03,-40 152.03,-40 152.03,-28 152.03,-28 152.03,-22 158.03,-16 164.03,-16 164.03,-16 227.97,-16 227.97,-16 233.97,-16 239.97,-22 239.97,-28 239.97,-28 239.97,-40 239.97,-40 239.97,-46 233.97,-52 227.97,-52"/>
+<text xml:space="preserve" text-anchor="middle" x="196" y="-29.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">FAT 镜像设备</text>
+</g>
+<!-- FAT&#45;&gt;FatImg -->
+<g id="edge9" class="edge">
+<title>FAT-&gt;FatImg</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M197.85,-244.38C197.5,-205.63 196.68,-111.94 196.26,-64.13"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="199.76,-64.26 196.17,-54.3 192.76,-64.33 199.76,-64.26"/>
+</g>
+<!-- Cache -->
+<g id="node8" class="node">
+<title>Cache</title>
+<path fill="#e3f2fd" stroke="#333333" stroke-width="1.2" d="M104.51,-136.8C104.51,-136.8 37.49,-136.8 37.49,-136.8 31.49,-136.8 25.49,-130.8 25.49,-124.8 25.49,-124.8 25.49,-112.8 25.49,-112.8 25.49,-106.8 31.49,-100.8 37.49,-100.8 37.49,-100.8 104.51,-100.8 104.51,-100.8 110.51,-100.8 116.51,-106.8 116.51,-112.8 116.51,-112.8 116.51,-124.8 116.51,-124.8 116.51,-130.8 110.51,-136.8 104.51,-136.8"/>
+<text xml:space="preserve" text-anchor="middle" x="71" y="-114.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">Buffer Cache</text>
+</g>
+<!-- Log&#45;&gt;Cache -->
+<g id="edge7" class="edge">
+<title>Log-&gt;Cache</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M69.49,-172.5C69.7,-165.4 69.94,-156.98 70.17,-148.98"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="73.66,-149.3 70.45,-139.21 66.66,-149.1 73.66,-149.3"/>
+</g>
+<!-- Disk -->
+<g id="node9" class="node">
+<title>Disk</title>
+<path fill="#e8f5e9" stroke="#333333" stroke-width="1.2" d="M96.58,-52C96.58,-52 47.42,-52 47.42,-52 41.42,-52 35.42,-46 35.42,-40 35.42,-40 35.42,-28 35.42,-28 35.42,-22 41.42,-16 47.42,-16 47.42,-16 96.58,-16 96.58,-16 102.58,-16 108.58,-22 108.58,-28 108.58,-28 108.58,-40 108.58,-40 108.58,-46 102.58,-52 96.58,-52"/>
+<text xml:space="preserve" text-anchor="middle" x="72" y="-29.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">virtio disk</text>
+</g>
+<!-- Cache&#45;&gt;Disk -->
+<g id="edge8" class="edge">
+<title>Cache-&gt;Disk</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M71.21,-100.24C71.34,-89.81 71.5,-76.32 71.65,-64.32"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="75.15,-64.39 71.77,-54.35 68.15,-64.31 75.15,-64.39"/>
+</g>
+</g>
+</svg>

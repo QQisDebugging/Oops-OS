@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="378pt" height="332pt" viewBox="0.00 0.00 378.00 332.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 328)">
+<title>fs_inode_bmap</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-328 374.34,-328 374.34,4 -4,4"/>
+<!-- Inode -->
+<g id="node1" class="node">
+<title>Inode</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M193.96,-324C193.96,-324 163.96,-324 163.96,-324 157.96,-324 151.96,-318 151.96,-312 151.96,-312 151.96,-300 151.96,-300 151.96,-294 157.96,-288 163.96,-288 163.96,-288 193.96,-288 193.96,-288 199.96,-288 205.96,-294 205.96,-300 205.96,-300 205.96,-312 205.96,-312 205.96,-318 199.96,-324 193.96,-324"/>
+<text xml:space="preserve" text-anchor="middle" x="178.96" y="-301.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">inode</text>
+</g>
+<!-- Direct -->
+<g id="node2" class="node">
+<title>Direct</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M75.92,-252C75.92,-252 12,-252 12,-252 6,-252 0,-246 0,-240 0,-240 0,-228 0,-228 0,-222 6,-216 12,-216 12,-216 75.92,-216 75.92,-216 81.92,-216 87.92,-222 87.92,-228 87.92,-228 87.92,-240 87.92,-240 87.92,-246 81.92,-252 75.92,-252"/>
+<text xml:space="preserve" text-anchor="middle" x="43.96" y="-229.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">direct blocks</text>
+</g>
+<!-- Inode&#45;&gt;Direct -->
+<g id="edge1" class="edge">
+<title>Inode-&gt;Direct</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M151.64,-290.83C133.32,-281.33 108.78,-268.61 87.76,-257.71"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="89.56,-254.7 79.07,-253.2 86.33,-260.91 89.56,-254.7"/>
+</g>
+<!-- Indirect -->
+<g id="node3" class="node">
+<title>Indirect</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M214.81,-252C214.81,-252 143.11,-252 143.11,-252 137.11,-252 131.11,-246 131.11,-240 131.11,-240 131.11,-228 131.11,-228 131.11,-222 137.11,-216 143.11,-216 143.11,-216 214.81,-216 214.81,-216 220.81,-216 226.81,-222 226.81,-228 226.81,-228 226.81,-240 226.81,-240 226.81,-246 220.81,-252 214.81,-252"/>
+<text xml:space="preserve" text-anchor="middle" x="178.96" y="-229.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">single indirect</text>
+</g>
+<!-- Inode&#45;&gt;Indirect -->
+<g id="edge3" class="edge">
+<title>Inode-&gt;Indirect</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M178.96,-287.7C178.96,-280.6 178.96,-272.18 178.96,-264.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="182.46,-264.41 178.96,-254.41 175.46,-264.41 182.46,-264.41"/>
+</g>
+<!-- DIndirect -->
+<g id="node4" class="node">
+<title>DIndirect</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M358.14,-252C358.14,-252 281.78,-252 281.78,-252 275.78,-252 269.78,-246 269.78,-240 269.78,-240 269.78,-228 269.78,-228 269.78,-222 275.78,-216 281.78,-216 281.78,-216 358.14,-216 358.14,-216 364.14,-216 370.14,-222 370.14,-228 370.14,-228 370.14,-240 370.14,-240 370.14,-246 364.14,-252 358.14,-252"/>
+<text xml:space="preserve" text-anchor="middle" x="319.96" y="-229.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">double indirect</text>
+</g>
+<!-- Inode&#45;&gt;DIndirect -->
+<g id="edge5" class="edge">
+<title>Inode-&gt;DIndirect</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M206.48,-291.34C225.78,-281.75 252.04,-268.72 274.43,-257.6"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="275.71,-260.88 283.11,-253.29 272.6,-254.61 275.71,-260.88"/>
+</g>
+<!-- Data1 -->
+<g id="node7" class="node">
+<title>Data1</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M71.65,-180C71.65,-180 16.28,-180 16.28,-180 10.28,-180 4.28,-174 4.28,-168 4.28,-168 4.28,-156 4.28,-156 4.28,-150 10.28,-144 16.28,-144 16.28,-144 71.65,-144 71.65,-144 77.65,-144 83.65,-150 83.65,-156 83.65,-156 83.65,-168 83.65,-168 83.65,-174 77.65,-180 71.65,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="43.96" y="-157.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">data blocks</text>
+</g>
+<!-- Direct&#45;&gt;Data1 -->
+<g id="edge2" class="edge">
+<title>Direct-&gt;Data1</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M43.96,-215.7C43.96,-208.6 43.96,-200.18 43.96,-192.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="47.46,-192.41 43.96,-182.41 40.46,-192.41 47.46,-192.41"/>
+</g>
+<!-- Data2 -->
+<g id="node8" class="node">
+<title>Data2</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M206.65,-180C206.65,-180 151.28,-180 151.28,-180 145.28,-180 139.28,-174 139.28,-168 139.28,-168 139.28,-156 139.28,-156 139.28,-150 145.28,-144 151.28,-144 151.28,-144 206.65,-144 206.65,-144 212.65,-144 218.65,-150 218.65,-156 218.65,-156 218.65,-168 218.65,-168 218.65,-174 212.65,-180 206.65,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="178.96" y="-157.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">data blocks</text>
+</g>
+<!-- Indirect&#45;&gt;Data2 -->
+<g id="edge4" class="edge">
+<title>Indirect-&gt;Data2</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M178.96,-215.7C178.96,-208.6 178.96,-200.18 178.96,-192.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="182.46,-192.41 178.96,-182.41 175.46,-192.41 182.46,-192.41"/>
+</g>
+<!-- L2 -->
+<g id="node5" class="node">
+<title>L2</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M358.34,-180C358.34,-180 281.58,-180 281.58,-180 275.58,-180 269.58,-174 269.58,-168 269.58,-168 269.58,-156 269.58,-156 269.58,-150 275.58,-144 281.58,-144 281.58,-144 358.34,-144 358.34,-144 364.34,-144 370.34,-150 370.34,-156 370.34,-156 370.34,-168 370.34,-168 370.34,-174 364.34,-180 358.34,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="319.96" y="-157.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">L2 index block</text>
+</g>
+<!-- DIndirect&#45;&gt;L2 -->
+<g id="edge6" class="edge">
+<title>DIndirect-&gt;L2</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M319.96,-215.7C319.96,-208.6 319.96,-200.18 319.96,-192.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="323.46,-192.41 319.96,-182.41 316.46,-192.41 323.46,-192.41"/>
+</g>
+<!-- L1 -->
+<g id="node6" class="node">
+<title>L1</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M358.34,-108C358.34,-108 281.58,-108 281.58,-108 275.58,-108 269.58,-102 269.58,-96 269.58,-96 269.58,-84 269.58,-84 269.58,-78 275.58,-72 281.58,-72 281.58,-72 358.34,-72 358.34,-72 364.34,-72 370.34,-78 370.34,-84 370.34,-84 370.34,-96 370.34,-96 370.34,-102 364.34,-108 358.34,-108"/>
+<text xml:space="preserve" text-anchor="middle" x="319.96" y="-85.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">L1 index block</text>
+</g>
+<!-- L2&#45;&gt;L1 -->
+<g id="edge7" class="edge">
+<title>L2-&gt;L1</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M319.96,-143.7C319.96,-136.6 319.96,-128.18 319.96,-120.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="323.46,-120.41 319.96,-110.41 316.46,-120.41 323.46,-120.41"/>
+</g>
+<!-- Data3 -->
+<g id="node9" class="node">
+<title>Data3</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M347.65,-36C347.65,-36 292.28,-36 292.28,-36 286.28,-36 280.28,-30 280.28,-24 280.28,-24 280.28,-12 280.28,-12 280.28,-6 286.28,0 292.28,0 292.28,0 347.65,0 347.65,0 353.65,0 359.65,-6 359.65,-12 359.65,-12 359.65,-24 359.65,-24 359.65,-30 353.65,-36 347.65,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="319.96" y="-13.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">data blocks</text>
+</g>
+<!-- L1&#45;&gt;Data3 -->
+<g id="edge8" class="edge">
+<title>L1-&gt;Data3</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M319.96,-71.7C319.96,-64.6 319.96,-56.18 319.96,-48.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="323.46,-48.41 319.96,-38.41 316.46,-48.41 323.46,-48.41"/>
+</g>
+</g>
+</svg>

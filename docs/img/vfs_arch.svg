@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="219pt" height="476pt" viewBox="0.00 0.00 219.00 476.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 472)">
+<title>vfs_arch</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-472 215.42,-472 215.42,4 -4,4"/>
+<!-- Sys -->
+<g id="node1" class="node">
+<title>Sys</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M121.62,-468C121.62,-468 86.07,-468 86.07,-468 80.07,-468 74.07,-462 74.07,-456 74.07,-456 74.07,-444 74.07,-444 74.07,-438 80.07,-432 86.07,-432 86.07,-432 121.62,-432 121.62,-432 127.62,-432 133.62,-438 133.62,-444 133.62,-444 133.62,-456 133.62,-456 133.62,-462 127.62,-468 121.62,-468"/>
+<text xml:space="preserve" text-anchor="middle" x="103.85" y="-445.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">syscalls</text>
+</g>
+<!-- VFS -->
+<g id="node2" class="node">
+<title>VFS</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M126.48,-396C126.48,-396 81.21,-396 81.21,-396 75.21,-396 69.21,-390 69.21,-384 69.21,-384 69.21,-372 69.21,-372 69.21,-366 75.21,-360 81.21,-360 81.21,-360 126.48,-360 126.48,-360 132.48,-360 138.48,-366 138.48,-372 138.48,-372 138.48,-384 138.48,-384 138.48,-390 132.48,-396 126.48,-396"/>
+<text xml:space="preserve" text-anchor="middle" x="103.85" y="-373.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">VFS core</text>
+</g>
+<!-- Sys&#45;&gt;VFS -->
+<g id="edge1" class="edge">
+<title>Sys-&gt;VFS</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M103.85,-431.7C103.85,-424.6 103.85,-416.18 103.85,-408.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="107.35,-408.41 103.85,-398.41 100.35,-408.41 107.35,-408.41"/>
+</g>
+<!-- Mnt -->
+<g id="node3" class="node">
+<title>Mnt</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M133.09,-324C133.09,-324 74.6,-324 74.6,-324 68.6,-324 62.6,-318 62.6,-312 62.6,-312 62.6,-300 62.6,-300 62.6,-294 68.6,-288 74.6,-288 74.6,-288 133.09,-288 133.09,-288 139.09,-288 145.09,-294 145.09,-300 145.09,-300 145.09,-312 145.09,-312 145.09,-318 139.09,-324 133.09,-324"/>
+<text xml:space="preserve" text-anchor="middle" x="103.85" y="-301.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">mount table</text>
+</g>
+<!-- VFS&#45;&gt;Mnt -->
+<g id="edge2" class="edge">
+<title>VFS-&gt;Mnt</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M103.85,-359.7C103.85,-352.6 103.85,-344.18 103.85,-336.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="107.35,-336.41 103.85,-326.41 100.35,-336.41 107.35,-336.41"/>
+</g>
+<!-- Ops -->
+<g id="node4" class="node">
+<title>Ops</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M137.56,-252C137.56,-252 70.13,-252 70.13,-252 64.13,-252 58.13,-246 58.13,-240 58.13,-240 58.13,-228 58.13,-228 58.13,-222 64.13,-216 70.13,-216 70.13,-216 137.56,-216 137.56,-216 143.56,-216 149.56,-222 149.56,-228 149.56,-228 149.56,-240 149.56,-240 149.56,-246 143.56,-252 137.56,-252"/>
+<text xml:space="preserve" text-anchor="middle" x="103.85" y="-229.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">fs_operations</text>
+</g>
+<!-- Mnt&#45;&gt;Ops -->
+<g id="edge3" class="edge">
+<title>Mnt-&gt;Ops</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M103.85,-287.7C103.85,-280.6 103.85,-272.18 103.85,-264.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="107.35,-264.41 103.85,-254.41 100.35,-264.41 107.35,-264.41"/>
+</g>
+<!-- Xv6A -->
+<g id="node5" class="node">
+<title>Xv6A</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M69.69,-180C69.69,-180 12,-180 12,-180 6,-180 0,-174 0,-168 0,-168 0,-156 0,-156 0,-150 6,-144 12,-144 12,-144 69.69,-144 69.69,-144 75.69,-144 81.69,-150 81.69,-156 81.69,-156 81.69,-168 81.69,-168 81.69,-174 75.69,-180 69.69,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="40.85" y="-157.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">xv6 adapter</text>
+</g>
+<!-- Ops&#45;&gt;Xv6A -->
+<g id="edge4" class="edge">
+<title>Ops-&gt;Xv6A</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M88.27,-215.7C81.06,-207.68 72.33,-197.98 64.34,-189.1"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="67.18,-187.03 57.89,-181.94 61.98,-191.71 67.18,-187.03"/>
+</g>
+<!-- FatA -->
+<g id="node6" class="node">
+<title>FatA</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M199.42,-180C199.42,-180 136.28,-180 136.28,-180 130.28,-180 124.28,-174 124.28,-168 124.28,-168 124.28,-156 124.28,-156 124.28,-150 130.28,-144 136.28,-144 136.28,-144 199.42,-144 199.42,-144 205.42,-144 211.42,-150 211.42,-156 211.42,-156 211.42,-168 211.42,-168 211.42,-174 205.42,-180 199.42,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="167.85" y="-157.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">FAT adapter</text>
+</g>
+<!-- Ops&#45;&gt;FatA -->
+<g id="edge7" class="edge">
+<title>Ops-&gt;FatA</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M119.67,-215.7C127,-207.68 135.86,-197.98 143.98,-189.1"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="146.37,-191.67 150.54,-181.93 141.21,-186.95 146.37,-191.67"/>
+</g>
+<!-- Xv6FS -->
+<g id="node7" class="node">
+<title>Xv6FS</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M55.85,-108C55.85,-108 25.85,-108 25.85,-108 19.85,-108 13.85,-102 13.85,-96 13.85,-96 13.85,-84 13.85,-84 13.85,-78 19.85,-72 25.85,-72 25.85,-72 55.85,-72 55.85,-72 61.85,-72 67.85,-78 67.85,-84 67.85,-84 67.85,-96 67.85,-96 67.85,-102 61.85,-108 55.85,-108"/>
+<text xml:space="preserve" text-anchor="middle" x="40.85" y="-85.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">xv6 fs</text>
+</g>
+<!-- Xv6A&#45;&gt;Xv6FS -->
+<g id="edge5" class="edge">
+<title>Xv6A-&gt;Xv6FS</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M40.85,-143.7C40.85,-136.6 40.85,-128.18 40.85,-120.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="44.35,-120.41 40.85,-110.41 37.35,-120.41 44.35,-120.41"/>
+</g>
+<!-- FatFS -->
+<g id="node8" class="node">
+<title>FatFS</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M183.88,-108C183.88,-108 151.82,-108 151.82,-108 145.82,-108 139.82,-102 139.82,-96 139.82,-96 139.82,-84 139.82,-84 139.82,-78 145.82,-72 151.82,-72 151.82,-72 183.88,-72 183.88,-72 189.88,-72 195.88,-78 195.88,-84 195.88,-84 195.88,-96 195.88,-96 195.88,-102 189.88,-108 183.88,-108"/>
+<text xml:space="preserve" text-anchor="middle" x="167.85" y="-85.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">FAT fs</text>
+</g>
+<!-- FatA&#45;&gt;FatFS -->
+<g id="edge8" class="edge">
+<title>FatA-&gt;FatFS</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M167.85,-143.7C167.85,-136.6 167.85,-128.18 167.85,-120.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="171.35,-120.41 167.85,-110.41 164.35,-120.41 171.35,-120.41"/>
+</g>
+<!-- Disk -->
+<g id="node9" class="node">
+<title>Disk</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M65.43,-36C65.43,-36 16.26,-36 16.26,-36 10.26,-36 4.26,-30 4.26,-24 4.26,-24 4.26,-12 4.26,-12 4.26,-6 10.26,0 16.26,0 16.26,0 65.43,0 65.43,0 71.43,0 77.43,-6 77.43,-12 77.43,-12 77.43,-24 77.43,-24 77.43,-30 71.43,-36 65.43,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="40.85" y="-13.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">virtio disk</text>
+</g>
+<!-- Xv6FS&#45;&gt;Disk -->
+<g id="edge6" class="edge">
+<title>Xv6FS-&gt;Disk</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M40.85,-71.7C40.85,-64.6 40.85,-56.18 40.85,-48.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="44.35,-48.41 40.85,-38.41 37.35,-48.41 44.35,-48.41"/>
+</g>
+<!-- FatImg -->
+<g id="node10" class="node">
+<title>FatImg</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M195.92,-36C195.92,-36 139.77,-36 139.77,-36 133.77,-36 127.77,-30 127.77,-24 127.77,-24 127.77,-12 127.77,-12 127.77,-6 133.77,0 139.77,0 139.77,0 195.92,0 195.92,0 201.92,0 207.92,-6 207.92,-12 207.92,-12 207.92,-24 207.92,-24 207.92,-30 201.92,-36 195.92,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="167.85" y="-13.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">FAT image</text>
+</g>
+<!-- FatFS&#45;&gt;FatImg -->
+<g id="edge9" class="edge">
+<title>FatFS-&gt;FatImg</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M167.85,-71.7C167.85,-64.6 167.85,-56.18 167.85,-48.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="171.35,-48.41 167.85,-38.41 164.35,-48.41 171.35,-48.41"/>
+</g>
+</g>
+</svg>

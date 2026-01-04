@@ -108,7 +108,6 @@ entry("getxattr");
 entry("listxattr");
 entry("removexattr");
 entry("midsched");
-entry("fclonerange");
 entry("pread");
 entry("pwrite");
 entry("dup2");

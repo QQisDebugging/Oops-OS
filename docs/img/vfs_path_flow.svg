@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="117pt" height="410pt" viewBox="0.00 0.00 117.00 410.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 405.6)">
+<title>vfs_path_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-405.6 113.32,-405.6 113.32,4 -4,4"/>
+<!-- Path -->
+<g id="node1" class="node">
+<title>Path</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M93.43,-401.6C93.43,-401.6 15.89,-401.6 15.89,-401.6 9.89,-401.6 3.89,-395.6 3.89,-389.6 3.89,-389.6 3.89,-377.6 3.89,-377.6 3.89,-371.6 9.89,-365.6 15.89,-365.6 15.89,-365.6 93.43,-365.6 93.43,-365.6 99.43,-365.6 105.43,-371.6 105.43,-377.6 105.43,-377.6 105.43,-389.6 105.43,-389.6 105.43,-395.6 99.43,-401.6 93.43,-401.6"/>
+<text xml:space="preserve" text-anchor="middle" x="54.66" y="-379.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">path: /mnt/a.txt</text>
+</g>
+<!-- Get -->
+<g id="node2" class="node">
+<title>Get</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M97.32,-329.6C97.32,-329.6 12,-329.6 12,-329.6 6,-329.6 0,-323.6 0,-317.6 0,-317.6 0,-305.6 0,-305.6 0,-299.6 6,-293.6 12,-293.6 12,-293.6 97.32,-293.6 97.32,-293.6 103.32,-293.6 109.32,-299.6 109.32,-305.6 109.32,-305.6 109.32,-317.6 109.32,-317.6 109.32,-323.6 103.32,-329.6 97.32,-329.6"/>
+<text xml:space="preserve" text-anchor="middle" x="54.66" y="-307.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">vfs_get_mount()</text>
+</g>
+<!-- Path&#45;&gt;Get -->
+<g id="edge1" class="edge">
+<title>Path-&gt;Get</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M54.66,-365.3C54.66,-358.2 54.66,-349.78 54.66,-341.78"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="58.16,-342.01 54.66,-332.01 51.16,-342.01 58.16,-342.01"/>
+</g>
+<!-- Table -->
+<g id="node3" class="node">
+<title>Table</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M83.9,-257.6C83.9,-257.6 25.42,-257.6 25.42,-257.6 19.42,-257.6 13.42,-251.6 13.42,-245.6 13.42,-245.6 13.42,-228 13.42,-228 13.42,-222 19.42,-216 25.42,-216 25.42,-216 83.9,-216 83.9,-216 89.9,-216 95.9,-222 95.9,-228 95.9,-228 95.9,-245.6 95.9,-245.6 95.9,-251.6 89.9,-257.6 83.9,-257.6"/>
+<text xml:space="preserve" text-anchor="middle" x="54.66" y="-241" font-family="Helvetica,Arial,sans-serif" font-size="14.00">mount table</text>
+<text xml:space="preserve" text-anchor="middle" x="54.66" y="-224.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">最长前缀匹配</text>
+</g>
+<!-- Get&#45;&gt;Table -->
+<g id="edge2" class="edge">
+<title>Get-&gt;Table</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M54.66,-293.35C54.66,-286.23 54.66,-277.74 54.66,-269.57"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="58.16,-269.84 54.66,-259.84 51.16,-269.84 58.16,-269.84"/>
+</g>
+<!-- Ops -->
+<g id="node4" class="node">
+<title>Ops</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M88.37,-180C88.37,-180 20.94,-180 20.94,-180 14.94,-180 8.94,-174 8.94,-168 8.94,-168 8.94,-156 8.94,-156 8.94,-150 14.94,-144 20.94,-144 20.94,-144 88.37,-144 88.37,-144 94.37,-144 100.37,-150 100.37,-156 100.37,-156 100.37,-168 100.37,-168 100.37,-174 94.37,-180 88.37,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="54.66" y="-157.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">fs_operations</text>
+</g>
+<!-- Table&#45;&gt;Ops -->
+<g id="edge3" class="edge">
+<title>Table-&gt;Ops</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M54.66,-215.52C54.66,-208.23 54.66,-199.86 54.66,-191.98"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="58.16,-192.03 54.66,-182.03 51.16,-192.03 58.16,-192.03"/>
+</g>
+<!-- Namei -->
+<g id="node5" class="node">
+<title>Namei</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M88.43,-108C88.43,-108 20.89,-108 20.89,-108 14.89,-108 8.89,-102 8.89,-96 8.89,-96 8.89,-84 8.89,-84 8.89,-78 14.89,-72 20.89,-72 20.89,-72 88.43,-72 88.43,-72 94.43,-72 100.43,-78 100.43,-84 100.43,-84 100.43,-96 100.43,-96 100.43,-102 94.43,-108 88.43,-108"/>
+<text xml:space="preserve" text-anchor="middle" x="54.66" y="-85.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">ops-&gt;namei()</text>
+</g>
+<!-- Ops&#45;&gt;Namei -->
+<g id="edge4" class="edge">
+<title>Ops-&gt;Namei</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M54.66,-143.7C54.66,-136.6 54.66,-128.18 54.66,-120.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="58.16,-120.41 54.66,-110.41 51.16,-120.41 58.16,-120.41"/>
+</g>
+<!-- Vinode -->
+<g id="node6" class="node">
+<title>Vinode</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M78.27,-36C78.27,-36 31.05,-36 31.05,-36 25.05,-36 19.05,-30 19.05,-24 19.05,-24 19.05,-12 19.05,-12 19.05,-6 25.05,0 31.05,0 31.05,0 78.27,0 78.27,0 84.27,0 90.27,-6 90.27,-12 90.27,-12 90.27,-24 90.27,-24 90.27,-30 84.27,-36 78.27,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="54.66" y="-13.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">vfs_inode</text>
+</g>
+<!-- Namei&#45;&gt;Vinode -->
+<g id="edge5" class="edge">
+<title>Namei-&gt;Vinode</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M54.66,-71.7C54.66,-64.6 54.66,-56.18 54.66,-48.18"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="58.16,-48.41 54.66,-38.41 51.16,-48.41 58.16,-48.41"/>
+</g>
+</g>
+</svg>
