@@ -260,6 +260,13 @@ sys_fallocate(void)
   if (f->writable == 0)
     return -1;
 
+  if (len == 0)
+    return 0;
+  if ((uint64)offset + (uint64)len < (uint64)offset)
+    return -1;
+  if ((uint64)offset + (uint64)len > (uint64)MAXFILE * BSIZE)
+    return -1;
+
   // PUNCH_HOLE mode: release blocks in [offset, offset+len).
   if (flags & FALLOC_FL_PUNCH_HOLE) {
     uint startb = offset / BSIZE;
@@ -290,14 +297,7 @@ sys_fallocate(void)
 
   // Pre-allocation mode.
   uint target = (uint)(offset + len);
-
-  ilock(f->ip);
-  uint cur_size = f->ip->size;
-  iunlock(f->ip);
-  if (target <= cur_size)
-    return 0;
-
-  uint startb = (cur_size + BSIZE - 1) / BSIZE;
+  uint startb = offset / BSIZE;
   uint endb = (target + BSIZE - 1) / BSIZE;
   uint maxblocks = (MAXOPBLOCKS - 1 - 1 - 2) / 2;
   if (maxblocks < 1)
@@ -312,15 +312,6 @@ sys_fallocate(void)
 
     begin_op();
     ilock(f->ip);
-    uint cur_start = (f->ip->size + BSIZE - 1) / BSIZE;
-    if (cur_start > b)
-      b = cur_start;
-    if (b >= endb)
-    {
-      iunlock(f->ip);
-      end_op();
-      break;
-    }
     if (chunk > endb - b)
       chunk = endb - b;
     uint newsize = target;
@@ -382,6 +373,93 @@ sys_fclone(void)
   iunlockput(ip_dst);
   iunlockput(ip_src);
   end_op();
+  return 0;
+}
+
+uint64
+sys_fclonerange(void)
+{
+  struct file *fsrc;
+  struct file *fdst;
+  int src_off;
+  int dst_off;
+  int len;
+
+  if (argfd(0, 0, &fsrc) < 0 || argint(1, &src_off) < 0 ||
+      argfd(2, 0, &fdst) < 0 || argint(3, &dst_off) < 0 ||
+      argint(4, &len) < 0)
+    return -1;
+
+  if (src_off < 0 || dst_off < 0 || len < 0)
+    return -1;
+  if (len == 0)
+    return 0;
+  if ((src_off | dst_off | len) & (BSIZE - 1))
+    return -1;
+  if ((uint64)src_off + (uint64)len < (uint64)src_off)
+    return -1;
+  if ((uint64)dst_off + (uint64)len < (uint64)dst_off)
+    return -1;
+
+  if (fsrc->type != FD_INODE || fdst->type != FD_INODE)
+    return -1;
+  if (fsrc->ip->type != T_FILE || fdst->ip->type != T_FILE)
+    return -1;
+  if (fsrc->readable == 0)
+    return -1;
+  if (fdst->writable == 0)
+    return -1;
+  if (fsrc->ip == fdst->ip)
+    return -1;
+  if (fsrc->ip->dev != fdst->ip->dev)
+    return -1;
+  if ((uint64)dst_off + (uint64)len > (uint64)MAXFILE * BSIZE)
+    return -1;
+
+  ilock(fsrc->ip);
+  uint src_size = fsrc->ip->size;
+  iunlock(fsrc->ip);
+  if ((uint64)src_off + (uint64)len > src_size)
+    return -1;
+
+  uint nblocks = len / BSIZE;
+  uint maxblocks = (MAXOPBLOCKS - 1 - 2) / 2;
+  if (maxblocks < 1)
+    maxblocks = 1;
+
+  for (uint b = 0; b < nblocks; )
+  {
+    uint chunk = nblocks - b;
+    if (chunk > maxblocks)
+      chunk = maxblocks;
+
+    begin_op();
+    if (fsrc->ip->inum < fdst->ip->inum)
+    {
+      ilock(fsrc->ip);
+      ilock(fdst->ip);
+    }
+    else
+    {
+      ilock(fdst->ip);
+      ilock(fsrc->ip);
+    }
+
+    int r = iclone_range(fsrc->ip, fdst->ip,
+                         src_off + b * BSIZE,
+                         dst_off + b * BSIZE,
+                         chunk * BSIZE);
+
+    iunlock(fsrc->ip);
+    iunlock(fdst->ip);
+    end_op();
+
+    if (r < 0)
+      return -1;
+
+    b += chunk;
+  }
+
   return 0;
 }
 

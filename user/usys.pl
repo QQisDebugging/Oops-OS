@@ -87,6 +87,7 @@ entry("clone");
 entry("join");
 entry("fallocate");
 entry("fclone");
+entry("fclonerange");
 entry("thread_exit");
 entry("lseek");
 entry("truncate");

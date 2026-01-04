@@ -2857,6 +2857,14 @@ void fclonetest_run(char *s)
   exit(1);
 }
 
+void fclonerangetest_run(char *s)
+{
+  char *argv[] = {"fclonerangetest", 0};
+  exec("fclonerangetest", argv);
+  printf("%s: exec fclonerangetest failed\n", s);
+  exit(1);
+}
+
 void lseektest_run(char *s)
 {
   char *argv[] = {"lseektest", 0};
@@ -2988,6 +2996,7 @@ int main(int argc, char *argv[])
       {lseektest_run, "lseektest"},
       {fallocatetest_run, "fallocatetest"},
       {fclonetest_run, "fclonetest"},
+      {fclonerangetest_run, "fclonerangetest"},
       {truncatetest_run, "truncatetest"},
       {renametest_run, "renametest"},
       {deduptest_run, "deduptest"},

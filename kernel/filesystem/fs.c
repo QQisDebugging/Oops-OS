@@ -661,6 +661,48 @@ bmap_set_existing(struct inode *ip, uint bn, uint addr)
   return -1;
 }
 
+// Ensure metadata blocks exist for bn without allocating data blocks.
+// Returns: 1 if inode needs iupdate(), 0 if not, -1 on failure.
+static int
+bmap_ensure(struct inode *ip, uint bn)
+{
+  struct buf *bp;
+  uint *a;
+  int need_update = 0;
+
+  if(bn < NDIRECT)
+    return 0;
+
+  bn -= NDIRECT;
+  if(bn < NINDIRECT){
+    if(ip->addrs[NDIRECT] == 0){
+      ip->addrs[NDIRECT] = balloc(ip->dev);
+      need_update = 1;
+    }
+    return need_update;
+  }
+
+  bn -= NINDIRECT;
+  if(bn < NDINDIRECT){
+    int level2_idx = bn / NADDR_PER_BLOCK;
+
+    if(ip->addrs[NDIRECT + 1] == 0){
+      ip->addrs[NDIRECT + 1] = balloc(ip->dev);
+      need_update = 1;
+    }
+    bp = bread(ip->dev, ip->addrs[NDIRECT + 1]);
+    a = (uint*)bp->data;
+    if(a[level2_idx] == 0){
+      a[level2_idx] = balloc(ip->dev);
+      log_write(bp);
+    }
+    brelse(bp);
+    return need_update;
+  }
+
+  return -1;
+}
+
 // Truncate inode (discard contents).
 // Caller must hold ip->lock.
 void
@@ -1128,6 +1170,75 @@ iclone(struct inode *src, struct inode *dst)
   }
 
   iupdate(dst);
+  return 0;
+}
+
+// Clone a block-aligned range from src to dst, sharing data blocks.
+// Caller must hold both inode locks.
+int
+iclone_range(struct inode *src, struct inode *dst, uint src_off, uint dst_off, uint len)
+{
+  uint bn;
+  uint nblocks;
+  uint srcb;
+  uint dstb;
+  int need_update = 0;
+
+  if(src->type != T_FILE || dst->type != T_FILE)
+    return -1;
+  if(src->dev != dst->dev)
+    return -1;
+
+  nblocks = len / BSIZE;
+  srcb = src_off / BSIZE;
+  dstb = dst_off / BSIZE;
+
+  for(bn = 0; bn < nblocks; bn++){
+    uint s = bmap_nalloc(src, srcb + bn);
+    uint d = bmap_nalloc(dst, dstb + bn);
+
+    if(s == 0){
+      if(d != 0){
+        int r = bmap_set_existing(dst, dstb + bn, 0);
+        if(r < 0)
+          return -1;
+        if(r == 1)
+          need_update = 1;
+        bfree(dst->dev, d);
+      }
+      continue;
+    }
+
+    if(d == s)
+      continue;
+
+    bref_inc(s);
+    int r = bmap_ensure(dst, dstb + bn);
+    if(r < 0){
+      bref_dec(s);
+      return -1;
+    }
+    if(r == 1)
+      need_update = 1;
+
+    r = bmap_set_existing(dst, dstb + bn, s);
+    if(r < 0){
+      bref_dec(s);
+      return -1;
+    }
+    if(r == 1)
+      need_update = 1;
+
+    if(d != 0)
+      bfree(dst->dev, d);
+  }
+
+  if(dst_off + len > dst->size){
+    dst->size = dst_off + len;
+    need_update = 1;
+  }
+  if(need_update)
+    iupdate(dst);
   return 0;
 }
 

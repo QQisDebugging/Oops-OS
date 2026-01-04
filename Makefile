@@ -171,6 +171,7 @@ UPROGS=\
 	$U/test/_bigfiletest\
 	$U/test/_fallocatetest\
 	$U/test/_fclonetest\
+	$U/test/_fclonerangetest\
 	$U/program/_bigbss\
 	$U/program/_symlink\
 	$U/program/_readfile\

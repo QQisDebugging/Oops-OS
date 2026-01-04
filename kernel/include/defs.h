@@ -81,6 +81,7 @@ void itrunc_to(struct inode *, uint);
 int falloc(struct inode *, uint, uint, uint, int);
 int ipunch(struct inode *, uint, uint);
 int iclone(struct inode *, struct inode *);
+int iclone_range(struct inode *, struct inode *, uint, uint, uint);
 int idedup(struct inode *, struct inode *);
 
 // ramdisk.c

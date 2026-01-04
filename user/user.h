@@ -48,6 +48,7 @@ int geti(const char*,uint64);
 int recoveri(uint,uint64);
 int fallocate(int fd, int offset, int len, int flags);
 int fclone(const char *, const char *);
+int fclonerange(int srcfd, int srcoff, int dstfd, int dstoff, int len);
 int lseek(int fd, int offset, int whence);
 int truncate(const char *path, int length);
 int ftruncate(int fd, int length);

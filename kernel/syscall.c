@@ -195,6 +195,7 @@ extern uint64 sys_cond_signal(void);
 extern uint64 sys_cond_broadcast(void);
 extern uint64 sys_fallocate(void);
 extern uint64 sys_fclone(void);
+extern uint64 sys_fclonerange(void);
 extern uint64 sys_lseek(void);
 extern uint64 sys_truncate(void);
 extern uint64 sys_ftruncate(void);
@@ -278,6 +279,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_cond_broadcast] sys_cond_broadcast,
     [SYS_fallocate] sys_fallocate,
     [SYS_fclone] sys_fclone,
+    [SYS_fclonerange] sys_fclonerange,
     [SYS_lseek] sys_lseek,
     [SYS_truncate] sys_truncate,
     [SYS_ftruncate] sys_ftruncate,
@@ -362,6 +364,7 @@ static char *syscall_names[] = {
     [SYS_cond_broadcast] "sys_cond_broadcast",
     [SYS_fallocate] "sys_fallocate",
     [SYS_fclone] "sys_fclone",
+    [SYS_fclonerange] "sys_fclonerange",
     [SYS_lseek] "sys_lseek",
     [SYS_truncate] "sys_truncate",
     [SYS_ftruncate] "sys_ftruncate",
