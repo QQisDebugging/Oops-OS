@@ -55,10 +55,8 @@ void *shmgetat(uint64 key, uint64 num)
     // 情况1：如果当前进程已经映射了该key的共享内存，直接返回地址
     if (p->shmkeymask >> key & 1)
     {
-
-        // printf("qingkuang1\n");
-        // release(&shmlock);
-        // return p->shmva[key];
+        release(&shmlock);
+        return p->shmva[key];
     }
 
     // 情况2：如果系统还未创建此key对应的共享内存，则分配内存并映射
@@ -79,14 +77,14 @@ void *shmgetat(uint64 key, uint64 num)
     {
         // printf("qingkuang3\n");
         // 情况3：如果未持有且已经在系统中分配此key对应的共享内存，则直接映射
+        num = shmtab[key].pagenum;  // 先获取实际页数
         for (int i = 0; i < num; i++)
         {
             phyaddr[i] = shmtab[key].physaddr[i];
         }
 
-        num = shmtab[key].pagenum;
         // mapshm方法新建映射
-        if ((shm = mapshm(pagetable, shm, shm, p->sz, phyaddr)) == 0)
+        if ((shm = mapshm(pagetable, shm, shm - num * PGSIZE, p->sz, phyaddr)) == 0)
         {
             release(&shmlock);
             return (void *)-1;

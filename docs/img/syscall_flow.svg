@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="833pt" height="67pt" viewBox="0.00 0.00 833.00 67.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 62.83)">
+<title>syscall_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-62.83 829.12,-62.83 829.12,4 -4,4"/>
+<!-- start -->
+<g id="node1" class="node">
+<title>start</title>
+<ellipse fill="#b3d9ff" stroke="black" cx="41.01" cy="-29.42" rx="41.01" ry="29.42"/>
+<text xml:space="preserve" text-anchor="middle" x="41.01" y="-33.62" font-family="SimHei" font-size="14.00">用户调用</text>
+<text xml:space="preserve" text-anchor="middle" x="41.01" y="-16.82" font-family="SimHei" font-size="14.00">fork()</text>
+</g>
+<!-- usys -->
+<g id="node2" class="node">
+<title>usys</title>
+<polygon fill="#cce5ff" stroke="black" points="231.63,-58.62 118.02,-58.62 118.02,-0.22 231.63,-0.22 231.63,-58.62"/>
+<text xml:space="preserve" text-anchor="middle" x="174.83" y="-42.02" font-family="SimHei" font-size="14.00">usys.S:</text>
+<text xml:space="preserve" text-anchor="middle" x="174.83" y="-25.22" font-family="SimHei" font-size="14.00">mv a7, SYS_fork</text>
+<text xml:space="preserve" text-anchor="middle" x="174.83" y="-8.42" font-family="SimHei" font-size="14.00">ecall</text>
+</g>
+<!-- start&#45;&gt;usys -->
+<g id="edge1" class="edge">
+<title>start-&gt;usys</title>
+<path fill="none" stroke="black" d="M82.28,-29.42C89.98,-29.42 98.24,-29.42 106.53,-29.42"/>
+<polygon fill="black" stroke="black" points="106.28,-32.92 116.28,-29.42 106.28,-25.92 106.28,-32.92"/>
+</g>
+<!-- trap -->
+<g id="node3" class="node">
+<title>trap</title>
+<polygon fill="#ffcccc" stroke="black" points="342.96,-58.62 267.63,-58.62 267.63,-0.22 342.96,-0.22 342.96,-58.62"/>
+<text xml:space="preserve" text-anchor="middle" x="305.3" y="-42.02" font-family="SimHei" font-size="14.00">usertrap():</text>
+<text xml:space="preserve" text-anchor="middle" x="305.3" y="-25.22" font-family="SimHei" font-size="14.00">scause==8</text>
+<text xml:space="preserve" text-anchor="middle" x="305.3" y="-8.42" font-family="SimHei" font-size="14.00">保存上下文</text>
+</g>
+<!-- usys&#45;&gt;trap -->
+<g id="edge2" class="edge">
+<title>usys-&gt;trap</title>
+<path fill="none" stroke="black" d="M231.8,-29.42C239.89,-29.42 248.16,-29.42 256.07,-29.42"/>
+<polygon fill="black" stroke="black" points="255.85,-32.92 265.85,-29.42 255.85,-25.92 255.85,-32.92"/>
+</g>
+<!-- dispatch -->
+<g id="node4" class="node">
+<title>dispatch</title>
+<polygon fill="#ffb3b3" stroke="black" points="482.05,-58.62 378.96,-58.62 378.96,-0.22 482.05,-0.22 482.05,-58.62"/>
+<text xml:space="preserve" text-anchor="middle" x="430.51" y="-42.02" font-family="SimHei" font-size="14.00">syscall():</text>
+<text xml:space="preserve" text-anchor="middle" x="430.51" y="-25.22" font-family="SimHei" font-size="14.00">num = a7</text>
+<text xml:space="preserve" text-anchor="middle" x="430.51" y="-8.42" font-family="SimHei" font-size="14.00">syscalls[num]()</text>
+</g>
+<!-- trap&#45;&gt;dispatch -->
+<g id="edge3" class="edge">
+<title>trap-&gt;dispatch</title>
+<path fill="none" stroke="black" d="M343.27,-29.42C350.97,-29.42 359.28,-29.42 367.6,-29.42"/>
+<polygon fill="black" stroke="black" points="367.38,-32.92 377.38,-29.42 367.38,-25.92 367.38,-32.92"/>
+</g>
+<!-- handler -->
+<g id="node5" class="node">
+<title>handler</title>
+<polygon fill="#ffd9d9" stroke="black" points="595.49,-58.62 518.05,-58.62 518.05,-0.22 595.49,-0.22 595.49,-58.62"/>
+<text xml:space="preserve" text-anchor="middle" x="556.77" y="-42.02" font-family="SimHei" font-size="14.00">sys_fork():</text>
+<text xml:space="preserve" text-anchor="middle" x="556.77" y="-25.22" font-family="SimHei" font-size="14.00">创建子进程</text>
+<text xml:space="preserve" text-anchor="middle" x="556.77" y="-8.42" font-family="SimHei" font-size="14.00">返回pid</text>
+</g>
+<!-- dispatch&#45;&gt;handler -->
+<g id="edge4" class="edge">
+<title>dispatch-&gt;handler</title>
+<path fill="none" stroke="black" d="M482.41,-29.42C490.34,-29.42 498.51,-29.42 506.4,-29.42"/>
+<polygon fill="black" stroke="black" points="506.18,-32.92 516.18,-29.42 506.18,-25.92 506.18,-32.92"/>
+</g>
+<!-- ret -->
+<g id="node6" class="node">
+<title>ret</title>
+<polygon fill="#d9f2d9" stroke="black" points="707.1,-50.22 631.49,-50.22 631.49,-8.62 707.1,-8.62 707.1,-50.22"/>
+<text xml:space="preserve" text-anchor="middle" x="669.29" y="-33.62" font-family="SimHei" font-size="14.00">返回用户态:</text>
+<text xml:space="preserve" text-anchor="middle" x="669.29" y="-16.82" font-family="SimHei" font-size="14.00">a0 = 返回值</text>
+</g>
+<!-- handler&#45;&gt;ret -->
+<g id="edge5" class="edge">
+<title>handler-&gt;ret</title>
+<path fill="none" stroke="black" d="M595.81,-29.42C603.62,-29.42 611.93,-29.42 620.05,-29.42"/>
+<polygon fill="black" stroke="black" points="619.79,-32.92 629.79,-29.42 619.79,-25.92 619.79,-32.92"/>
+</g>
+<!-- done -->
+<g id="node7" class="node">
+<title>done</title>
+<ellipse fill="#b3ffb3" stroke="black" cx="784.11" cy="-29.42" rx="41.01" ry="29.42"/>
+<text xml:space="preserve" text-anchor="middle" x="784.11" y="-33.62" font-family="SimHei" font-size="14.00">用户程序</text>
+<text xml:space="preserve" text-anchor="middle" x="784.11" y="-16.82" font-family="SimHei" font-size="14.00">继续执行</text>
+</g>
+<!-- ret&#45;&gt;done -->
+<g id="edge6" class="edge">
+<title>ret-&gt;done</title>
+<path fill="none" stroke="black" d="M707.55,-29.42C715.22,-29.42 723.44,-29.42 731.52,-29.42"/>
+<polygon fill="black" stroke="black" points="731.28,-32.92 741.27,-29.42 731.27,-25.92 731.28,-32.92"/>
+</g>
+</g>
+</svg>
