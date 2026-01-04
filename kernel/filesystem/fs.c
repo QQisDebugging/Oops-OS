@@ -20,6 +20,7 @@
 #include "fs.h"
 #include "buf.h"
 #include "file.h"
+#include "fsinfo.h"
 
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -43,6 +44,8 @@ readsb(int dev, struct superblock *sb)
 }
 
 static void bref_init(int dev);
+static uint count_free_blocks(int dev, uint data_start);
+static uint count_free_inodes(int dev);
 
 // Init fs
 void
@@ -53,6 +56,55 @@ fsinit(int dev) {
   initlog(dev, &sb);
   // Rebuild block refcounts after log recovery.
   bref_init(dev);
+}
+
+static uint
+count_free_blocks(int dev, uint data_start)
+{
+  uint free = 0;
+  uint bmapblocks = sb.size / BPB + 1;
+
+  for(uint bi = 0; bi < bmapblocks; bi++){
+    struct buf *bp = bread(dev, sb.bmapstart + bi);
+    for(uint bit = 0; bit < BPB; bit++){
+      uint b = bi * BPB + bit;
+      if(b < data_start || b >= sb.size)
+        continue;
+      if((bp->data[bit/8] & (1 << (bit % 8))) == 0)
+        free++;
+    }
+    brelse(bp);
+  }
+  return free;
+}
+
+static uint
+count_free_inodes(int dev)
+{
+  uint free = 0;
+
+  for(uint inum = 1; inum < sb.ninodes; inum += IPB){
+    struct buf *bp = bread(dev, IBLOCK(inum, sb));
+    struct dinode *dip = (struct dinode *)bp->data;
+    for(int i = 0; i < IPB && (inum + i) < sb.ninodes; i++){
+      if(dip[i].type == 0)
+        free++;
+    }
+    brelse(bp);
+  }
+  return free;
+}
+
+void
+fsinfo(struct fsinfo *info)
+{
+  uint data_start = sb.size - sb.nblocks;
+
+  info->bsize = BSIZE;
+  info->total_blocks = sb.nblocks;
+  info->free_blocks = count_free_blocks(ROOTDEV, data_start);
+  info->total_inodes = sb.ninodes;
+  info->free_inodes = count_free_inodes(ROOTDEV);
 }
 
 // Zero a block.

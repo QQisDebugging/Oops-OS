@@ -16,6 +16,7 @@
 #include "file.h"
 #include "fcntl.h"
 #include "buf.h"
+#include "fsinfo.h"
 
 static struct inode *create(char *path, char type, short major, short minor);
 static struct inode *create_exclusive(char *path, char type, short major, short minor);
@@ -485,6 +486,20 @@ sys_fstat(void)
   if (argfd(0, 0, &f) < 0 || argaddr(1, &st) < 0)
     return -1;
   return filestat(f, st);
+}
+
+uint64
+sys_fsinfo(void)
+{
+  uint64 uaddr;
+  struct fsinfo info;
+
+  if (argaddr(0, &uaddr) < 0)
+    return -1;
+  fsinfo(&info);
+  if (copyout(myproc()->pagetable, uaddr, (char *)&info, sizeof(info)) < 0)
+    return -1;
+  return 0;
 }
 
 // Create the path new as a link to the same inode as old.

@@ -1,5 +1,6 @@
 ﻿#include "param.h"
 struct stat;
+struct fsinfo;
 struct rtcdate;
 struct sysinfo;
 // system calls
@@ -29,6 +30,7 @@ int uptime(void);
 int cps(void);
 int trace(int);
 int sysinfo(struct sysinfo *);
+int fsinfo(struct fsinfo *);
 int setPriority(int pid, int priority);
 int rt_set(int pid, int period, int runtime, int deadline);
 int rt_clear(int pid);

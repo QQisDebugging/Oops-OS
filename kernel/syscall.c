@@ -127,6 +127,7 @@ extern uint64 sys_exec(void);
 extern uint64 sys_exit(void);
 extern uint64 sys_fork(void);
 extern uint64 sys_fstat(void);
+extern uint64 sys_fsinfo(void);
 extern uint64 sys_getpid(void);
 extern uint64 sys_gettid(void);
 extern uint64 sys_gettgid(void);
@@ -219,6 +220,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_kill] sys_kill,
     [SYS_exec] sys_exec,
     [SYS_fstat] sys_fstat,
+    [SYS_fsinfo] sys_fsinfo,
     [SYS_chdir] sys_chdir,
     [SYS_dup] sys_dup,
     [SYS_getpid] sys_getpid,
@@ -311,6 +313,7 @@ static char *syscall_names[] = {
     [SYS_kill] "kill",
     [SYS_exec] "exec",
     [SYS_fstat] "fstat",
+    [SYS_fsinfo] "sys_fsinfo",
     [SYS_chdir] "chdir",
     [SYS_dup] "dup",
     [SYS_getpid] "getpid",

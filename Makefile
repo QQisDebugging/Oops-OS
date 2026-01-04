@@ -138,6 +138,7 @@ UPROGS=\
 	$U/program/_kill\
 	$U/program/_ln\
 	$U/program/_ls\
+	$U/program/_df\
 	$U/program/_mkdir\
 	$U/program/_rm\
 	$U/program/_sh\
@@ -210,6 +211,7 @@ UPROGS=\
 	$U/test/_flocktest\
 	$U/test/_fsynctest\
 	$U/test/_xattrtest\
+	$U/test/_fsinfotest\
 	$U/program/_statistics
 
 

@@ -2929,6 +2929,14 @@ void xattrtest_run(char *s)
   exit(1);
 }
 
+void fsinfotest_run(char *s)
+{
+  char *argv[] = {"fsinfotest", 0};
+  exec("fsinfotest", argv);
+  printf("%s: exec fsinfotest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -3028,6 +3036,7 @@ int main(int argc, char *argv[])
       {flocktest_run, "flocktest"},
       {fsynctest_run, "fsynctest"},
       {xattrtest_run, "xattrtest"},
+      {fsinfotest_run, "fsinfotest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

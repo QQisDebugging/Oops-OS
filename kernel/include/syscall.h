@@ -89,3 +89,4 @@
 #define SYS_listxattr 88
 #define SYS_removexattr 89
 #define SYS_fclonerange 90
+#define SYS_fsinfo 91

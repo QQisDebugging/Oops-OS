@@ -9,6 +9,7 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct sharemem;
+struct fsinfo;
 // messagequeue.c
 void mqinit();                 // 初始化系统消息队列
 int mqget(uint);               // 申请使用某个消息队列
@@ -93,6 +94,7 @@ int ipunch(struct inode *, uint, uint);
 int iclone(struct inode *, struct inode *);
 int iclone_range(struct inode *, struct inode *, uint, uint, uint);
 int idedup(struct inode *, struct inode *);
+void fsinfo(struct fsinfo *);
 
 // ramdisk.c
 void ramdiskinit(void);
