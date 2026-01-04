@@ -1821,3 +1821,118 @@ sys_removexattr(void)
   end_op();
   return ret;
 }
+
+// pread - 在指定偏移位置读取文件，不修改文件偏移量
+// 参数: fd - 文件描述符
+//       buf - 用户缓冲区地址
+//       count - 读取字节数
+//       offset - 读取起始偏移
+// 返回: 成功返回读取字节数，失败返回 -1
+uint64
+sys_pread(void)
+{
+  struct file *f;
+  uint64 buf;
+  int count;
+  int offset;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &buf) < 0 ||
+     argint(2, &count) < 0 || argint(3, &offset) < 0)
+    return -1;
+
+  if(count < 0 || offset < 0)
+    return -1;
+
+  // 只支持普通文件
+  if(f->type != FD_INODE)
+    return -1;
+  if(f->readable == 0)
+    return -1;
+
+  struct inode *ip = f->ip;
+  int r;
+
+  ilock(ip);
+
+  // 检查权限
+  if((ip->mode & 1) == 0) {
+    iunlock(ip);
+    return -1;
+  }
+
+  // 在指定偏移位置读取，不修改 f->off
+  r = readi(ip, 1, buf, offset, count);
+
+  iunlock(ip);
+  return r;
+}
+
+// pwrite - 在指定偏移位置写入文件，不修改文件偏移量
+// 参数: fd - 文件描述符
+//       buf - 用户缓冲区地址
+//       count - 写入字节数
+//       offset - 写入起始偏移
+// 返回: 成功返回写入字节数，失败返回 -1
+uint64
+sys_pwrite(void)
+{
+  struct file *f;
+  uint64 buf;
+  int count;
+  int offset;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &buf) < 0 ||
+     argint(2, &count) < 0 || argint(3, &offset) < 0)
+    return -1;
+
+  if(count < 0 || offset < 0)
+    return -1;
+
+  // 只支持普通文件
+  if(f->type != FD_INODE)
+    return -1;
+  if(f->writable == 0)
+    return -1;
+
+  struct inode *ip = f->ip;
+  int r, total = 0;
+
+  // 分批写入，避免超过日志事务大小
+  int max = ((MAXOPBLOCKS - 1 - 1 - 2) / 2) * BSIZE;
+  int cur_offset = offset;
+
+  while(total < count) {
+    int n1 = count - total;
+    if(n1 > max)
+      n1 = max;
+
+    begin_op();
+    ilock(ip);
+
+    // 如果写入位置超过当前文件大小，需要先扩展文件
+    uint end_pos = cur_offset + n1;
+    if(end_pos > ip->size) {
+      // 扩展文件大小
+      ip->size = end_pos;
+      iupdate(ip);
+    }
+
+    // 在指定偏移位置写入，不修改 f->off
+    r = writei(ip, 1, buf + total, cur_offset, n1);
+
+    iunlock(ip);
+    end_op();
+
+    if(r < 0)
+      break;
+    if(r != n1) {
+      total += r;
+      break;
+    }
+
+    total += r;
+    cur_offset += r;
+  }
+
+  return total > 0 ? total : -1;
+}

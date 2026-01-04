@@ -212,6 +212,7 @@ UPROGS=\
 	$U/test/_fsynctest\
 	$U/test/_xattrtest\
 	$U/test/_fsinfotest\
+	$U/test/_preadwritetest\
 	$U/program/_statistics
 
 

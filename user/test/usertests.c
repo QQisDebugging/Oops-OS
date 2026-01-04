@@ -2937,6 +2937,14 @@ void fsinfotest_run(char *s)
   exit(1);
 }
 
+void preadwritetest_run(char *s)
+{
+  char *argv[] = {"preadwritetest", 0};
+  exec("preadwritetest", argv);
+  printf("%s: exec preadwritetest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -3037,6 +3045,7 @@ int main(int argc, char *argv[])
       {fsynctest_run, "fsynctest"},
       {xattrtest_run, "xattrtest"},
       {fsinfotest_run, "fsinfotest"},
+      {preadwritetest_run, "preadwritetest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

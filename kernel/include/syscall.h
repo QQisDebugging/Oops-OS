@@ -90,3 +90,5 @@
 #define SYS_removexattr 89
 #define SYS_fclonerange 90
 #define SYS_fsinfo 91
+#define SYS_pread 92
+#define SYS_pwrite 93

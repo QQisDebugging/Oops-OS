@@ -63,6 +63,8 @@ int setxattr(const char *path, const char *name, const void *value, int size);
 int getxattr(const char *path, const char *name, void *value, int size);
 int listxattr(const char *path, char *list, int size);
 int removexattr(const char *path, const char *name);
+int pread(int fd, void *buf, int count, int offset);
+int pwrite(int fd, const void *buf, int count, int offset);
 
 // fallocate flags
 #define FALLOC_KEEP_SIZE     0x001
