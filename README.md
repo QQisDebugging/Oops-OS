@@ -280,4 +280,4 @@ buffer cache互斥锁的细粒度化
 
 [文件系统](./docs/document/文件系统.md)
 
-[网络设备](./docs/document/网络设备.md)
+[设备管理](./docs/document/设备管理.md)
