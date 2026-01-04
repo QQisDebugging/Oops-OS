@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="351pt" height="45pt" viewBox="0.00 0.00 351.00 45.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 41)">
+<title>fs_disk_layout</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-41 346.51,-41 346.51,4 -4,4"/>
+<!-- disk -->
+<g id="node1" class="node">
+<title>disk</title>
+<path fill="#f5f5f5" stroke="#333333" stroke-width="1.2" d="M12,-0.5C12,-0.5 330.51,-0.5 330.51,-0.5 336.51,-0.5 342.51,-6.5 342.51,-12.5 342.51,-12.5 342.51,-24.5 342.51,-24.5 342.51,-30.5 336.51,-36.5 330.51,-36.5 330.51,-36.5 12,-36.5 12,-36.5 6,-36.5 0,-30.5 0,-24.5 0,-24.5 0,-12.5 0,-12.5 0,-6.5 6,-0.5 12,-0.5"/>
+<text xml:space="preserve" text-anchor="middle" x="20.44" y="-14.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">boot</text>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="40.89,-0.7 40.89,-36.5"/>
+<text xml:space="preserve" text-anchor="middle" x="64.05" y="-14.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">super</text>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="87.21,-0.7 87.21,-36.5"/>
+<text xml:space="preserve" text-anchor="middle" x="104.16" y="-14.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">log</text>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="121.1,-0.7 121.1,-36.5"/>
+<text xml:space="preserve" text-anchor="middle" x="164.68" y="-14.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">inode blocks</text>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="208.26,-0.7 208.26,-36.5"/>
+<text xml:space="preserve" text-anchor="middle" x="235.7" y="-14.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">bitmap</text>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="263.14,-0.7 263.14,-36.5"/>
+<text xml:space="preserve" text-anchor="middle" x="302.83" y="-14.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">data blocks</text>
+</g>
+</g>
+</svg>
