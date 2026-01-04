@@ -5,16 +5,26 @@
 #include "riscv.h"
 #include "user/user.h"
 
+static int quiet = 0;
+static int full = 0;
+
 static void
 fail(const char *msg)
 {
-  printf("mmapswaptest: %s\n", msg);
+  if (!quiet)
+    printf("mmapswaptest: %s\n", msg);
   exit(1);
 }
 
 int
-main(void)
+main(int argc, char *argv[])
 {
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-q") == 0)
+      quiet = 1;
+    else if (strcmp(argv[i], "-f") == 0)
+      full = 1;
+  }
   int pages = 12;
   int len = pages * PGSIZE;
   int fd = open("mmapswap", O_CREATE | O_RDWR);
@@ -45,9 +55,18 @@ main(void)
     fail("sysinfo failed");
 
   uint64 swap_bytes = (uint64)SWAP_PAGES * PGSIZE;
-  uint64 target = info.freemem + swap_bytes / 4;
-  if (target < 16 * PGSIZE)
-    target = 16 * PGSIZE;
+  uint64 target;
+  if (full) {
+    target = info.freemem + swap_bytes / 4;
+  } else {
+    target = 8 * 1024 * 1024;
+    if (target > info.freemem / 2)
+      target = info.freemem / 2;
+    if (target < 16 * PGSIZE)
+      target = 16 * PGSIZE;
+  }
+  if (!quiet)
+    printf("mmapswaptest: mode=%s target=%lu\n", full ? "full" : "light", target);
 
   uint64 amt = PGROUNDUP(target);
   char *base = sbrk(0);
@@ -55,8 +74,15 @@ main(void)
     fail("pressure sbrk failed");
 
   uint64 npages = amt / PGSIZE;
+  uint64 step = npages / 20;
+  if (step == 0)
+    step = 1;
+  if (!quiet)
+    printf("mmapswaptest: pressure phase\n");
   for (uint64 i = 0; i < npages; i++) {
     base[i * PGSIZE] = (char)i;
+    if (!quiet && (i + 1) % step == 0)
+      printf("mmapswaptest: pressure %lu/%lu\n", i + 1, npages);
   }
 
   for (int i = 0; i < pages; i++) {
@@ -73,6 +99,7 @@ main(void)
   if (munmap(addr, len) < 0)
     fail("munmap failed");
 
-  printf("mmapswaptest: ok\n");
+  if (!quiet)
+    printf("mmapswaptest: ok\n");
   exit(0);
 }

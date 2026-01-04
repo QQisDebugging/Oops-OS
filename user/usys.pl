@@ -106,3 +106,4 @@ entry("setxattr");
 entry("getxattr");
 entry("listxattr");
 entry("removexattr");
+entry("midsched");

@@ -36,6 +36,7 @@ int banker_init(int nres, int *total);
 int banker_set_max(int nres, int *max);
 int banker_request(int nres, int *req);
 int banker_release(int nres, int *rel);
+int midsched(int on);
 int execve(const char *path, char *argv[], char *envp[]);
 int getparentpid(void);
 int print_pgtable(void);

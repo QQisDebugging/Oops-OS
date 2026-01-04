@@ -45,6 +45,15 @@ uint64 sys_rt_clear(void)
   return rt_clear(pid);
 }
 
+uint64
+sys_midsched(void)
+{
+  int on;
+  if (argint(0, &on) < 0)
+    return -1;
+  return midsched_set(on);
+}
+
 uint64 sys_banker_init(void)
 {
   int n;
@@ -257,6 +266,12 @@ uint64 sys_sysinfo(void)
   struct sysinfo info;
   freebytes(&info.freemem);
   procnum(&info.nproc);
+  info.nsuspended = 0;
+  for (struct proc *p = proc; p < &proc[NPROC]; p++)
+  {
+    if (p->state == SUSPENDED || p->state == SUSPENDED_SLEEP)
+      info.nsuspended++;
+  }
   swap_pbuf_stats(&info.swapbuf_hits, &info.swapbuf_misses,
                   &info.swapbuf_cached);
 

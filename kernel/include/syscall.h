@@ -92,3 +92,4 @@
 #define SYS_getxattr 91
 #define SYS_listxattr 92
 #define SYS_removexattr 93
+#define SYS_midsched 94

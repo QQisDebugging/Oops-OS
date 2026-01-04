@@ -213,6 +213,7 @@ extern uint64 sys_setxattr(void);
 extern uint64 sys_getxattr(void);
 extern uint64 sys_listxattr(void);
 extern uint64 sys_removexattr(void);
+extern uint64 sys_midsched(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -307,6 +308,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_getxattr] sys_getxattr,
     [SYS_listxattr] sys_listxattr,
     [SYS_removexattr] sys_removexattr,
+    [SYS_midsched] sys_midsched,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -402,6 +404,7 @@ static char *syscall_names[] = {
     [SYS_getxattr] "sys_getxattr",
     [SYS_listxattr] "sys_listxattr",
     [SYS_removexattr] "sys_removexattr",
+    [SYS_midsched] "sys_midsched",
 };
 void syscall(void)
 {

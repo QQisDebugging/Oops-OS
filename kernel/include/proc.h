@@ -88,6 +88,8 @@ enum procstate
 {
   UNUSED,
   SLEEPING,
+  SUSPENDED_SLEEP,
+  SUSPENDED,
   RUNNABLE,
   RUNNING,
   ZOMBIE
@@ -155,6 +157,7 @@ struct proc
   int rt_deadline_tick;     // absolute deadline tick
   int rt_remaining;         // remaining runtime budget
   int rt_misses;            // deadline miss count
+  int midsched_suspending;  // mid-term suspension in progress
   struct proc *pthread;     // 父线程
   void *ustack;             // 用户线程栈
   uint shm;        // 本进程共享内存区域的下边界
