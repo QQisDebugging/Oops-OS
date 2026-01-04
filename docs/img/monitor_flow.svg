@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="358pt" height="610pt" viewBox="0.00 0.00 358.00 610.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 606)">
+<title>monitor_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-606 354,-606 354,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_enter</title>
+<polygon fill="#f0fff0" stroke="black" points="191,-365.6 191,-594 287,-594 287,-365.6 191,-365.6"/>
+<text xml:space="preserve" text-anchor="middle" x="239" y="-577.4" font-family="Times,serif" font-size="14.00">mon_enter</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_wait</title>
+<polygon fill="#fff0f5" stroke="black" points="8,-8 8,-330.8 124,-330.8 124,-8 8,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="66" y="-314.2" font-family="Times,serif" font-size="14.00">cond_wait</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_signal</title>
+<polygon fill="#fffaf0" stroke="black" points="132,-175.4 132,-330.8 238,-330.8 238,-175.4 132,-175.4"/>
+<text xml:space="preserve" text-anchor="middle" x="185" y="-314.2" font-family="Times,serif" font-size="14.00">cond_signal</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_exit</title>
+<polygon fill="#f5f5dc" stroke="black" points="246,-178.2 246,-330.8 330,-330.8 330,-178.2 246,-178.2"/>
+<text xml:space="preserve" text-anchor="middle" x="288" y="-314.2" font-family="Times,serif" font-size="14.00">mon_exit</text>
+</g>
+<!-- enter -->
+<g id="node1" class="node">
+<title>enter</title>
+<path fill="#e6f3ff" stroke="black" d="M266.5,-561.2C266.5,-561.2 211.5,-561.2 211.5,-561.2 205.5,-561.2 199.5,-555.2 199.5,-549.2 199.5,-549.2 199.5,-537.2 199.5,-537.2 199.5,-531.2 205.5,-525.2 211.5,-525.2 211.5,-525.2 266.5,-525.2 266.5,-525.2 272.5,-525.2 278.5,-531.2 278.5,-537.2 278.5,-537.2 278.5,-549.2 278.5,-549.2 278.5,-555.2 272.5,-561.2 266.5,-561.2"/>
+<text xml:space="preserve" text-anchor="middle" x="239" y="-539" font-family="Microsoft YaHei" font-size="14.00">请求进入管程</text>
+</g>
+<!-- lock -->
+<g id="node2" class="node">
+<title>lock</title>
+<path fill="#e6f3ff" stroke="black" d="M261.25,-488.2C261.25,-488.2 216.75,-488.2 216.75,-488.2 210.75,-488.2 204.75,-482.2 204.75,-476.2 204.75,-476.2 204.75,-464.2 204.75,-464.2 204.75,-458.2 210.75,-452.2 216.75,-452.2 216.75,-452.2 261.25,-452.2 261.25,-452.2 267.25,-452.2 273.25,-458.2 273.25,-464.2 273.25,-464.2 273.25,-476.2 273.25,-476.2 273.25,-482.2 267.25,-488.2 261.25,-488.2"/>
+<text xml:space="preserve" text-anchor="middle" x="239" y="-466" font-family="Microsoft YaHei" font-size="14.00">获取互斥锁</text>
+</g>
+<!-- enter&#45;&gt;lock -->
+<g id="edge1" class="edge">
+<title>enter-&gt;lock</title>
+<path fill="none" stroke="black" d="M239,-525.01C239,-517.43 239,-508.3 239,-499.74"/>
+<polygon fill="black" stroke="black" points="242.5,-499.74 239,-489.74 235.5,-499.74 242.5,-499.74"/>
+</g>
+<!-- in_monitor -->
+<g id="node3" class="node">
+<title>in_monitor</title>
+<path fill="#e6f3ff" stroke="black" d="M261.25,-415.2C261.25,-415.2 216.75,-415.2 216.75,-415.2 210.75,-415.2 204.75,-409.2 204.75,-403.2 204.75,-403.2 204.75,-385.6 204.75,-385.6 204.75,-379.6 210.75,-373.6 216.75,-373.6 216.75,-373.6 261.25,-373.6 261.25,-373.6 267.25,-373.6 273.25,-379.6 273.25,-385.6 273.25,-385.6 273.25,-403.2 273.25,-403.2 273.25,-409.2 267.25,-415.2 261.25,-415.2"/>
+<text xml:space="preserve" text-anchor="middle" x="239" y="-398.6" font-family="Microsoft YaHei" font-size="14.00">进入管程</text>
+<text xml:space="preserve" text-anchor="middle" x="239" y="-381.8" font-family="Microsoft YaHei" font-size="14.00">执行临界区</text>
+</g>
+<!-- lock&#45;&gt;in_monitor -->
+<g id="edge2" class="edge">
+<title>lock-&gt;in_monitor</title>
+<path fill="none" stroke="black" d="M239,-451.71C239,-444.35 239,-435.55 239,-427.12"/>
+<polygon fill="black" stroke="black" points="242.5,-427.15 239,-417.15 235.5,-427.15 242.5,-427.15"/>
+</g>
+<!-- wait -->
+<g id="node4" class="node">
+<title>wait</title>
+<path fill="#e6f3ff" stroke="black" d="M96.25,-298C96.25,-298 51.75,-298 51.75,-298 45.75,-298 39.75,-292 39.75,-286 39.75,-286 39.75,-274 39.75,-274 39.75,-268 45.75,-262 51.75,-262 51.75,-262 96.25,-262 96.25,-262 102.25,-262 108.25,-268 108.25,-274 108.25,-274 108.25,-286 108.25,-286 108.25,-292 102.25,-298 96.25,-298"/>
+<text xml:space="preserve" text-anchor="middle" x="74" y="-275.8" font-family="Microsoft YaHei" font-size="14.00">条件不满足</text>
+</g>
+<!-- in_monitor&#45;&gt;wait -->
+<g id="edge3" class="edge">
+<title>in_monitor-&gt;wait</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M204.4,-376.69C181.79,-365.11 152.11,-348.62 128,-330.8 118,-323.41 107.79,-314.42 98.97,-306.13"/>
+<polygon fill="black" stroke="black" points="101.4,-303.61 91.77,-299.2 96.55,-308.66 101.4,-303.61"/>
+<text xml:space="preserve" text-anchor="middle" x="178.8" y="-343" font-family="Times,serif" font-size="14.00">需等待</text>
+</g>
+<!-- signal -->
+<g id="node8" class="node">
+<title>signal</title>
+<path fill="#e6f3ff" stroke="black" d="M210,-298C210,-298 176,-298 176,-298 170,-298 164,-292 164,-286 164,-286 164,-274 164,-274 164,-268 170,-262 176,-262 176,-262 210,-262 210,-262 216,-262 222,-268 222,-274 222,-274 222,-286 222,-286 222,-292 216,-298 210,-298"/>
+<text xml:space="preserve" text-anchor="middle" x="193" y="-275.8" font-family="Microsoft YaHei" font-size="14.00">条件满足</text>
+</g>
+<!-- in_monitor&#45;&gt;signal -->
+<g id="edge8" class="edge">
+<title>in_monitor-&gt;signal</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M222.68,-373.46C218.74,-367.93 214.85,-361.74 212,-355.6 205.23,-341.02 200.62,-323.66 197.65,-309.37"/>
+<polygon fill="black" stroke="black" points="201.11,-308.85 195.8,-299.69 194.24,-310.17 201.11,-308.85"/>
+<text xml:space="preserve" text-anchor="middle" x="233" y="-343" font-family="Times,serif" font-size="14.00">唤醒他人</text>
+</g>
+<!-- exit -->
+<g id="node10" class="node">
+<title>exit</title>
+<path fill="#e6f3ff" stroke="black" d="M302,-298C302,-298 268,-298 268,-298 262,-298 256,-292 256,-286 256,-286 256,-274 256,-274 256,-268 262,-262 268,-262 268,-262 302,-262 302,-262 308,-262 314,-268 314,-274 314,-274 314,-286 314,-286 314,-292 308,-298 302,-298"/>
+<text xml:space="preserve" text-anchor="middle" x="285" y="-275.8" font-family="Microsoft YaHei" font-size="14.00">离开管程</text>
+</g>
+<!-- in_monitor&#45;&gt;exit -->
+<g id="edge10" class="edge">
+<title>in_monitor-&gt;exit</title>
+<path fill="none" stroke="black" d="M247.22,-373.31C254.56,-355.38 265.37,-328.96 273.55,-308.97"/>
+<polygon fill="black" stroke="black" points="276.78,-310.32 277.33,-299.74 270.3,-307.67 276.78,-310.32"/>
+</g>
+<!-- release -->
+<g id="node5" class="node">
+<title>release</title>
+<path fill="#e6f3ff" stroke="black" d="M93.25,-222.2C93.25,-222.2 48.75,-222.2 48.75,-222.2 42.75,-222.2 36.75,-216.2 36.75,-210.2 36.75,-210.2 36.75,-198.2 36.75,-198.2 36.75,-192.2 42.75,-186.2 48.75,-186.2 48.75,-186.2 93.25,-186.2 93.25,-186.2 99.25,-186.2 105.25,-192.2 105.25,-198.2 105.25,-198.2 105.25,-210.2 105.25,-210.2 105.25,-216.2 99.25,-222.2 93.25,-222.2"/>
+<text xml:space="preserve" text-anchor="middle" x="71" y="-200" font-family="Microsoft YaHei" font-size="14.00">释放互斥锁</text>
+</g>
+<!-- wait&#45;&gt;release -->
+<g id="edge4" class="edge">
+<title>wait-&gt;release</title>
+<path fill="none" stroke="black" d="M73.29,-261.51C72.95,-253.24 72.54,-243.15 72.16,-233.8"/>
+<polygon fill="black" stroke="black" points="75.67,-233.93 71.77,-224.08 68.68,-234.21 75.67,-233.93"/>
+</g>
+<!-- sleep -->
+<g id="node6" class="node">
+<title>sleep</title>
+<path fill="#e6f3ff" stroke="black" d="M104,-146.4C104,-146.4 28,-146.4 28,-146.4 22,-146.4 16,-140.4 16,-134.4 16,-134.4 16,-122.4 16,-122.4 16,-116.4 22,-110.4 28,-110.4 28,-110.4 104,-110.4 104,-110.4 110,-110.4 116,-116.4 116,-122.4 116,-122.4 116,-134.4 116,-134.4 116,-140.4 110,-146.4 104,-146.4"/>
+<text xml:space="preserve" text-anchor="middle" x="66" y="-124.2" font-family="Microsoft YaHei" font-size="14.00">在条件变量上睡眠</text>
+</g>
+<!-- release&#45;&gt;sleep -->
+<g id="edge5" class="edge">
+<title>release-&gt;sleep</title>
+<path fill="none" stroke="black" d="M69.82,-185.71C69.25,-177.44 68.57,-167.35 67.94,-158"/>
+<polygon fill="black" stroke="black" points="71.45,-158.01 67.28,-148.27 64.46,-158.49 71.45,-158.01"/>
+</g>
+<!-- reacquire -->
+<g id="node7" class="node">
+<title>reacquire</title>
+<path fill="#e6f3ff" stroke="black" d="M100.25,-57.6C100.25,-57.6 55.75,-57.6 55.75,-57.6 49.75,-57.6 43.75,-51.6 43.75,-45.6 43.75,-45.6 43.75,-28 43.75,-28 43.75,-22 49.75,-16 55.75,-16 55.75,-16 100.25,-16 100.25,-16 106.25,-16 112.25,-22 112.25,-28 112.25,-28 112.25,-45.6 112.25,-45.6 112.25,-51.6 106.25,-57.6 100.25,-57.6"/>
+<text xml:space="preserve" text-anchor="middle" x="78" y="-41" font-family="Microsoft YaHei" font-size="14.00">被唤醒后</text>
+<text xml:space="preserve" text-anchor="middle" x="78" y="-24.2" font-family="Microsoft YaHei" font-size="14.00">重新获取锁</text>
+</g>
+<!-- sleep&#45;&gt;reacquire -->
+<g id="edge6" class="edge">
+<title>sleep-&gt;reacquire</title>
+<path fill="none" stroke="black" d="M68.31,-110.12C69.88,-98.44 71.99,-82.69 73.84,-68.86"/>
+<polygon fill="black" stroke="black" points="77.26,-69.71 75.12,-59.34 70.32,-68.79 77.26,-69.71"/>
+<text xml:space="preserve" text-anchor="middle" x="88.47" y="-79.8" font-family="Times,serif" font-size="14.00">被唤醒</text>
+</g>
+<!-- reacquire&#45;&gt;in_monitor -->
+<g id="edge7" class="edge">
+<title>reacquire-&gt;in_monitor</title>
+<path fill="none" stroke="black" d="M112.73,-41.83C186.05,-51.3 350,-77.99 350,-127.4 350,-281 350,-281 350,-281 350,-304.25 348.06,-312.29 334,-330.8 320.8,-348.19 301.28,-362.23 283.37,-372.57"/>
+<polygon fill="black" stroke="black" points="282.03,-369.32 274.96,-377.21 285.41,-375.45 282.03,-369.32"/>
+</g>
+<!-- wake -->
+<g id="node9" class="node">
+<title>wake</title>
+<path fill="#e6f3ff" stroke="black" d="M217.75,-225C217.75,-225 152.25,-225 152.25,-225 146.25,-225 140.25,-219 140.25,-213 140.25,-213 140.25,-195.4 140.25,-195.4 140.25,-189.4 146.25,-183.4 152.25,-183.4 152.25,-183.4 217.75,-183.4 217.75,-183.4 223.75,-183.4 229.75,-189.4 229.75,-195.4 229.75,-195.4 229.75,-213 229.75,-213 229.75,-219 223.75,-225 217.75,-225"/>
+<text xml:space="preserve" text-anchor="middle" x="185" y="-208.4" font-family="Microsoft YaHei" font-size="14.00">唤醒一个等待者</text>
+<text xml:space="preserve" text-anchor="middle" x="185" y="-191.6" font-family="Microsoft YaHei" font-size="14.00">(Mesa 语义)</text>
+</g>
+<!-- signal&#45;&gt;wake -->
+<g id="edge9" class="edge">
+<title>signal-&gt;wake</title>
+<path fill="none" stroke="black" d="M191.1,-261.51C190.3,-254.07 189.33,-245.15 188.41,-236.63"/>
+<polygon fill="black" stroke="black" points="191.91,-236.51 187.36,-226.94 184.96,-237.26 191.91,-236.51"/>
+</g>
+<!-- unlock -->
+<g id="node11" class="node">
+<title>unlock</title>
+<path fill="#e6f3ff" stroke="black" d="M310.25,-222.2C310.25,-222.2 265.75,-222.2 265.75,-222.2 259.75,-222.2 253.75,-216.2 253.75,-210.2 253.75,-210.2 253.75,-198.2 253.75,-198.2 253.75,-192.2 259.75,-186.2 265.75,-186.2 265.75,-186.2 310.25,-186.2 310.25,-186.2 316.25,-186.2 322.25,-192.2 322.25,-198.2 322.25,-198.2 322.25,-210.2 322.25,-210.2 322.25,-216.2 316.25,-222.2 310.25,-222.2"/>
+<text xml:space="preserve" text-anchor="middle" x="288" y="-200" font-family="Microsoft YaHei" font-size="14.00">释放互斥锁</text>
+</g>
+<!-- exit&#45;&gt;unlock -->
+<g id="edge11" class="edge">
+<title>exit-&gt;unlock</title>
+<path fill="none" stroke="black" d="M285.71,-261.51C286.05,-253.24 286.46,-243.15 286.84,-233.8"/>
+<polygon fill="black" stroke="black" points="290.32,-234.21 287.23,-224.08 283.33,-233.93 290.32,-234.21"/>
+</g>
+</g>
+</svg>

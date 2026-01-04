@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="185pt" height="677pt" viewBox="0.00 0.00 185.00 677.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 673.4)">
+<title>thread_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-673.4 180.97,-673.4 180.97,4 -4,4"/>
+<!-- main -->
+<g id="node1" class="node">
+<title>main</title>
+<ellipse fill="#90ee90" stroke="black" cx="109.97" cy="-651.4" rx="32.76" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="109.97" y="-647.2" font-family="Microsoft YaHei" font-size="14.00">主线程</text>
+</g>
+<!-- clone -->
+<g id="node2" class="node">
+<title>clone</title>
+<path fill="#e6f3ff" stroke="black" d="M115.95,-596.4C115.95,-596.4 12,-596.4 12,-596.4 6,-596.4 0,-590.4 0,-584.4 0,-584.4 0,-566.8 0,-566.8 0,-560.8 6,-554.8 12,-554.8 12,-554.8 115.95,-554.8 115.95,-554.8 121.95,-554.8 127.95,-560.8 127.95,-566.8 127.95,-566.8 127.95,-584.4 127.95,-584.4 127.95,-590.4 121.95,-596.4 115.95,-596.4"/>
+<text xml:space="preserve" text-anchor="middle" x="63.97" y="-579.8" font-family="Microsoft YaHei" font-size="14.00">clone(fn, stack, arg)</text>
+<text xml:space="preserve" text-anchor="middle" x="63.97" y="-563" font-family="Microsoft YaHei" font-size="14.00">创建子线程</text>
+</g>
+<!-- main&#45;&gt;clone -->
+<g id="edge1" class="edge">
+<title>main-&gt;clone</title>
+<path fill="none" stroke="black" d="M99.76,-634.02C94.7,-625.89 88.41,-615.81 82.53,-606.37"/>
+<polygon fill="black" stroke="black" points="85.68,-604.8 77.42,-598.17 79.74,-608.51 85.68,-604.8"/>
+</g>
+<!-- join -->
+<g id="node7" class="node">
+<title>join</title>
+<path fill="#e6f3ff" stroke="black" d="M148.41,-193.2C148.41,-193.2 75.53,-193.2 75.53,-193.2 69.53,-193.2 63.53,-187.2 63.53,-181.2 63.53,-181.2 63.53,-163.6 63.53,-163.6 63.53,-157.6 69.53,-151.6 75.53,-151.6 75.53,-151.6 148.41,-151.6 148.41,-151.6 154.41,-151.6 160.41,-157.6 160.41,-163.6 160.41,-163.6 160.41,-181.2 160.41,-181.2 160.41,-187.2 154.41,-193.2 148.41,-193.2"/>
+<text xml:space="preserve" text-anchor="middle" x="111.97" y="-176.6" font-family="Microsoft YaHei" font-size="14.00">主线程 join(tid)</text>
+<text xml:space="preserve" text-anchor="middle" x="111.97" y="-159.8" font-family="Microsoft YaHei" font-size="14.00">等待回收</text>
+</g>
+<!-- main&#45;&gt;join -->
+<g id="edge6" class="edge">
+<title>main-&gt;join</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M126.32,-635.39C139.54,-621.55 155.97,-599.7 155.97,-576.6 155.97,-576.6 155.97,-576.6 155.97,-265.8 155.97,-243.22 145.13,-220.3 134.21,-202.93"/>
+<polygon fill="black" stroke="black" points="137.15,-201.03 128.7,-194.65 131.33,-204.91 137.15,-201.03"/>
+<text xml:space="preserve" text-anchor="middle" x="166.47" y="-414.2" font-family="Times,serif" font-size="14.00">可选</text>
+</g>
+<!-- alloc -->
+<g id="node3" class="node">
+<title>alloc</title>
+<path fill="#e6f3ff" stroke="black" d="M96.72,-517.8C96.72,-517.8 31.22,-517.8 31.22,-517.8 25.22,-517.8 19.22,-511.8 19.22,-505.8 19.22,-505.8 19.22,-488.2 19.22,-488.2 19.22,-482.2 25.22,-476.2 31.22,-476.2 31.22,-476.2 96.72,-476.2 96.72,-476.2 102.72,-476.2 108.72,-482.2 108.72,-488.2 108.72,-488.2 108.72,-505.8 108.72,-505.8 108.72,-511.8 102.72,-517.8 96.72,-517.8"/>
+<text xml:space="preserve" text-anchor="middle" x="63.97" y="-501.2" font-family="Microsoft YaHei" font-size="14.00">分配线程控制块</text>
+<text xml:space="preserve" text-anchor="middle" x="63.97" y="-484.4" font-family="Microsoft YaHei" font-size="14.00">共享地址空间</text>
+</g>
+<!-- clone&#45;&gt;alloc -->
+<g id="edge2" class="edge">
+<title>clone-&gt;alloc</title>
+<path fill="none" stroke="black" d="M63.97,-554.47C63.97,-546.88 63.97,-538.05 63.97,-529.66"/>
+<polygon fill="black" stroke="black" points="67.47,-529.77 63.97,-519.77 60.47,-529.77 67.47,-529.77"/>
+</g>
+<!-- setup -->
+<g id="node4" class="node">
+<title>setup</title>
+<path fill="#e6f3ff" stroke="black" d="M89,-439.2C89,-439.2 38.94,-439.2 38.94,-439.2 32.94,-439.2 26.94,-433.2 26.94,-427.2 26.94,-427.2 26.94,-409.6 26.94,-409.6 26.94,-403.6 32.94,-397.6 38.94,-397.6 38.94,-397.6 89,-397.6 89,-397.6 95,-397.6 101,-403.6 101,-409.6 101,-409.6 101,-427.2 101,-427.2 101,-433.2 95,-439.2 89,-439.2"/>
+<text xml:space="preserve" text-anchor="middle" x="63.97" y="-422.6" font-family="Microsoft YaHei" font-size="14.00">设置独立栈</text>
+<text xml:space="preserve" text-anchor="middle" x="63.97" y="-405.8" font-family="Microsoft YaHei" font-size="14.00">入口点 = fn</text>
+</g>
+<!-- alloc&#45;&gt;setup -->
+<g id="edge3" class="edge">
+<title>alloc-&gt;setup</title>
+<path fill="none" stroke="black" d="M63.97,-475.87C63.97,-468.28 63.97,-459.45 63.97,-451.06"/>
+<polygon fill="black" stroke="black" points="67.47,-451.17 63.97,-441.17 60.47,-451.17 67.47,-451.17"/>
+</g>
+<!-- run -->
+<g id="node5" class="node">
+<title>run</title>
+<path fill="#87ceeb" stroke="black" d="M108.4,-360.6C108.4,-360.6 21.54,-360.6 21.54,-360.6 15.54,-360.6 9.54,-354.6 9.54,-348.6 9.54,-348.6 9.54,-336.6 9.54,-336.6 9.54,-330.6 15.54,-324.6 21.54,-324.6 21.54,-324.6 108.4,-324.6 108.4,-324.6 114.4,-324.6 120.4,-330.6 120.4,-336.6 120.4,-336.6 120.4,-348.6 120.4,-348.6 120.4,-354.6 114.4,-360.6 108.4,-360.6"/>
+<text xml:space="preserve" text-anchor="middle" x="64.97" y="-338.4" font-family="Microsoft YaHei" font-size="14.00">子线程运行 fn(arg)</text>
+</g>
+<!-- setup&#45;&gt;run -->
+<g id="edge4" class="edge">
+<title>setup-&gt;run</title>
+<path fill="none" stroke="black" d="M64.25,-397.23C64.35,-389.46 64.47,-380.43 64.59,-372.02"/>
+<polygon fill="black" stroke="black" points="68.08,-372.3 64.72,-362.25 61.08,-372.2 68.08,-372.3"/>
+</g>
+<!-- exit -->
+<g id="node6" class="node">
+<title>exit</title>
+<path fill="#e6f3ff" stroke="black" d="M116.06,-287.6C116.06,-287.6 19.89,-287.6 19.89,-287.6 13.89,-287.6 7.89,-281.6 7.89,-275.6 7.89,-275.6 7.89,-258 7.89,-258 7.89,-252 13.89,-246 19.89,-246 19.89,-246 116.06,-246 116.06,-246 122.06,-246 128.06,-252 128.06,-258 128.06,-258 128.06,-275.6 128.06,-275.6 128.06,-281.6 122.06,-287.6 116.06,-287.6"/>
+<text xml:space="preserve" text-anchor="middle" x="67.97" y="-271" font-family="Microsoft YaHei" font-size="14.00">thread_exit(retval)</text>
+<text xml:space="preserve" text-anchor="middle" x="67.97" y="-254.2" font-family="Microsoft YaHei" font-size="14.00">线程结束</text>
+</g>
+<!-- run&#45;&gt;exit -->
+<g id="edge5" class="edge">
+<title>run-&gt;exit</title>
+<path fill="none" stroke="black" d="M65.68,-324.11C65.98,-316.75 66.34,-307.95 66.68,-299.52"/>
+<polygon fill="black" stroke="black" points="70.18,-299.68 67.09,-289.55 63.19,-299.4 70.18,-299.68"/>
+</g>
+<!-- exit&#45;&gt;join -->
+<g id="edge7" class="edge">
+<title>exit-&gt;join</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M77.52,-245.75C83.4,-233.4 91.05,-217.33 97.65,-203.48"/>
+<polygon fill="black" stroke="black" points="100.65,-205.31 101.79,-194.78 94.33,-202.3 100.65,-205.31"/>
+<text xml:space="preserve" text-anchor="middle" x="104.41" y="-215.4" font-family="Times,serif" font-size="14.00">唤醒</text>
+</g>
+<!-- reap -->
+<g id="node8" class="node">
+<title>reap</title>
+<path fill="#e6f3ff" stroke="black" d="M139.47,-114.6C139.47,-114.6 84.47,-114.6 84.47,-114.6 78.47,-114.6 72.47,-108.6 72.47,-102.6 72.47,-102.6 72.47,-85 72.47,-85 72.47,-79 78.47,-73 84.47,-73 84.47,-73 139.47,-73 139.47,-73 145.47,-73 151.47,-79 151.47,-85 151.47,-85 151.47,-102.6 151.47,-102.6 151.47,-108.6 145.47,-114.6 139.47,-114.6"/>
+<text xml:space="preserve" text-anchor="middle" x="111.97" y="-98" font-family="Microsoft YaHei" font-size="14.00">回收线程资源</text>
+<text xml:space="preserve" text-anchor="middle" x="111.97" y="-81.2" font-family="Microsoft YaHei" font-size="14.00">获取返回值</text>
+</g>
+<!-- join&#45;&gt;reap -->
+<g id="edge8" class="edge">
+<title>join-&gt;reap</title>
+<path fill="none" stroke="black" d="M111.97,-151.27C111.97,-143.68 111.97,-134.85 111.97,-126.46"/>
+<polygon fill="black" stroke="black" points="115.47,-126.57 111.97,-116.57 108.47,-126.57 115.47,-126.57"/>
+</g>
+<!-- done -->
+<g id="node9" class="node">
+<title>done</title>
+<ellipse fill="#ffb6c1" stroke="black" cx="111.97" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="111.97" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">完成</text>
+</g>
+<!-- reap&#45;&gt;done -->
+<g id="edge9" class="edge">
+<title>reap-&gt;done</title>
+<path fill="none" stroke="black" d="M111.97,-72.63C111.97,-64.86 111.97,-55.83 111.97,-47.42"/>
+<polygon fill="black" stroke="black" points="115.47,-47.65 111.97,-37.65 108.47,-47.65 115.47,-47.65"/>
+</g>
+</g>
+</svg>
