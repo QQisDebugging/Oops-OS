@@ -81,3 +81,10 @@
 #define SYS_dedup 80
 #define SYS_rt_set 81
 #define SYS_rt_clear 82
+#define SYS_flock 83
+#define SYS_fsync 84
+#define SYS_fdatasync 85
+#define SYS_setxattr 86
+#define SYS_getxattr 87
+#define SYS_listxattr 88
+#define SYS_removexattr 89

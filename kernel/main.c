@@ -38,6 +38,7 @@ void main()
     binit();            // buffer cache
     iinit();            // inode cache
     fileinit();         // file table
+    xattrinit();        // extended attributes
     virtio_disk_init(); // emulated hard disk
     pci_init();
     sockinit();

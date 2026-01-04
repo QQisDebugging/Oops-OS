@@ -16,4 +16,10 @@
 // lseek whence values
 #define SEEK_SET 0  // 从文件开头计算偏移
 #define SEEK_CUR 1  // 从当前位置计算偏移
-#define SEEK_END 2  // 从文件末尾计算偏移     
+#define SEEK_END 2  // 从文件末尾计算偏移
+
+// flock 操作标志
+#define LOCK_SH   1   // 共享锁（读锁）
+#define LOCK_EX   2   // 排他锁（写锁）
+#define LOCK_UN   8   // 解锁
+#define LOCK_NB   4   // 非阻塞模式（可与 LOCK_SH/LOCK_EX 组合）

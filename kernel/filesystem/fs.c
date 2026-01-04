@@ -417,6 +417,9 @@ iget(uint dev, uint inum)
   ip->inum = inum;
   ip->ref = 1;
   ip->valid = 0;
+  // 初始化 flock 锁状态
+  ip->flock_type = 0;
+  ip->flock_count = 0;
   release(&icache.lock);
 
   return ip;
@@ -495,9 +498,11 @@ iput(struct inode *ip)
     release(&icache.lock);
 
     itrunc(ip);
+    xattr_clear(ip);  // 清理该 inode 的扩展属性
     ip->type = 0;
     iupdate(ip);
     ip->valid = 0;
+
 
     releasesleep(&ip->lock);
 
