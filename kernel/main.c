@@ -12,6 +12,7 @@ void main()
   if (cpuid() == 0)
   {
     consoleinit();
+    spoolinit();
     printfinit();
     printf("\033[1;32m");
     printf("\n");
@@ -37,6 +38,7 @@ void main()
     binit();            // buffer cache
     iinit();            // inode cache
     fileinit();         // file table
+    xattrinit();        // extended attributes
     virtio_disk_init(); // emulated hard disk
     pci_init();
     sockinit();

@@ -5,6 +5,7 @@ OBJS = \
   $K/asm/entry.o \
   $K/start.o \
   $K/driver/console.o \
+  $K/driver/spool.o \
   $K/lib/printf.o \
   $K/driver/uart.o \
   $K/mm/kalloc.o \
@@ -22,6 +23,7 @@ OBJS = \
   $K/filesystem/bio.o \
   $K/filesystem/fs.o \
   $K/filesystem/log.o \
+  $K/filesystem/xattr.o \
   $K/lock/sleeplock.o \
   $K/filesystem/file.o \
   $K/proc/pipe.o \
@@ -161,6 +163,9 @@ UPROGS=\
 	$U/test/_swapbuftest\
 	$U/test/_swapbufcmptest\
 	$U/test/_demandloadtest\
+	$U/test/_spooltest\
+	$U/test/_readaheadtest\
+	$U/test/_ballochinttest\
 	$U/program/_execve\
 	$U/program/_getparentpid\
 	$U/program/_print_pgtable\
@@ -206,6 +211,9 @@ UPROGS=\
 	$U/test/_renametest\
 	$U/test/_deduptest\
 	$U/test/_punchtest\
+	$U/test/_flocktest\
+	$U/test/_fsynctest\
+	$U/test/_xattrtest\
 	$U/program/_statistics
 
 

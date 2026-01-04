@@ -30,6 +30,10 @@ struct {
   struct spinlock lock;
   uint ref[FSSIZE];
 } brefs;
+struct {
+  struct spinlock lock;
+  uint hint;
+} balloc_state;
 
 // Read the super block.
 static void
@@ -51,6 +55,8 @@ fsinit(int dev) {
   if(sb.magic != FSMAGIC)
     panic("invalid file system");
   initlog(dev, &sb);
+  initlock(&balloc_state.lock, "balloc");
+  balloc_state.hint = 0;
   // Rebuild block refcounts after log recovery.
   bref_init(dev);
 }
@@ -169,11 +175,22 @@ balloc(uint dev)
 {
   int b, bi, m;
   struct buf *bp;
+  uint start;
+
+  acquire(&balloc_state.lock);
+  start = balloc_state.hint;
+  if (start >= sb.size)
+    start = 0;
+  release(&balloc_state.lock);
 
   bp = 0;
-  for(b = 0; b < sb.size; b += BPB){
+  uint b0 = start - (start % BPB);
+  for(b = b0; b < sb.size; b += BPB){
     bp = bread(dev, BBLOCK(b, sb));
-    for(bi = 0; bi < BPB && b + bi < sb.size; bi++){
+    int bi_start = 0;
+    if (b == b0)
+      bi_start = start - b;
+    for(bi = bi_start; bi < BPB && b + bi < sb.size; bi++){
       m = 1 << (bi % 8);
       if((bp->data[bi/8] & m) == 0){  // Is block free?
         bp->data[bi/8] |= m;  // Mark block in use.
@@ -181,10 +198,36 @@ balloc(uint dev)
         brelse(bp);
         bzero(dev, b + bi);
         bref_inc(b + bi);
+        acquire(&balloc_state.lock);
+        balloc_state.hint = b + bi + 1;
+        release(&balloc_state.lock);
         return b + bi;
       }
     }
     brelse(bp);
+  }
+  if (start != 0) {
+    for(b = 0; b < start; b += BPB){
+      bp = bread(dev, BBLOCK(b, sb));
+      int bi_end = BPB;
+      if (b + bi_end > start)
+        bi_end = start - b;
+      for(bi = 0; bi < bi_end && b + bi < sb.size; bi++){
+        m = 1 << (bi % 8);
+        if((bp->data[bi/8] & m) == 0){  // Is block free?
+          bp->data[bi/8] |= m;  // Mark block in use.
+          log_write(bp);
+          brelse(bp);
+          bzero(dev, b + bi);
+          bref_inc(b + bi);
+          acquire(&balloc_state.lock);
+          balloc_state.hint = b + bi + 1;
+          release(&balloc_state.lock);
+          return b + bi;
+        }
+      }
+      brelse(bp);
+    }
   }
   panic("balloc: out of blocks");
 }
@@ -374,6 +417,9 @@ iget(uint dev, uint inum)
   ip->inum = inum;
   ip->ref = 1;
   ip->valid = 0;
+  // 初始化 flock 锁状态
+  ip->flock_type = 0;
+  ip->flock_count = 0;
   release(&icache.lock);
 
   return ip;
@@ -452,9 +498,11 @@ iput(struct inode *ip)
     release(&icache.lock);
 
     itrunc(ip);
+    xattr_clear(ip);  // 清理该 inode 的扩展属性
     ip->type = 0;
     iupdate(ip);
     ip->valid = 0;
+
 
     releasesleep(&ip->lock);
 

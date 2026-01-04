@@ -12,6 +12,7 @@
 #include "file.h"
 #include "stat.h"
 #include "proc.h"
+#include "fcntl.h"
 
 struct devsw devsw[NDEV];
 struct {
@@ -19,10 +20,14 @@ struct {
   struct file file[NFILE];
 } ftable;
 
+// 文件锁全局锁，用于保护 inode 的 flock 字段
+struct spinlock flock_lock;
+
 void
 fileinit(void)
 {
   initlock(&ftable.lock, "ftable");
+  initlock(&flock_lock, "flock");
 }
 
 // Allocate a file structure.
@@ -35,6 +40,7 @@ filealloc(void)
   for(f = ftable.file; f < ftable.file + NFILE; f++){
     if(f->ref == 0){
       f->ref = 1;
+      f->flock_held = 0;  // 初始化 flock 状态
       release(&ftable.lock);
       return f;
     }
@@ -71,7 +77,25 @@ fileclose(struct file *f)
   ff = *f;
   f->ref = 0;
   f->type = FD_NONE;
+  f->flock_held = 0;  // 清除 flock 状态
   release(&ftable.lock);
+
+  // 如果持有 flock 锁，先释放锁
+  if(ff.flock_held != 0 && ff.type == FD_INODE && ff.ip != 0) {
+    acquire(&flock_lock);
+    if(ff.ip->flock_type == LOCK_SH) {
+      ff.ip->flock_count--;
+      if(ff.ip->flock_count == 0) {
+        ff.ip->flock_type = 0;
+        wakeup(&ff.ip->flock_type);
+      }
+    } else if(ff.ip->flock_type == LOCK_EX) {
+      ff.ip->flock_type = 0;
+      ff.ip->flock_count = 0;
+      wakeup(&ff.ip->flock_type);
+    }
+    release(&flock_lock);
+  }
 
   if(ff.type == FD_PIPE){
     pipeclose(ff.pipe, ff.writable);
@@ -196,5 +220,129 @@ filewrite(struct file *f, uint64 addr, int n)
   }
 
   return ret;
+}
+
+// flock - 对文件加锁/解锁
+// operation: LOCK_SH（共享锁）, LOCK_EX（排他锁）, LOCK_UN（解锁）
+//            可与 LOCK_NB（非阻塞）组合使用
+// 返回：成功返回 0，失败返回 -1
+int
+fileflock(struct file *f, int operation)
+{
+  struct inode *ip;
+  int nonblock = operation & LOCK_NB;
+  int op = operation & ~LOCK_NB;
+
+  // 只支持对普通文件加锁
+  if(f->type != FD_INODE)
+    return -1;
+  
+  ip = f->ip;
+
+  acquire(&flock_lock);
+
+  if(op == LOCK_UN) {
+    // 解锁操作：只有持有锁的文件描述符才能解锁
+    if(f->flock_held == 0) {
+      release(&flock_lock);
+      return 0;  // 没有持有锁，直接返回成功
+    }
+    if(ip->flock_type == LOCK_SH) {
+      ip->flock_count--;
+      if(ip->flock_count == 0) {
+        ip->flock_type = 0;
+        wakeup(&ip->flock_type);
+      }
+    } else if(ip->flock_type == LOCK_EX) {
+      ip->flock_type = 0;
+      ip->flock_count = 0;
+      wakeup(&ip->flock_type);
+    }
+    f->flock_held = 0;
+    release(&flock_lock);
+    return 0;
+  }
+
+  // 如果已经持有锁，先释放旧锁（锁转换）
+  if(f->flock_held != 0 && f->flock_held != op) {
+    if(ip->flock_type == LOCK_SH) {
+      ip->flock_count--;
+      if(ip->flock_count == 0) {
+        ip->flock_type = 0;
+        wakeup(&ip->flock_type);
+      }
+    } else if(ip->flock_type == LOCK_EX) {
+      ip->flock_type = 0;
+      ip->flock_count = 0;
+      wakeup(&ip->flock_type);
+    }
+    f->flock_held = 0;
+  }
+
+  if(op == LOCK_SH) {
+    // 申请共享锁
+    while(ip->flock_type == LOCK_EX) {
+      if(nonblock) {
+        release(&flock_lock);
+        return -1;  // EWOULDBLOCK
+      }
+      sleep(&ip->flock_type, &flock_lock);
+    }
+    ip->flock_type = LOCK_SH;
+    ip->flock_count++;
+    f->flock_held = LOCK_SH;
+    release(&flock_lock);
+    return 0;
+  }
+
+  if(op == LOCK_EX) {
+    // 申请排他锁
+    while(ip->flock_type != 0) {
+      if(nonblock) {
+        release(&flock_lock);
+        return -1;  // EWOULDBLOCK
+      }
+      sleep(&ip->flock_type, &flock_lock);
+    }
+    ip->flock_type = LOCK_EX;
+    ip->flock_count = 1;
+    f->flock_held = LOCK_EX;
+    release(&flock_lock);
+    return 0;
+  }
+
+  release(&flock_lock);
+  return -1;  // 无效操作
+}
+
+// fsync - 将文件数据和元数据同步到磁盘
+// datasync: 0 = fsync（同步数据+元数据）, 1 = fdatasync（仅同步数据）
+// 返回：成功返回 0，失败返回 -1
+int
+filefsync(struct file *f, int datasync)
+{
+  struct inode *ip;
+
+  // 只支持对普通文件 fsync
+  if(f->type != FD_INODE)
+    return -1;
+
+  ip = f->ip;
+
+  begin_op();
+  ilock(ip);
+
+  if(!datasync) {
+    // fsync: 更新 inode 元数据到磁盘
+    iupdate(ip);
+  }
+
+  iunlock(ip);
+  end_op();
+
+  // end_op() 会触发日志提交，将所有挂起的写操作刷到磁盘
+  // 这确保了文件数据的持久性
+
+  return 0;
 }
 

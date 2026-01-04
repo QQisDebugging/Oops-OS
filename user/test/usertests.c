@@ -2817,6 +2817,30 @@ void swaptest_run(char *s)
   exit(1);
 }
 
+void spooltest_run(char *s)
+{
+  char *argv[] = {"spooltest", "quiet", 0};
+  exec("spooltest", argv);
+  printf("%s: exec spooltest failed\n", s);
+  exit(1);
+}
+
+void readaheadtest_run(char *s)
+{
+  char *argv[] = {"readaheadtest", "quiet", 0};
+  exec("readaheadtest", argv);
+  printf("%s: exec readaheadtest failed\n", s);
+  exit(1);
+}
+
+void ballochinttest_run(char *s)
+{
+  char *argv[] = {"ballochinttest", "quiet", 0};
+  exec("ballochinttest", argv);
+  printf("%s: exec ballochinttest failed\n", s);
+  exit(1);
+}
+
 void mmapswaptest_run(char *s)
 {
   char *argv[] = {"mmapswaptest", 0};
@@ -2827,7 +2851,7 @@ void mmapswaptest_run(char *s)
 
 void swapconctest_run(char *s)
 {
-  char *argv[] = {"swapconctest", 0};
+  char *argv[] = {"swapconctest", "-q", 0};
   exec("swapconctest", argv);
   printf("%s: exec swapconctest failed\n", s);
   exit(1);
@@ -2905,6 +2929,30 @@ void punchtest_run(char *s)
   exit(1);
 }
 
+void flocktest_run(char *s)
+{
+  char *argv[] = {"flocktest", 0};
+  exec("flocktest", argv);
+  printf("%s: exec flocktest failed\n", s);
+  exit(1);
+}
+
+void fsynctest_run(char *s)
+{
+  char *argv[] = {"fsynctest", 0};
+  exec("fsynctest", argv);
+  printf("%s: exec fsynctest failed\n", s);
+  exit(1);
+}
+
+void xattrtest_run(char *s)
+{
+  char *argv[] = {"xattrtest", 0};
+  exec("xattrtest", argv);
+  printf("%s: exec xattrtest failed\n", s);
+  exit(1);
+}
+
 void demandloadtest_run(char *s)
 {
   char *argv[] = {"demandloadtest", 0};
@@ -2973,6 +3021,9 @@ int main(int argc, char *argv[])
       {bsstest, "bsstest"},
       {sbrkmuch, "sbrkmuch"},
       {swaptest_run, "swaptest"},
+      {readaheadtest_run, "readaheadtest"},
+      {ballochinttest_run, "ballochinttest"},
+      {spooltest_run, "spooltest"},
       {mmapswaptest_run, "mmapswaptest"},
       {swapconctest_run, "swapconctest"},
       {swapbuftest_run, "swapbuftest"},
@@ -3000,6 +3051,9 @@ int main(int argc, char *argv[])
       {renametest_run, "renametest"},
       {deduptest_run, "deduptest"},
       {punchtest_run, "punchtest"},
+      {flocktest_run, "flocktest"},
+      {fsynctest_run, "fsynctest"},
+      {xattrtest_run, "xattrtest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},

@@ -4,10 +4,14 @@
 #include "riscv.h"
 #include "user/user.h"
 
+static int quiet = 0;
+static int full = 0;
+
 static void
 fail(const char *msg)
 {
-  printf("swapconctest: %s\n", msg);
+  if (!quiet)
+    printf("swapconctest: %s\n", msg);
   exit(1);
 }
 
@@ -23,7 +27,7 @@ worker(uint64 amt, int rounds, int tag, int max_ticks, int verbose)
   if (step < 512)
     step = 512;
   int start = uptime();
-  int do_print = verbose || tag == 0;
+  int do_print = !quiet && (verbose || tag == 0);
   for (int r = 0; r < rounds; r++) {
     if (do_print && (r & 1) == 0) {
       printf("swapconctest: pid %d round %d/%d\n", getpid(), r + 1, rounds);
@@ -63,15 +67,27 @@ main(int argc, char *argv[])
   int rounds = 1;
   int max_ticks = 3000;
   int verbose = 0;
+  int nidx = 0;
 
-  if (argc > 1)
-    nprocs = atoi(argv[1]);
-  if (argc > 2)
-    rounds = atoi(argv[2]);
-  if (argc > 3)
-    max_ticks = atoi(argv[3]);
-  if (argc > 4)
-    verbose = atoi(argv[4]);
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-q") == 0) {
+      quiet = 1;
+      continue;
+    }
+    if (strcmp(argv[i], "-f") == 0) {
+      full = 1;
+      continue;
+    }
+    if (nidx == 0)
+      nprocs = atoi(argv[i]);
+    else if (nidx == 1)
+      rounds = atoi(argv[i]);
+    else if (nidx == 2)
+      max_ticks = atoi(argv[i]);
+    else if (nidx == 3)
+      verbose = atoi(argv[i]);
+    nidx++;
+  }
 
   if (nprocs < 1)
     nprocs = 1;
@@ -87,11 +103,18 @@ main(int argc, char *argv[])
     fail("sysinfo failed");
 
   uint64 swap_bytes = (uint64)SWAP_PAGES * PGSIZE;
-  uint64 extra = swap_bytes / 16;
-  uint64 max_extra = 8 * 1024 * 1024;
-  if (extra > max_extra)
-    extra = max_extra;
-  uint64 total = info.freemem + extra;
+  uint64 total;
+  if (full) {
+    uint64 extra = swap_bytes / 16;
+    uint64 max_extra = 8 * 1024 * 1024;
+    if (extra > max_extra)
+      extra = max_extra;
+    total = info.freemem + extra;
+  } else {
+    total = 16 * 1024 * 1024;
+    if (total > info.freemem / 2)
+      total = info.freemem / 2;
+  }
   uint64 min_total = (uint64)nprocs * 8 * PGSIZE;
   if (total < min_total)
     total = min_total;
@@ -99,8 +122,11 @@ main(int argc, char *argv[])
   uint64 amt = PGROUNDUP(total / nprocs);
 
   int start = uptime();
-  printf("swapconctest: start procs=%d rounds=%d max_ticks=%d verbose=%d\n",
-         nprocs, rounds, max_ticks, verbose ? 1 : 0);
+  if (!quiet) {
+    printf("swapconctest: mode=%s total=%lu\n", full ? "full" : "light", total);
+    printf("swapconctest: start procs=%d rounds=%d max_ticks=%d verbose=%d\n",
+           nprocs, rounds, max_ticks, verbose ? 1 : 0);
+  }
   for (int i = 0; i < nprocs; i++) {
     int pid = fork();
     if (pid < 0)
@@ -115,7 +141,9 @@ main(int argc, char *argv[])
   }
   int end = uptime();
 
-  printf("swapconctest: %d procs, %d ticks\n", nprocs, end - start);
-  printf("swapconctest: ok\n");
+  if (!quiet) {
+    printf("swapconctest: %d procs, %d ticks\n", nprocs, end - start);
+    printf("swapconctest: ok\n");
+  }
   exit(0);
 }

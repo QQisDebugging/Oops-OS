@@ -16,6 +16,7 @@ struct file
   struct sock *sock;
   uint off;          // FD_INODE
   short major;       // FD_DEVICE
+  char flock_held;   // 该文件描述符持有的 flock 类型：0=无, LOCK_SH, LOCK_EX
 };
 
 #define major(dev) ((dev) >> 16 & 0xFFFF)
@@ -38,6 +39,10 @@ struct inode
   short nlink;
   uint size;
   uint addrs[NDIRECT + 2];
+
+  // 文件锁（flock）
+  int flock_type;        // 当前锁类型：0=无锁, LOCK_SH=共享锁, LOCK_EX=排他锁
+  int flock_count;       // 共享锁持有者数量
 };
 
 // map major device number to device functions.
@@ -50,3 +55,4 @@ struct devsw
 extern struct devsw devsw[];
 
 #define CONSOLE 1
+#define SPOOL 2

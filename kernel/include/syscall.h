@@ -85,3 +85,10 @@
 #define SYS_banker_set_max 84
 #define SYS_banker_request 85
 #define SYS_banker_release 86
+#define SYS_flock 87
+#define SYS_fsync 88
+#define SYS_fdatasync 89
+#define SYS_setxattr 90
+#define SYS_getxattr 91
+#define SYS_listxattr 92
+#define SYS_removexattr 93
