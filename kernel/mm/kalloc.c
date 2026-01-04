@@ -8,6 +8,7 @@
 #include "spinlock.h"
 #include "riscv.h"
 #include "defs.h"
+#include "proc.h"
 
 void freerange(void *pa_start, void *pa_end);
 
@@ -143,9 +144,43 @@ void *kalloc(void)
   {
     void *r = kalloc_try();
     if (r != 0)
+    {
+      if (midsched_on() && mycpu()->noff == 0)
+      {
+        uint64 free;
+        uint64 hits, misses, cached;
+        freebytes(&free);
+        swap_pbuf_stats(&hits, &misses, &cached);
+        if (free < (uint64)MIDSCHED_SUSPEND_MINFREE_PAGES * PGSIZE ||
+            cached >= MIDSCHED_SWAPBUF_TRIGGER)
+          midsched_suspend_one();
+      }
       return r;
-    if (swapout() < 0)
+    }
+    if (mycpu()->noff > 0)
       return 0;
+    if (swapout() < 0)
+    {
+      if (midsched_on())
+      {
+        if (midsched_suspend_one() <= 0)
+          return 0;
+      }
+      else
+      {
+        return 0;
+      }
+    }
+    else if (midsched_on())
+    {
+      uint64 free;
+      uint64 hits, misses, cached;
+      freebytes(&free);
+      swap_pbuf_stats(&hits, &misses, &cached);
+      if (free < (uint64)MIDSCHED_SUSPEND_MINFREE_PAGES * PGSIZE ||
+          cached >= MIDSCHED_SWAPBUF_TRIGGER)
+        midsched_suspend_one();
+    }
   }
 }
 

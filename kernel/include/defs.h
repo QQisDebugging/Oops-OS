@@ -44,6 +44,7 @@ void bunpin(struct buf *);
 
 // console.c
 void consoleinit(void);
+void spoolinit(void);
 void consoleintr(int);
 void consputc(int);
 
@@ -125,6 +126,7 @@ int krefcnt(void *);
 int kaddrefcnt(void *);
 void swapinit(void);
 int swapout(void);
+int swapout_proc(struct proc *p, int max_pages);
 int swapin(pagetable_t, uint64);
 void swapfree(uint64);
 int swapcopy(pagetable_t, uint64, pte_t);
@@ -171,6 +173,15 @@ void yield(void);
 void pi_donate(int owner_pid, int donated_prio);
 void pi_recalc(int owner_pid);
 int deadlock_detect(void *chan);
+int midsched_suspend_one(void);
+void midsched_maybe_resume(void);
+int midsched_on(void);
+int midsched_set(int on);
+int banker_init(int nres, int *total);
+int banker_set_max(struct proc *p, int nres, int *max);
+int banker_request(struct proc *p, int nres, int *req);
+int banker_release(struct proc *p, int nres, int *rel);
+void banker_release_proc(struct proc *p);
 int either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void procdump(void);

@@ -88,6 +88,8 @@ enum procstate
 {
   UNUSED,
   SLEEPING,
+  SUSPENDED_SLEEP,
+  SUSPENDED,
   RUNNABLE,
   RUNNING,
   ZOMBIE
@@ -155,6 +157,7 @@ struct proc
   int rt_deadline_tick;     // absolute deadline tick
   int rt_remaining;         // remaining runtime budget
   int rt_misses;            // deadline miss count
+  int midsched_suspending;  // mid-term suspension in progress
   struct proc *pthread;     // 父线程
   void *ustack;             // 用户线程栈
   uint shm;        // 本进程共享内存区域的下边界
@@ -177,6 +180,9 @@ struct proc
   struct trapframe *alarm_trapframe;  // A copy of trapframe right before running alarm_handler
   int alarm_goingoff;          // Is an alarm currently going off and hasn't not yet returned? (prevent re-entrance of alarm_handler)
 
+  int bkr_active;                  // banker enabled for this process
+  int bkr_max[BANKER_MAX_RES];     // max claim per resource type
+  int bkr_alloc[BANKER_MAX_RES];   // allocated per resource type
 };
 
 extern struct proc proc[NPROC]; // 声明进程表（全局）

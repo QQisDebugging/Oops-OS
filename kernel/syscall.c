@@ -202,6 +202,10 @@ extern uint64 sys_rename(void);
 extern uint64 sys_dedup(void);
 extern uint64 sys_rt_set(void);
 extern uint64 sys_rt_clear(void);
+extern uint64 sys_banker_init(void);
+extern uint64 sys_banker_set_max(void);
+extern uint64 sys_banker_request(void);
+extern uint64 sys_banker_release(void);
 extern uint64 sys_flock(void);
 extern uint64 sys_fsync(void);
 extern uint64 sys_fdatasync(void);
@@ -209,6 +213,8 @@ extern uint64 sys_setxattr(void);
 extern uint64 sys_getxattr(void);
 extern uint64 sys_listxattr(void);
 extern uint64 sys_removexattr(void);
+extern uint64 sys_midsched(void);
+extern uint64 sys_fclonerange(void);
 extern uint64 sys_pread(void);
 extern uint64 sys_pwrite(void);
 extern uint64 sys_dup2(void);
@@ -300,6 +306,10 @@ static uint64 (*syscalls[])(void) = {
     [SYS_dedup] sys_dedup,
     [SYS_rt_set] sys_rt_set,
     [SYS_rt_clear] sys_rt_clear,
+    [SYS_banker_init] sys_banker_init,
+    [SYS_banker_set_max] sys_banker_set_max,
+    [SYS_banker_request] sys_banker_request,
+    [SYS_banker_release] sys_banker_release,
     [SYS_flock] sys_flock,
     [SYS_fsync] sys_fsync,
     [SYS_fdatasync] sys_fdatasync,
@@ -307,6 +317,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_getxattr] sys_getxattr,
     [SYS_listxattr] sys_listxattr,
     [SYS_removexattr] sys_removexattr,
+    [SYS_midsched] sys_midsched,
     [SYS_pread] sys_pread,
     [SYS_pwrite] sys_pwrite,
     [SYS_dup2] sys_dup2,
@@ -399,6 +410,10 @@ static char *syscall_names[] = {
     [SYS_dedup] "sys_dedup",
     [SYS_rt_set] "sys_rt_set",
     [SYS_rt_clear] "sys_rt_clear",
+    [SYS_banker_init] "sys_banker_init",
+    [SYS_banker_set_max] "sys_banker_set_max",
+    [SYS_banker_request] "sys_banker_request",
+    [SYS_banker_release] "sys_banker_release",
     [SYS_flock] "sys_flock",
     [SYS_fsync] "sys_fsync",
     [SYS_fdatasync] "sys_fdatasync",
@@ -406,6 +421,7 @@ static char *syscall_names[] = {
     [SYS_getxattr] "sys_getxattr",
     [SYS_listxattr] "sys_listxattr",
     [SYS_removexattr] "sys_removexattr",
+    [SYS_midsched] "sys_midsched",
     [SYS_pread] "sys_pread",
     [SYS_pwrite] "sys_pwrite",
     [SYS_dup2] "sys_dup2",
@@ -438,4 +454,3 @@ void syscall(void)
     p->trapframe->a0 = -1;
   }
 }
-

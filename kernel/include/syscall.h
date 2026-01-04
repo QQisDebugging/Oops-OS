@@ -79,20 +79,32 @@
 #define SYS_dedup 80
 #define SYS_rt_set 81
 #define SYS_rt_clear 82
-#define SYS_flock 83
-#define SYS_fsync 84
-#define SYS_fdatasync 85
-#define SYS_setxattr 86
-#define SYS_getxattr 87
-#define SYS_listxattr 88
-#define SYS_removexattr 89
-#define SYS_fclonerange 90
-#define SYS_fsinfo 91
-#define SYS_pread 92
-#define SYS_pwrite 93
-#define SYS_dup2 94
-#define SYS_readv 95
-#define SYS_writev 96
-#define SYS_access 97
-#define SYS_mount 98
-#define SYS_umount 99
+// 银行家算法 (来自 proc 分支)
+#define SYS_banker_init 83
+#define SYS_banker_set_max 84
+#define SYS_banker_request 85
+#define SYS_banker_release 86
+// 文件锁与同步
+#define SYS_flock 87
+#define SYS_fsync 88
+#define SYS_fdatasync 89
+// 扩展属性
+#define SYS_setxattr 90
+#define SYS_getxattr 91
+#define SYS_listxattr 92
+#define SYS_removexattr 93
+// 中级调度 (来自 proc 分支)
+#define SYS_midsched 94
+// 文件范围克隆与文件系统信息 (来自 filesystem 分支)
+#define SYS_fclonerange 95
+#define SYS_fsinfo 96
+// 位置读写与文件描述符操作 (来自 filesystem 分支)
+#define SYS_pread 97
+#define SYS_pwrite 98
+#define SYS_dup2 99
+#define SYS_readv 100
+#define SYS_writev 101
+#define SYS_access 102
+// VFS 挂载 (来自 filesystem 分支)
+#define SYS_mount 103
+#define SYS_umount 104

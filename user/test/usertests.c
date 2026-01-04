@@ -2761,6 +2761,14 @@ void deadlocktest_run(char *s)
   exit(1);
 }
 
+void bankertest_run(char *s)
+{
+  char *argv[] = {"bankertest", "-q", 0};
+  exec("bankertest", argv);
+  printf("%s: exec bankertest failed\n", s);
+  exit(1);
+}
+
 void dmsgtest_run(char *s)
 {
   char *argv[] = {"dmsgtest", 0};
@@ -2803,15 +2811,47 @@ void pitest_run(char *s)
 
 void swaptest_run(char *s)
 {
-  char *argv[] = {"swaptest", 0};
+  char *argv[] = {"swaptest", "-q", 0};
   exec("swaptest", argv);
   printf("%s: exec swaptest failed\n", s);
   exit(1);
 }
 
+void spooltest_run(char *s)
+{
+  char *argv[] = {"spooltest", "quiet", 0};
+  exec("spooltest", argv);
+  printf("%s: exec spooltest failed\n", s);
+  exit(1);
+}
+
+void readaheadtest_run(char *s)
+{
+  char *argv[] = {"readaheadtest", "quiet", 0};
+  exec("readaheadtest", argv);
+  printf("%s: exec readaheadtest failed\n", s);
+  exit(1);
+}
+
+void ballochinttest_run(char *s)
+{
+  char *argv[] = {"ballochinttest", "quiet", 0};
+  exec("ballochinttest", argv);
+  printf("%s: exec ballochinttest failed\n", s);
+  exit(1);
+}
+
+void midschedtest_run(char *s)
+{
+  char *argv[] = {"midschedtest", "-q", 0};
+  exec("midschedtest", argv);
+  printf("%s: exec midschedtest failed\n", s);
+  exit(1);
+}
+
 void mmapswaptest_run(char *s)
 {
-  char *argv[] = {"mmapswaptest", 0};
+  char *argv[] = {"mmapswaptest", "-q", 0};
   exec("mmapswaptest", argv);
   printf("%s: exec mmapswaptest failed\n", s);
   exit(1);
@@ -2819,7 +2859,7 @@ void mmapswaptest_run(char *s)
 
 void swapconctest_run(char *s)
 {
-  char *argv[] = {"swapconctest", 0};
+  char *argv[] = {"swapconctest", "-q", 0};
   exec("swapconctest", argv);
   printf("%s: exec swapconctest failed\n", s);
   exit(1);
@@ -3037,6 +3077,9 @@ int main(int argc, char *argv[])
       {bsstest, "bsstest"},
       {sbrkmuch, "sbrkmuch"},
       {swaptest_run, "swaptest"},
+      {readaheadtest_run, "readaheadtest"},
+      {ballochinttest_run, "ballochinttest"},
+      {spooltest_run, "spooltest"},
       {mmapswaptest_run, "mmapswaptest"},
       {swapconctest_run, "swapconctest"},
       {swapbuftest_run, "swapbuftest"},
@@ -3081,11 +3124,13 @@ int main(int argc, char *argv[])
       {semandtest_run, "semandtest"},
       {semsettest_run, "semsettest"},
       {deadlocktest_run, "deadlocktest"},
+      {bankertest_run, "bankertest"},
       {dmsgtest_run, "dmsgtest"},
       {threadtest_run, "threadtest"},
       {cstest_run, "cstest"},
       {monitortest_run, "monitortest"},
       {pitest_run, "pitest"},
+      // {midschedtest_run, "midschedtest"},  // 耗时太长，单独测试
       {0, 0},
   };
 

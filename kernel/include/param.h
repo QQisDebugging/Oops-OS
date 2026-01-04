@@ -15,12 +15,18 @@
 #define FSSIZE 100000             // size of file system in blocks
 #define SWAP_PAGES 512            // swap size in pages (4 blocks per page)
 #define SWAPBLOCKS (SWAP_PAGES * 4)
+#define MIDSCHED_SUSPEND_MINFREE_PAGES 2048
+#define MIDSCHED_RESUME_MINFREE_PAGES 4096
+#define MIDSCHED_SWAPBUF_TRIGGER 128
+#define MIDSCHED_RESUME_FORCE_PAGES 8192
+#define MIDSCHED_HOLD_TICKS 50
 #define MAXPATH 128               // maximum file path name
 #define MQMAX 8                   // 消息队列数量
 #define DMSG_MAX 128              // direct message max size
 #define DMSG_QUEUE_MAX 16         // direct message queue length
 #define MONITOR_MAX_NUM 16        // monitor count
 #define MONITOR_COND_MAX 16       // condition variables per monitor
+#define BANKER_MAX_RES 8          // max resource types for banker
 #define MLFQ_LEVELS 4             // number of MLFQ levels
 #define MLFQ_BOOST_TICKS 200      // periodic priority boost interval
 #define MLFQ_SLICE_L0 1           // time slice for level 0

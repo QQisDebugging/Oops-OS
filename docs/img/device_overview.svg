@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600pt" height="763pt" viewBox="0.00 0.00 600.00 763.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 759.2)">
+<title>device_overview</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-759.2 596,-759.2 596,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_user</title>
+<polygon fill="#e3f2fd" stroke="black" points="336,-664.8 336,-747.2 464,-747.2 464,-664.8 336,-664.8"/>
+<text xml:space="preserve" text-anchor="middle" x="400" y="-730.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">用户态 (User Space)</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_kernel</title>
+<polygon fill="#fff3e0" stroke="black" points="8,-117.6 8,-630 584,-630 584,-117.6 8,-117.6"/>
+<text xml:space="preserve" text-anchor="middle" x="296" y="-613.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">内核态 (OopsOS Kernel Space)</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_fs_subsystem</title>
+<polygon fill="#ffecb3" stroke="black" points="16,-242.8 16,-518.4 265,-518.4 265,-242.8 16,-242.8"/>
+<text xml:space="preserve" text-anchor="middle" x="140.5" y="-501.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">文件系统与块 I/O 子系统</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_drivers</title>
+<polygon fill="#ffccbc" stroke="black" points="16,-125.6 16,-208 576,-208 576,-125.6 16,-125.6"/>
+<text xml:space="preserve" text-anchor="middle" x="296" y="-191.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">设备驱动</text>
+</g>
+<g id="clust5" class="cluster">
+<title>cluster_hardware</title>
+<polygon fill="#e8f5e9" stroke="black" points="45,-8 45,-84.8 398,-84.8 398,-8 45,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="221.5" y="-68.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">硬件层 (QEMU 模拟)</text>
+</g>
+<!-- user_apps -->
+<g id="node1" class="node">
+<title>user_apps</title>
+<path fill="#bbdefb" stroke="#333333" stroke-width="1.2" d="M443.83,-714.4C443.83,-714.4 356.17,-714.4 356.17,-714.4 350.17,-714.4 344.17,-708.4 344.17,-702.4 344.17,-702.4 344.17,-684.8 344.17,-684.8 344.17,-678.8 350.17,-672.8 356.17,-672.8 356.17,-672.8 443.83,-672.8 443.83,-672.8 449.83,-672.8 455.83,-678.8 455.83,-684.8 455.83,-684.8 455.83,-702.4 455.83,-702.4 455.83,-708.4 449.83,-714.4 443.83,-714.4"/>
+<text xml:space="preserve" text-anchor="middle" x="400" y="-697.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">用户应用程序</text>
+<text xml:space="preserve" text-anchor="middle" x="400" y="-681" font-family="Helvetica,Arial,sans-serif" font-size="14.00">(Shell, init, tests)</text>
+</g>
+<!-- syscalls -->
+<g id="node2" class="node">
+<title>syscalls</title>
+<path fill="#ffe0b2" stroke="#333333" stroke-width="1.2" d="M470.67,-597.2C470.67,-597.2 329.33,-597.2 329.33,-597.2 323.33,-597.2 317.33,-591.2 317.33,-585.2 317.33,-585.2 317.33,-573.2 317.33,-573.2 317.33,-567.2 323.33,-561.2 329.33,-561.2 329.33,-561.2 470.67,-561.2 470.67,-561.2 476.67,-561.2 482.67,-567.2 482.67,-573.2 482.67,-573.2 482.67,-585.2 482.67,-585.2 482.67,-591.2 476.67,-597.2 470.67,-597.2"/>
+<text xml:space="preserve" text-anchor="middle" x="400" y="-575" font-family="Helvetica,Arial,sans-serif" font-size="14.00">系统调用接口 (System Calls)</text>
+</g>
+<!-- user_apps&#45;&gt;syscalls -->
+<g id="edge1" class="edge">
+<title>user_apps-&gt;syscalls</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M400,-672.25C400,-654.62 400,-628.93 400,-609.16"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="403.5,-609.27 400,-599.27 396.5,-609.27 403.5,-609.27"/>
+<text xml:space="preserve" text-anchor="middle" x="427.79" y="-642.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 陷入(trap)</text>
+</g>
+<!-- vfs -->
+<g id="node3" class="node">
+<title>vfs</title>
+<path fill="#ffe0b2" stroke="#333333" stroke-width="1.2" d="M236.29,-485.6C236.29,-485.6 165.71,-485.6 165.71,-485.6 159.71,-485.6 153.71,-479.6 153.71,-473.6 153.71,-473.6 153.71,-461.6 153.71,-461.6 153.71,-455.6 159.71,-449.6 165.71,-449.6 165.71,-449.6 236.29,-449.6 236.29,-449.6 242.29,-449.6 248.29,-455.6 248.29,-461.6 248.29,-461.6 248.29,-473.6 248.29,-473.6 248.29,-479.6 242.29,-485.6 236.29,-485.6"/>
+<text xml:space="preserve" text-anchor="middle" x="201" y="-463.4" font-family="Helvetica,Arial,sans-serif" font-size="14.00">VFS / 文件系统</text>
+</g>
+<!-- syscalls&#45;&gt;vfs -->
+<g id="edge2" class="edge">
+<title>syscalls-&gt;vfs</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M342.67,-560.7C314,-551.95 285.34,-543.2 285.34,-543.2 285.34,-543.2 252,-518.4 252,-518.4 252,-518.4 239.58,-506.27 227,-493.99"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="229.74,-491.77 220.14,-487.29 224.85,-496.78 229.74,-491.77"/>
+<text xml:space="preserve" text-anchor="middle" x="308.67" y="-530.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 文件 I/O</text>
+</g>
+<!-- console_drv -->
+<g id="node6" class="node">
+<title>console_drv</title>
+<path fill="#ffe0b2" stroke="#333333" stroke-width="1.2" d="M275,-175.2C275,-175.2 185,-175.2 185,-175.2 179,-175.2 173,-169.2 173,-163.2 173,-163.2 173,-145.6 173,-145.6 173,-139.6 179,-133.6 185,-133.6 185,-133.6 275,-133.6 275,-133.6 281,-133.6 287,-139.6 287,-145.6 287,-145.6 287,-163.2 287,-163.2 287,-169.2 281,-175.2 275,-175.2"/>
+<text xml:space="preserve" text-anchor="middle" x="230" y="-158.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">控制台/UART 驱动</text>
+<text xml:space="preserve" text-anchor="middle" x="230" y="-141.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">(环形缓冲区)</text>
+</g>
+<!-- syscalls&#45;&gt;console_drv -->
+<g id="edge3" class="edge">
+<title>syscalls-&gt;console_drv</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M391.09,-561.07C375.06,-530.25 343,-468.6 343,-468.6 343,-468.6 343,-468.6 343,-278.4 343,-278.4 289.65,-220.33 256.27,-183.99"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="259.23,-182.04 249.89,-177.05 254.08,-186.78 259.23,-182.04"/>
+<text xml:space="preserve" text-anchor="middle" x="357.19" y="-374.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 读/写</text>
+</g>
+<!-- spool_drv -->
+<g id="node9" class="node">
+<title>spool_drv</title>
+<path fill="#ffe0b2" stroke="#333333" stroke-width="1.2" d="M409.53,-172.4C409.53,-172.4 342.47,-172.4 342.47,-172.4 336.47,-172.4 330.47,-166.4 330.47,-160.4 330.47,-160.4 330.47,-148.4 330.47,-148.4 330.47,-142.4 336.47,-136.4 342.47,-136.4 342.47,-136.4 409.53,-136.4 409.53,-136.4 415.53,-136.4 421.53,-142.4 421.53,-148.4 421.53,-148.4 421.53,-160.4 421.53,-160.4 421.53,-166.4 415.53,-172.4 409.53,-172.4"/>
+<text xml:space="preserve" text-anchor="middle" x="376" y="-150.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">Spooling 驱动</text>
+</g>
+<!-- syscalls&#45;&gt;spool_drv -->
+<g id="edge5" class="edge">
+<title>syscalls-&gt;spool_drv</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M399.01,-560.84C395.32,-495.79 382.28,-266.09 377.65,-184.46"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="381.14,-184.27 377.08,-174.49 374.16,-184.67 381.14,-184.27"/>
+<text xml:space="preserve" text-anchor="middle" x="396.69" y="-374.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 写</text>
+</g>
+<!-- net_stack -->
+<g id="node10" class="node">
+<title>net_stack</title>
+<path fill="#ffe0b2" stroke="#333333" stroke-width="1.2" d="M560.39,-300.2C560.39,-300.2 469.61,-300.2 469.61,-300.2 463.61,-300.2 457.61,-294.2 457.61,-288.2 457.61,-288.2 457.61,-270.6 457.61,-270.6 457.61,-264.6 463.61,-258.6 469.61,-258.6 469.61,-258.6 560.39,-258.6 560.39,-258.6 566.39,-258.6 572.39,-264.6 572.39,-270.6 572.39,-270.6 572.39,-288.2 572.39,-288.2 572.39,-294.2 566.39,-300.2 560.39,-300.2"/>
+<text xml:space="preserve" text-anchor="middle" x="515" y="-283.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">网络协议栈</text>
+<text xml:space="preserve" text-anchor="middle" x="515" y="-266.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">(UDP/IP, Socket)</text>
+</g>
+<!-- syscalls&#45;&gt;net_stack -->
+<g id="edge4" class="edge">
+<title>syscalls-&gt;net_stack</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M434,-560.7C451,-551.95 468,-543.2 468,-543.2 468,-543.2 496.82,-382.05 509.32,-312.14"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="512.76,-312.83 511.07,-302.37 505.86,-311.6 512.76,-312.83"/>
+<text xml:space="preserve" text-anchor="middle" x="522.84" y="-419" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> Socket I/O</text>
+</g>
+<!-- log -->
+<g id="node4" class="node">
+<title>log</title>
+<path fill="#ffcc80" stroke="#333333" stroke-width="1.2" d="M257.46,-393.53C257.46,-395.33 233.05,-396.8 203,-396.8 172.95,-396.8 148.54,-395.33 148.54,-393.53 148.54,-393.53 148.54,-364.07 148.54,-364.07 148.54,-362.27 172.95,-360.8 203,-360.8 233.05,-360.8 257.46,-362.27 257.46,-364.07 257.46,-364.07 257.46,-393.53 257.46,-393.53"/>
+<path fill="none" stroke="#333333" stroke-width="1.2" d="M257.46,-393.53C257.46,-391.72 233.05,-390.25 203,-390.25 172.95,-390.25 148.54,-391.72 148.54,-393.53"/>
+<text xml:space="preserve" text-anchor="middle" x="203" y="-374.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">日志 (Journaling)</text>
+</g>
+<!-- vfs&#45;&gt;log -->
+<g id="edge6" class="edge">
+<title>vfs-&gt;log</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M178,-449.1C166.5,-440.35 155,-431.6 155,-431.6 155,-431.6 155,-414.8 155,-414.8 155,-414.8 161.47,-410.08 169.66,-404.11"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="171.51,-407.09 177.53,-398.37 167.39,-401.43 171.51,-407.09"/>
+<text xml:space="preserve" text-anchor="middle" x="183" y="-419" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 元数据操作</text>
+</g>
+<!-- bcache -->
+<g id="node5" class="node">
+<title>bcache</title>
+<path fill="#ffcc80" stroke="#333333" stroke-width="1.2" d="M159.67,-302.8C159.67,-305.67 129.34,-308 92,-308 54.66,-308 24.33,-305.67 24.33,-302.8 24.33,-302.8 24.33,-256 24.33,-256 24.33,-253.13 54.66,-250.8 92,-250.8 129.34,-250.8 159.67,-253.13 159.67,-256 159.67,-256 159.67,-302.8 159.67,-302.8"/>
+<path fill="none" stroke="#333333" stroke-width="1.2" d="M159.67,-302.8C159.67,-299.93 129.34,-297.6 92,-297.6 54.66,-297.6 24.33,-299.93 24.33,-302.8"/>
+<text xml:space="preserve" text-anchor="middle" x="92" y="-283.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">块缓存 (Buffer Cache)</text>
+<text xml:space="preserve" text-anchor="middle" x="92" y="-266.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">(Clock 算法 + 预读)</text>
+</g>
+<!-- vfs&#45;&gt;bcache -->
+<g id="edge8" class="edge">
+<title>vfs-&gt;bcache</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M172.8,-449.17C139.37,-428.49 88.11,-396.8 88.11,-396.8 88.11,-396.8 88.11,-360.8 88.11,-360.8 88.11,-360.8 89.09,-340.47 90.07,-320.25"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="93.56,-320.49 90.55,-310.33 86.57,-320.15 93.56,-320.49"/>
+<text xml:space="preserve" text-anchor="middle" x="107.56" y="-374.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 块读/写</text>
+</g>
+<!-- log&#45;&gt;bcache -->
+<g id="edge7" class="edge">
+<title>log-&gt;bcache</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M162.77,-360.92C141.45,-351.96 119.61,-342.8 119.61,-342.8 119.61,-342.8 114.69,-331.67 109,-318.82"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="112.33,-317.7 105.09,-309.98 105.93,-320.54 112.33,-317.7"/>
+<text xml:space="preserve" text-anchor="middle" x="144.31" y="-330.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 提交/写入</text>
+</g>
+<!-- virtio_drv -->
+<g id="node7" class="node">
+<title>virtio_drv</title>
+<path fill="#ffe0b2" stroke="#333333" stroke-width="1.2" d="M117.72,-172.4C117.72,-172.4 36.28,-172.4 36.28,-172.4 30.28,-172.4 24.28,-166.4 24.28,-160.4 24.28,-160.4 24.28,-148.4 24.28,-148.4 24.28,-142.4 30.28,-136.4 36.28,-136.4 36.28,-136.4 117.72,-136.4 117.72,-136.4 123.72,-136.4 129.72,-142.4 129.72,-148.4 129.72,-148.4 129.72,-160.4 129.72,-160.4 129.72,-166.4 123.72,-172.4 117.72,-172.4"/>
+<text xml:space="preserve" text-anchor="middle" x="77" y="-150.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00">Virtio 块设备驱动</text>
+</g>
+<!-- bcache&#45;&gt;virtio_drv -->
+<g id="edge9" class="edge">
+<title>bcache-&gt;virtio_drv</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M61.12,-250.3C50.81,-240.92 41.89,-232.8 41.89,-232.8 41.89,-232.8 41.89,-216 41.89,-216 41.89,-216 51.7,-199.06 60.96,-183.09"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="63.95,-184.91 65.93,-174.5 57.89,-181.4 63.95,-184.91"/>
+<text xml:space="preserve" text-anchor="middle" x="67.94" y="-220.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 提交 BIO</text>
+</g>
+<!-- uart_hw -->
+<g id="node11" class="node">
+<title>uart_hw</title>
+<polygon fill="#c8e6c9" stroke="#333333" stroke-width="1.2" points="269.31,-52 190.69,-52 190.69,-48 186.69,-48 186.69,-44 190.69,-44 190.69,-24 186.69,-24 186.69,-20 190.69,-20 190.69,-16 269.31,-16 269.31,-52"/>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="190.69,-48 194.69,-48 194.69,-44 190.69,-44"/>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="190.69,-24 194.69,-24 194.69,-20 190.69,-20"/>
+<text xml:space="preserve" text-anchor="middle" x="230" y="-29.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">UART 芯片</text>
+</g>
+<!-- console_drv&#45;&gt;uart_hw -->
+<g id="edge12" class="edge">
+<title>console_drv-&gt;uart_hw</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M230,-121.49C230,-103.62 230,-81.5 230,-64.1"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="226.5,-121.23 230,-131.23 233.5,-121.23 226.5,-121.23"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="233.5,-64.21 230,-54.21 226.5,-64.21 233.5,-64.21"/>
+<text xml:space="preserve" text-anchor="middle" x="264.03" y="-97" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 中断/MMIO</text>
+</g>
+<!-- virtio_disk -->
+<g id="node12" class="node">
+<title>virtio_disk</title>
+<polygon fill="#c8e6c9" stroke="#333333" stroke-width="1.2" points="147.47,-52 52.53,-52 52.53,-48 48.53,-48 48.53,-44 52.53,-44 52.53,-24 48.53,-24 48.53,-20 52.53,-20 52.53,-16 147.47,-16 147.47,-52"/>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="52.53,-48 56.53,-48 56.53,-44 52.53,-44"/>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="52.53,-24 56.53,-24 56.53,-20 52.53,-20"/>
+<text xml:space="preserve" text-anchor="middle" x="100" y="-29.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">Virtio 磁盘设备</text>
+</g>
+<!-- virtio_drv&#45;&gt;virtio_disk -->
+<g id="edge13" class="edge">
+<title>virtio_drv-&gt;virtio_disk</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M82.64,-124.37C86.21,-106.01 90.8,-82.36 94.37,-64"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="79.21,-123.66 80.74,-134.15 86.08,-125 79.21,-123.66"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="97.77,-64.81 96.25,-54.32 90.9,-63.47 97.77,-64.81"/>
+<text xml:space="preserve" text-anchor="middle" x="130.68" y="-97" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 中断/Virtqueue</text>
+</g>
+<!-- e1000_drv -->
+<g id="node8" class="node">
+<title>e1000_drv</title>
+<path fill="#ffe0b2" stroke="#333333" stroke-width="1.2" d="M555.75,-175.2C555.75,-175.2 476.25,-175.2 476.25,-175.2 470.25,-175.2 464.25,-169.2 464.25,-163.2 464.25,-163.2 464.25,-145.6 464.25,-145.6 464.25,-139.6 470.25,-133.6 476.25,-133.6 476.25,-133.6 555.75,-133.6 555.75,-133.6 561.75,-133.6 567.75,-139.6 567.75,-145.6 567.75,-145.6 567.75,-163.2 567.75,-163.2 567.75,-169.2 561.75,-175.2 555.75,-175.2"/>
+<text xml:space="preserve" text-anchor="middle" x="516" y="-158.6" font-family="Helvetica,Arial,sans-serif" font-size="14.00">E1000 网卡驱动</text>
+<text xml:space="preserve" text-anchor="middle" x="516" y="-141.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">(DMA 环形队列)</text>
+</g>
+<!-- e1000_drv&#45;&gt;net_stack -->
+<g id="edge11" class="edge">
+<title>e1000_drv-&gt;net_stack</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M515.83,-175.74C515.68,-194.98 515.44,-224.15 515.26,-246.49"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="511.76,-246.24 515.18,-256.27 518.76,-246.3 511.76,-246.24"/>
+<text xml:space="preserve" text-anchor="middle" x="533" y="-220.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 接收包</text>
+</g>
+<!-- e1000_hw -->
+<g id="node13" class="node">
+<title>e1000_hw</title>
+<polygon fill="#c8e6c9" stroke="#333333" stroke-width="1.2" points="389.53,-52 312.47,-52 312.47,-48 308.47,-48 308.47,-44 312.47,-44 312.47,-24 308.47,-24 308.47,-20 312.47,-20 312.47,-16 389.53,-16 389.53,-52"/>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="312.47,-48 316.47,-48 316.47,-44 312.47,-44"/>
+<polyline fill="none" stroke="#333333" stroke-width="1.2" points="312.47,-24 316.47,-24 316.47,-20 312.47,-20"/>
+<text xml:space="preserve" text-anchor="middle" x="351" y="-29.8" font-family="Helvetica,Arial,sans-serif" font-size="14.00">E1000 网卡</text>
+</g>
+<!-- e1000_drv&#45;&gt;e1000_hw -->
+<g id="edge14" class="edge">
+<title>e1000_drv-&gt;e1000_hw</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M478.28,-126.33C450.18,-106.17 412.14,-78.87 384.98,-59.38"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="475.99,-129 486.16,-131.99 480.08,-123.31 475.99,-129"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="387.14,-56.63 376.98,-53.64 383.06,-62.32 387.14,-56.63"/>
+<text xml:space="preserve" text-anchor="middle" x="483.66" y="-97" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 中断/DMA</text>
+</g>
+<!-- net_stack&#45;&gt;e1000_drv -->
+<g id="edge10" class="edge">
+<title>net_stack-&gt;e1000_drv</title>
+<path fill="none" stroke="#555555" stroke-width="1.2" d="M487.26,-258C470.76,-245.86 453,-232.8 453,-232.8 453,-232.8 453,-216 453,-216 453,-216 470.18,-199.47 486.6,-183.68"/>
+<polygon fill="#555555" stroke="#555555" stroke-width="1.2" points="488.93,-186.29 493.71,-176.84 484.08,-181.25 488.93,-186.29"/>
+<text xml:space="preserve" text-anchor="middle" x="470.5" y="-220.2" font-family="Helvetica,Arial,sans-serif" font-size="14.00"> 发送包</text>
+</g>
+</g>
+</svg>

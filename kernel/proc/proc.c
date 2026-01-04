@@ -13,6 +13,20 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+#define BANKER_RES_MAX BANKER_MAX_RES
+static void banker_init_state(void);
+
+struct banker_state
+{
+  struct spinlock lock;
+  int inited;
+  int nres;
+  int total[BANKER_RES_MAX];
+  int avail[BANKER_RES_MAX];
+};
+
+static struct banker_state banker;
+
 #if defined(SCHED_MLFQ)
 static const int mlfq_time_slice[MLFQ_LEVELS] = {
     MLFQ_SLICE_L0,
@@ -297,6 +311,7 @@ void procinit(void)
   struct proc *p;
 
   initlock(&pid_lock, "nextpid");
+  banker_init_state();
   for (p = proc; p < &proc[NPROC]; p++)
   {
     initlock(&p->lock, "proc");
@@ -499,6 +514,441 @@ deadlock_detect(void *chan)
   return 0;
 }
 
+static int
+midsched_can_suspend(struct proc *p, struct proc *cur)
+{
+  if (p->state != RUNNABLE && p->state != SLEEPING)
+    return 0;
+  if (p->midsched_suspending)
+    return 0;
+  if (p->sz == 0)
+    return 0;
+  if (p->pid <= 1)
+    return 0;
+  if (cur && p == cur)
+    return 0;
+  if (p->rt_policy == SCHED_RT_LLF)
+    return 0;
+  return 1;
+}
+
+static int midsched_enabled = 0;
+static uint midsched_last_suspend;
+
+int
+midsched_on(void)
+{
+  return midsched_enabled;
+}
+
+static void
+midsched_resume_all(void)
+{
+  struct proc *p;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state == SUSPENDED)
+    {
+      p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+    }
+    else if (p->state == SUSPENDED_SLEEP)
+    {
+      if (p->chan)
+        p->state = SLEEPING;
+      else
+        p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+    }
+    p->midsched_suspending = 0;
+    release(&p->lock);
+  }
+}
+
+int
+midsched_set(int on)
+{
+  int old = midsched_enabled;
+  midsched_enabled = on ? 1 : 0;
+  if (!midsched_enabled)
+    midsched_resume_all();
+  return old;
+}
+
+int
+midsched_suspend_one(void)
+{
+  struct proc *p;
+  struct proc *cur = myproc();
+  struct proc *victim = 0;
+  uint64 maxsz = 0;
+
+  if (mycpu()->noff > 0)
+    return 0;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (midsched_can_suspend(p, cur))
+    {
+      if (p->sz > maxsz)
+      {
+        maxsz = p->sz;
+        victim = p;
+      }
+    }
+    release(&p->lock);
+  }
+
+  if (victim == 0)
+    return 0;
+
+  acquire(&victim->lock);
+  if (!midsched_can_suspend(victim, cur))
+  {
+    release(&victim->lock);
+    return 0;
+  }
+
+  enum procstate prev = victim->state;
+  if (prev == SLEEPING)
+    victim->state = SUSPENDED_SLEEP;
+  else
+    victim->state = SUSPENDED;
+  victim->midsched_suspending = 1;
+#if defined(SCHED_MLFQ)
+  victim->mlfq_level = 0;
+  victim->mlfq_ticks = 0;
+#endif
+  release(&victim->lock);
+
+  int swapped = swapout_proc(victim, -1);
+  acquire(&victim->lock);
+  victim->midsched_suspending = 0;
+  if (swapped <= 0)
+  {
+    if (victim->state == SUSPENDED || victim->state == SUSPENDED_SLEEP)
+      victim->state = prev;
+    release(&victim->lock);
+    return 0;
+  }
+  midsched_last_suspend = ticks;
+  release(&victim->lock);
+  return swapped;
+}
+
+void
+midsched_maybe_resume(void)
+{
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state == SUSPENDED && !p->midsched_suspending)
+    {
+      p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+      release(&p->lock);
+      return;
+    }
+    if (p->state == SUSPENDED_SLEEP && !p->midsched_suspending)
+    {
+      if (p->chan)
+        p->state = SLEEPING;
+      else
+        p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+      release(&p->lock);
+      return;
+    }
+    release(&p->lock);
+  }
+}
+
+static int
+banker_need_ok(struct proc *p, int *work)
+{
+  for (int r = 0; r < banker.nres; r++)
+  {
+    int need = p->bkr_max[r] - p->bkr_alloc[r];
+    if (need > work[r])
+      return 0;
+  }
+  return 1;
+}
+
+static int
+banker_is_safe_locked(void)
+{
+  int work[BANKER_RES_MAX];
+  int finish[NPROC];
+
+  for (int r = 0; r < banker.nres; r++)
+    work[r] = banker.avail[r];
+
+  for (int i = 0; i < NPROC; i++)
+  {
+    struct proc *p = &proc[i];
+    if (p->state == UNUSED || !p->bkr_active)
+      finish[i] = 1;
+    else
+      finish[i] = 0;
+  }
+
+  for (;;)
+  {
+    int progress = 0;
+    for (int i = 0; i < NPROC; i++)
+    {
+      if (finish[i])
+        continue;
+      struct proc *p = &proc[i];
+      if (banker_need_ok(p, work))
+      {
+        for (int r = 0; r < banker.nres; r++)
+          work[r] += p->bkr_alloc[r];
+        finish[i] = 1;
+        progress = 1;
+      }
+    }
+    if (!progress)
+      break;
+  }
+
+  for (int i = 0; i < NPROC; i++)
+  {
+    if (!finish[i])
+      return 0;
+  }
+  return 1;
+}
+
+static int
+banker_any_alloc_locked(void)
+{
+  for (int i = 0; i < NPROC; i++)
+  {
+    struct proc *p = &proc[i];
+    if (!p->bkr_active)
+      continue;
+    for (int r = 0; r < banker.nres; r++)
+    {
+      if (p->bkr_alloc[r] > 0)
+        return 1;
+    }
+  }
+  return 0;
+}
+
+static void
+banker_init_state(void)
+{
+  initlock(&banker.lock, "banker");
+  banker.inited = 0;
+  banker.nres = 0;
+  for (int r = 0; r < BANKER_RES_MAX; r++)
+  {
+    banker.total[r] = 0;
+    banker.avail[r] = 0;
+  }
+}
+
+int
+banker_init(int nres, int *total)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+  for (int r = 0; r < nres; r++)
+  {
+    if (total[r] < 0)
+      return -1;
+  }
+
+  acquire(&banker.lock);
+  if (banker.inited && banker_any_alloc_locked())
+  {
+    release(&banker.lock);
+    return -1;
+  }
+
+  banker.inited = 1;
+  banker.nres = nres;
+  for (int r = 0; r < BANKER_RES_MAX; r++)
+  {
+    banker.total[r] = 0;
+    banker.avail[r] = 0;
+  }
+  for (int r = 0; r < nres; r++)
+  {
+    banker.total[r] = total[r];
+    banker.avail[r] = total[r];
+  }
+
+  for (int i = 0; i < NPROC; i++)
+  {
+    struct proc *p = &proc[i];
+    p->bkr_active = 0;
+    for (int r = 0; r < BANKER_RES_MAX; r++)
+    {
+      p->bkr_max[r] = 0;
+      p->bkr_alloc[r] = 0;
+    }
+  }
+
+  release(&banker.lock);
+  return 0;
+}
+
+int
+banker_set_max(struct proc *p, int nres, int *max)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+
+  acquire(&banker.lock);
+  if (!banker.inited || nres != banker.nres)
+  {
+    release(&banker.lock);
+    return -1;
+  }
+  for (int r = 0; r < nres; r++)
+  {
+    if (max[r] < 0 || max[r] > banker.total[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+    if (max[r] < p->bkr_alloc[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+  }
+
+  if (!p->bkr_active)
+  {
+    for (int r = 0; r < BANKER_RES_MAX; r++)
+      p->bkr_alloc[r] = 0;
+  }
+  p->bkr_active = 1;
+  for (int r = 0; r < nres; r++)
+    p->bkr_max[r] = max[r];
+  for (int r = nres; r < BANKER_RES_MAX; r++)
+    p->bkr_max[r] = 0;
+
+  release(&banker.lock);
+  return 0;
+}
+
+int
+banker_request(struct proc *p, int nres, int *req)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+
+  acquire(&banker.lock);
+  if (!banker.inited || nres != banker.nres || !p->bkr_active)
+  {
+    release(&banker.lock);
+    return -1;
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    int need = p->bkr_max[r] - p->bkr_alloc[r];
+    if (req[r] < 0 || req[r] > need || req[r] > banker.avail[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    banker.avail[r] -= req[r];
+    p->bkr_alloc[r] += req[r];
+  }
+
+  if (!banker_is_safe_locked())
+  {
+    for (int r = 0; r < nres; r++)
+    {
+      banker.avail[r] += req[r];
+      p->bkr_alloc[r] -= req[r];
+    }
+    release(&banker.lock);
+    return -1;
+  }
+
+  release(&banker.lock);
+  return 0;
+}
+
+int
+banker_release(struct proc *p, int nres, int *rel)
+{
+  if (nres <= 0 || nres > BANKER_RES_MAX)
+    return -1;
+
+  acquire(&banker.lock);
+  if (!banker.inited || nres != banker.nres || !p->bkr_active)
+  {
+    release(&banker.lock);
+    return -1;
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    if (rel[r] < 0 || rel[r] > p->bkr_alloc[r])
+    {
+      release(&banker.lock);
+      return -1;
+    }
+  }
+
+  for (int r = 0; r < nres; r++)
+  {
+    p->bkr_alloc[r] -= rel[r];
+    banker.avail[r] += rel[r];
+  }
+
+  release(&banker.lock);
+  return 0;
+}
+
+void
+banker_release_proc(struct proc *p)
+{
+  acquire(&banker.lock);
+  if (!banker.inited || !p->bkr_active)
+  {
+    release(&banker.lock);
+    return;
+  }
+  for (int r = 0; r < banker.nres; r++)
+  {
+    banker.avail[r] += p->bkr_alloc[r];
+    p->bkr_alloc[r] = 0;
+    p->bkr_max[r] = 0;
+  }
+  p->bkr_active = 0;
+  release(&banker.lock);
+}
+
 int allocpid()
 {
   int pid;
@@ -544,6 +994,12 @@ static struct proc *allocproc(void)
   p->dmsg_count = 0;
   p->dmsg_bytes = 0;
   p->dmsg_closed = 0;
+  p->bkr_active = 0;
+  for (int r = 0; r < BANKER_RES_MAX; r++)
+  {
+    p->bkr_max[r] = 0;
+    p->bkr_alloc[r] = 0;
+  }
   p->priority = 10; // 设定优先级为10
   p->cpu_time = 0;
   p->wait_time = 0;
@@ -552,6 +1008,7 @@ static struct proc *allocproc(void)
   p->mlfq_level = 0;
   p->mlfq_ticks = 0;
   rt_reset_locked(p);
+  p->midsched_suspending = 0;
   p->trace_mask = 0; // 设定掩码为0
   p->swap_hand = 0;
   p->shm = KERNBASE; // 初始化shm，刚开始shm与kernbase重合
@@ -725,6 +1182,7 @@ monitor_release_on_exit(struct proc *p)
 // p->lock must be held.
 static void freeproc(struct proc *p)
 {
+  banker_release_proc(p);
   if (p->trapframe)
     kfree((void *)p->trapframe);
   p->trapframe = 0;
@@ -1281,6 +1739,23 @@ void mlfq_boost(uint now)
 }
 #endif
 
+static void
+midsched_maintain(void)
+{
+  if (!midsched_on())
+    return;
+  if (ticks - midsched_last_suspend < MIDSCHED_HOLD_TICKS)
+    return;
+  uint64 free;
+  freebytes(&free);
+  uint64 hits, misses, cached;
+  swap_pbuf_stats(&hits, &misses, &cached);
+  if (free > (uint64)MIDSCHED_RESUME_MINFREE_PAGES * PGSIZE &&
+      (cached < (MIDSCHED_SWAPBUF_TRIGGER / 2) ||
+       free > (uint64)MIDSCHED_RESUME_FORCE_PAGES * PGSIZE))
+    midsched_maybe_resume();
+}
+
 void scheduler(void)
 {
 #if defined(SCHED_DYNPRIO)
@@ -1294,6 +1769,7 @@ void scheduler(void)
   for (;;)
   {
     intr_on();         // 启用中断
+    midsched_maintain();
     struct proc *rt = rt_pick(rt_now());
     if (rt)
     {
@@ -1367,6 +1843,7 @@ void scheduler(void)
     int found = 0;
 
     intr_on();
+    midsched_maintain();
     struct proc *rt = rt_pick(rt_now());
     if (rt)
     {
@@ -1533,6 +2010,10 @@ void wakeup(void *chan)
       p->mlfq_ticks = 0;
 #endif
     }
+    else if (p->state == SUSPENDED_SLEEP && p->chan == chan)
+    {
+      p->state = SUSPENDED;
+    }
     release(&p->lock);
   }
 }
@@ -1551,6 +2032,12 @@ void wakeupOneProc(void *chan)
       p->mlfq_level = 0;
       p->mlfq_ticks = 0;
 #endif
+      release(&p->lock);
+      break; // 多加了这一步
+    }
+    else if (p->state == SUSPENDED_SLEEP && p->chan == chan)
+    {
+      p->state = SUSPENDED;
       release(&p->lock);
       break; // 多加了这一步
     }
@@ -1573,6 +2060,10 @@ wakeup1(struct proc *p)
     p->mlfq_ticks = 0;
 #endif
   }
+  else if (p->chan == p && p->state == SUSPENDED_SLEEP)
+  {
+    p->state = SUSPENDED;
+  }
 }
 
 // Kill the process with the given pid.
@@ -1592,6 +2083,15 @@ int kill(int pid)
       {
         // Wake process from sleep().
         p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+        p->mlfq_level = 0;
+        p->mlfq_ticks = 0;
+#endif
+      }
+      else if (p->state == SUSPENDED || p->state == SUSPENDED_SLEEP)
+      {
+        p->state = RUNNABLE;
+        p->midsched_suspending = 0;
 #if defined(SCHED_MLFQ)
         p->mlfq_level = 0;
         p->mlfq_ticks = 0;
@@ -1647,6 +2147,8 @@ void procdump(void)
   static char *states[] = {
       [UNUSED] "unused",
       [SLEEPING] "sleep ",
+      [SUSPENDED_SLEEP] "susps",
+      [SUSPENDED] "susp  ",
       [RUNNABLE] "runble",
       [RUNNING] "run   ",
       [ZOMBIE] "zombie"};
@@ -1684,6 +2186,22 @@ int cps(void)
       printf("%s \t %d \t SLEEPING \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
 #else
       printf("%s \t %d \t SLEEPING \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
+#endif
+    }
+    else if (p->state == SUSPENDED_SLEEP)
+    {
+#if defined(SCHED_DYNPRIO)
+      printf("%s \t %d \t SUSP_SLEEP \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
+#else
+      printf("%s \t %d \t SUSP_SLEEP \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
+#endif
+    }
+    else if (p->state == SUSPENDED)
+    {
+#if defined(SCHED_DYNPRIO)
+      printf("%s \t %d \t SUSPENDED \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
+#else
+      printf("%s \t %d \t SUSPENDED \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
 #endif
     }
     else if (p->state == RUNNING) // 正在执行
