@@ -67,6 +67,8 @@ int pread(int fd, void *buf, int count, int offset);
 int pwrite(int fd, const void *buf, int count, int offset);
 int dup2(int oldfd, int newfd);
 int access(const char *path, int mode);
+int mount(const char *source, const char *target, const char *fstype);
+int umount(const char *target);
 
 // iovec 结构体用于分散/聚集 I/O
 struct iovec {

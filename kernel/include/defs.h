@@ -69,12 +69,25 @@ int xattr_list(struct inode *, char *, int);
 int xattr_remove(struct inode *, char *);
 void xattr_clear(struct inode *);
 
+// vfs.c
+struct vfs_mount;
+struct vfs_inode;
+void vfs_init(void);
+int vfs_mount(const char *, const char *, int);
+int vfs_umount(const char *);
+struct vfs_mount* vfs_get_mount(const char *);
+void vfs_list_mounts(void);
+
+// fat.c
+void fat_init(void);
+
 // fs.c
 void fsinit(int);
 int dirlink(struct inode *, char *, uint);
 struct inode *dirlookup(struct inode *, char *, uint *);
 struct inode *ialloc(uint, char);
 struct inode *idup(struct inode *);
+struct inode *iget(uint, uint);
 void iinit();
 void ilock(struct inode *);
 void iput(struct inode *);

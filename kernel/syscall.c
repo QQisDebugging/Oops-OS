@@ -217,6 +217,8 @@ extern uint64 sys_dup2(void);
 extern uint64 sys_readv(void);
 extern uint64 sys_writev(void);
 extern uint64 sys_access(void);
+extern uint64 sys_mount(void);
+extern uint64 sys_umount(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -315,6 +317,8 @@ static uint64 (*syscalls[])(void) = {
     [SYS_readv] sys_readv,
     [SYS_writev] sys_writev,
     [SYS_access] sys_access,
+    [SYS_mount] sys_mount,
+    [SYS_umount] sys_umount,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -414,6 +418,8 @@ static char *syscall_names[] = {
     [SYS_readv] "sys_readv",
     [SYS_writev] "sys_writev",
     [SYS_access] "sys_access",
+    [SYS_mount] "sys_mount",
+    [SYS_umount] "sys_umount",
 };
 void syscall(void)
 {

@@ -46,6 +46,8 @@ void main()
     initmonitor();
     sharememinit();
     mqinit();
+    vfs_init();           // 初始化虚拟文件系统
+    fat_init();           // 初始化 FAT 文件系统驱动
     printf("\033[0m");
     userinit();           // first user process
     __sync_synchronize(); // 防止编译器优化，确保后续的任何操作都是初始化之后进行

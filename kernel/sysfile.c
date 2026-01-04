@@ -2132,3 +2132,44 @@ sys_access(void)
   return result;
 }
 
+// mount - 挂载文件系统
+// 参数: source - 设备路径
+//       target - 挂载点路径
+//       fstype - 文件系统类型字符串 ("xv6", "fat")
+// 返回: 成功返回 0，失败返回 -1
+uint64
+sys_mount(void)
+{
+  char source[MAXPATH], target[MAXPATH], fstype[16];
+  
+  if(argstr(0, source, MAXPATH) < 0 ||
+     argstr(1, target, MAXPATH) < 0 ||
+     argstr(2, fstype, 16) < 0)
+    return -1;
+  
+  // 解析文件系统类型
+  int fs_type;
+  if(strncmp(fstype, "xv6", 3) == 0)
+    fs_type = 0;  // FS_TYPE_XV6
+  else if(strncmp(fstype, "fat", 3) == 0)
+    fs_type = 1;  // FS_TYPE_FAT
+  else
+    return -1;
+  
+  // 调用 VFS 挂载
+  return vfs_mount(source, target, fs_type);
+}
+
+// umount - 卸载文件系统
+// 参数: target - 挂载点路径
+// 返回: 成功返回 0，失败返回 -1
+uint64
+sys_umount(void)
+{
+  char target[MAXPATH];
+  
+  if(argstr(0, target, MAXPATH) < 0)
+    return -1;
+  
+  return vfs_umount(target);
+}

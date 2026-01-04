@@ -110,3 +110,5 @@ entry("dup2");
 entry("readv");
 entry("writev");
 entry("access");
+entry("mount");
+entry("umount");

@@ -25,6 +25,8 @@ OBJS = \
   $K/filesystem/xattr.o \
   $K/lock/sleeplock.o \
   $K/filesystem/file.o \
+  $K/filesystem/vfs.o \
+  $K/filesystem/fat.o \
   $K/proc/pipe.o \
   $K/proc/exec.o \
   $K/sysfile.o \
@@ -216,6 +218,7 @@ UPROGS=\
 	$U/test/_dup2test\
 	$U/test/_readvwritevtest\
 	$U/test/_accesstest\
+	$U/program/_vfstest\
 	$U/program/_statistics
 
 

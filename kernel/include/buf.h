@@ -1,3 +1,5 @@
+#include "fs.h"  // for BSIZE
+
 struct buf {
   int valid;   // 记录是否数据从磁盘读取到内存，首次记录目标块时会标记为0
   int disk;    // 用于磁盘层驱动和中断之间作为消息

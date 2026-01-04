@@ -96,3 +96,5 @@
 #define SYS_readv 95
 #define SYS_writev 96
 #define SYS_access 97
+#define SYS_mount 98
+#define SYS_umount 99
