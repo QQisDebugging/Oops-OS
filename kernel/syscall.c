@@ -206,6 +206,7 @@ extern uint64 sys_banker_init(void);
 extern uint64 sys_banker_set_max(void);
 extern uint64 sys_banker_request(void);
 extern uint64 sys_banker_release(void);
+extern uint64 sys_midsched(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -293,6 +294,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_banker_set_max] sys_banker_set_max,
     [SYS_banker_request] sys_banker_request,
     [SYS_banker_release] sys_banker_release,
+    [SYS_midsched] sys_midsched,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -381,6 +383,7 @@ static char *syscall_names[] = {
     [SYS_banker_set_max] "sys_banker_set_max",
     [SYS_banker_request] "sys_banker_request",
     [SYS_banker_release] "sys_banker_release",
+    [SYS_midsched] "sys_midsched",
 };
 void syscall(void)
 {

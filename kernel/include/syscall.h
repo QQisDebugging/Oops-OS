@@ -85,3 +85,4 @@
 #define SYS_banker_set_max 84
 #define SYS_banker_request 85
 #define SYS_banker_release 86
+#define SYS_midsched 87

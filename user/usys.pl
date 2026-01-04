@@ -99,3 +99,4 @@ entry("banker_init");
 entry("banker_set_max");
 entry("banker_request");
 entry("banker_release");
+entry("midsched");

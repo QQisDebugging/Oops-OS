@@ -515,6 +515,171 @@ deadlock_detect(void *chan)
 }
 
 static int
+midsched_can_suspend(struct proc *p, struct proc *cur)
+{
+  if (p->state != RUNNABLE && p->state != SLEEPING)
+    return 0;
+  if (p->midsched_suspending)
+    return 0;
+  if (p->sz == 0)
+    return 0;
+  if (p->pid <= 1)
+    return 0;
+  if (cur && p == cur)
+    return 0;
+  if (p->rt_policy == SCHED_RT_LLF)
+    return 0;
+  return 1;
+}
+
+static int midsched_enabled = 0;
+static uint midsched_last_suspend;
+
+int
+midsched_on(void)
+{
+  return midsched_enabled;
+}
+
+static void
+midsched_resume_all(void)
+{
+  struct proc *p;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state == SUSPENDED)
+    {
+      p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+    }
+    else if (p->state == SUSPENDED_SLEEP)
+    {
+      if (p->chan)
+        p->state = SLEEPING;
+      else
+        p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+    }
+    p->midsched_suspending = 0;
+    release(&p->lock);
+  }
+}
+
+int
+midsched_set(int on)
+{
+  int old = midsched_enabled;
+  midsched_enabled = on ? 1 : 0;
+  if (!midsched_enabled)
+    midsched_resume_all();
+  return old;
+}
+
+int
+midsched_suspend_one(void)
+{
+  struct proc *p;
+  struct proc *cur = myproc();
+  struct proc *victim = 0;
+  uint64 maxsz = 0;
+
+  if (mycpu()->noff > 0)
+    return 0;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (midsched_can_suspend(p, cur))
+    {
+      if (p->sz > maxsz)
+      {
+        maxsz = p->sz;
+        victim = p;
+      }
+    }
+    release(&p->lock);
+  }
+
+  if (victim == 0)
+    return 0;
+
+  acquire(&victim->lock);
+  if (!midsched_can_suspend(victim, cur))
+  {
+    release(&victim->lock);
+    return 0;
+  }
+
+  enum procstate prev = victim->state;
+  if (prev == SLEEPING)
+    victim->state = SUSPENDED_SLEEP;
+  else
+    victim->state = SUSPENDED;
+  victim->midsched_suspending = 1;
+#if defined(SCHED_MLFQ)
+  victim->mlfq_level = 0;
+  victim->mlfq_ticks = 0;
+#endif
+  release(&victim->lock);
+
+  int swapped = swapout_proc(victim, -1);
+  acquire(&victim->lock);
+  victim->midsched_suspending = 0;
+  if (swapped <= 0)
+  {
+    if (victim->state == SUSPENDED || victim->state == SUSPENDED_SLEEP)
+      victim->state = prev;
+    release(&victim->lock);
+    return 0;
+  }
+  midsched_last_suspend = ticks;
+  release(&victim->lock);
+  return swapped;
+}
+
+void
+midsched_maybe_resume(void)
+{
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state == SUSPENDED && !p->midsched_suspending)
+    {
+      p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+      release(&p->lock);
+      return;
+    }
+    if (p->state == SUSPENDED_SLEEP && !p->midsched_suspending)
+    {
+      if (p->chan)
+        p->state = SLEEPING;
+      else
+        p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+      p->mlfq_level = 0;
+      p->mlfq_ticks = 0;
+#endif
+      release(&p->lock);
+      return;
+    }
+    release(&p->lock);
+  }
+}
+
+static int
 banker_need_ok(struct proc *p, int *work)
 {
   for (int r = 0; r < banker.nres; r++)
@@ -843,6 +1008,7 @@ static struct proc *allocproc(void)
   p->mlfq_level = 0;
   p->mlfq_ticks = 0;
   rt_reset_locked(p);
+  p->midsched_suspending = 0;
   p->trace_mask = 0; // 设定掩码为0
   p->swap_hand = 0;
   p->shm = KERNBASE; // 初始化shm，刚开始shm与kernbase重合
@@ -1573,6 +1739,23 @@ void mlfq_boost(uint now)
 }
 #endif
 
+static void
+midsched_maintain(void)
+{
+  if (!midsched_on())
+    return;
+  if (ticks - midsched_last_suspend < MIDSCHED_HOLD_TICKS)
+    return;
+  uint64 free;
+  freebytes(&free);
+  uint64 hits, misses, cached;
+  swap_pbuf_stats(&hits, &misses, &cached);
+  if (free > (uint64)MIDSCHED_RESUME_MINFREE_PAGES * PGSIZE &&
+      (cached < (MIDSCHED_SWAPBUF_TRIGGER / 2) ||
+       free > (uint64)MIDSCHED_RESUME_FORCE_PAGES * PGSIZE))
+    midsched_maybe_resume();
+}
+
 void scheduler(void)
 {
 #if defined(SCHED_DYNPRIO)
@@ -1586,6 +1769,7 @@ void scheduler(void)
   for (;;)
   {
     intr_on();         // 启用中断
+    midsched_maintain();
     struct proc *rt = rt_pick(rt_now());
     if (rt)
     {
@@ -1659,6 +1843,7 @@ void scheduler(void)
     int found = 0;
 
     intr_on();
+    midsched_maintain();
     struct proc *rt = rt_pick(rt_now());
     if (rt)
     {
@@ -1825,6 +2010,10 @@ void wakeup(void *chan)
       p->mlfq_ticks = 0;
 #endif
     }
+    else if (p->state == SUSPENDED_SLEEP && p->chan == chan)
+    {
+      p->state = SUSPENDED;
+    }
     release(&p->lock);
   }
 }
@@ -1843,6 +2032,12 @@ void wakeupOneProc(void *chan)
       p->mlfq_level = 0;
       p->mlfq_ticks = 0;
 #endif
+      release(&p->lock);
+      break; // 多加了这一步
+    }
+    else if (p->state == SUSPENDED_SLEEP && p->chan == chan)
+    {
+      p->state = SUSPENDED;
       release(&p->lock);
       break; // 多加了这一步
     }
@@ -1865,6 +2060,10 @@ wakeup1(struct proc *p)
     p->mlfq_ticks = 0;
 #endif
   }
+  else if (p->chan == p && p->state == SUSPENDED_SLEEP)
+  {
+    p->state = SUSPENDED;
+  }
 }
 
 // Kill the process with the given pid.
@@ -1884,6 +2083,15 @@ int kill(int pid)
       {
         // Wake process from sleep().
         p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+        p->mlfq_level = 0;
+        p->mlfq_ticks = 0;
+#endif
+      }
+      else if (p->state == SUSPENDED || p->state == SUSPENDED_SLEEP)
+      {
+        p->state = RUNNABLE;
+        p->midsched_suspending = 0;
 #if defined(SCHED_MLFQ)
         p->mlfq_level = 0;
         p->mlfq_ticks = 0;
@@ -1939,6 +2147,8 @@ void procdump(void)
   static char *states[] = {
       [UNUSED] "unused",
       [SLEEPING] "sleep ",
+      [SUSPENDED_SLEEP] "susps",
+      [SUSPENDED] "susp  ",
       [RUNNABLE] "runble",
       [RUNNING] "run   ",
       [ZOMBIE] "zombie"};
@@ -1976,6 +2186,22 @@ int cps(void)
       printf("%s \t %d \t SLEEPING \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
 #else
       printf("%s \t %d \t SLEEPING \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
+#endif
+    }
+    else if (p->state == SUSPENDED_SLEEP)
+    {
+#if defined(SCHED_DYNPRIO)
+      printf("%s \t %d \t SUSP_SLEEP \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
+#else
+      printf("%s \t %d \t SUSP_SLEEP \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
+#endif
+    }
+    else if (p->state == SUSPENDED)
+    {
+#if defined(SCHED_DYNPRIO)
+      printf("%s \t %d \t SUSPENDED \t %d\t \t%d\n", p->name, p->pid, p->priority, p->dyn_priority);
+#else
+      printf("%s \t %d \t SUSPENDED \t %d\t \t%d\t \t%d\n", p->name, p->pid, p->priority, p->mlfq_level, p->mlfq_ticks);
 #endif
     }
     else if (p->state == RUNNING) // 正在执行

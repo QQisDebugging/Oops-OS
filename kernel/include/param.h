@@ -15,6 +15,11 @@
 #define FSSIZE 100000             // size of file system in blocks
 #define SWAP_PAGES 512            // swap size in pages (4 blocks per page)
 #define SWAPBLOCKS (SWAP_PAGES * 4)
+#define MIDSCHED_SUSPEND_MINFREE_PAGES 2048
+#define MIDSCHED_RESUME_MINFREE_PAGES 4096
+#define MIDSCHED_SWAPBUF_TRIGGER 128
+#define MIDSCHED_RESUME_FORCE_PAGES 8192
+#define MIDSCHED_HOLD_TICKS 50
 #define MAXPATH 128               // maximum file path name
 #define MQMAX 8                   // 消息队列数量
 #define DMSG_MAX 128              // direct message max size

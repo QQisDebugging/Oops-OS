@@ -154,6 +154,8 @@ UPROGS=\
 	$U/program/_setp\
 	$U/test/_lazytest\
 	$U/test/_swaptest\
+	$U/test/_midschedtest\
+	$U/test/_midschedcmp\
 	$U/test/_mmapswaptest\
 	$U/test/_swapperftest\
 	$U/test/_swapconctest\

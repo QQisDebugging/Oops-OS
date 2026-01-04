@@ -16,8 +16,8 @@ extern struct spinlock tickslock;
 
 #define SWAP_BLOCKS_PER_PAGE (PGSIZE / BSIZE)
 #define SWAP_THRASH_WINDOW 20
-#define SWAP_THRASH_EVENTS 64
-#define SWAP_THRASH_SLEEP 2
+#define SWAP_THRASH_EVENTS 128
+#define SWAP_THRASH_SLEEP 1
 #define SWAP_PBUF_SIZE 64
 
 static struct spinlock swapmap_lock;
@@ -156,10 +156,18 @@ swap_throttle(void)
   swap_events++;
   if (swap_events >= SWAP_THRASH_EVENTS) {
     uint until = now + SWAP_THRASH_SLEEP;
-    while (ticks < until)
-      sleep(&ticks, &tickslock);
-    swap_window_start = ticks;
+    swap_window_start = now;
     swap_events = 0;
+    release(&tickslock);
+    for (;;) {
+      acquire(&tickslock);
+      if (ticks >= until) {
+        release(&tickslock);
+        break;
+      }
+      release(&tickslock);
+    }
+    return;
   }
   release(&tickslock);
 }
@@ -233,6 +241,8 @@ swapout(void)
   if (!swapready)
     return -1;
   if (cur == 0)
+    return -1;
+  if (mycpu()->noff > 0)
     return -1;
 
   struct proc *p = cur;
@@ -310,6 +320,83 @@ advance:
   }
 
   return -1;
+}
+
+int
+swapout_proc(struct proc *p, int max_pages)
+{
+  if (!swapready)
+    return -1;
+  if (p == 0 || p->pagetable == 0)
+    return -1;
+  if (mycpu()->noff > 0)
+    return -1;
+  if (max_pages <= 0)
+    max_pages = 0x7fffffff;
+
+  uint64 sz = PGROUNDUP(p->sz);
+  if (sz == 0)
+    return 0;
+
+  uint64 npages = sz / PGSIZE;
+  uint64 start = PGROUNDDOWN(p->swap_hand);
+  if (start >= sz)
+    start = 0;
+
+  uint64 va = start;
+  uint64 scanned = 0;
+  uint64 max_scans = npages * 2;
+  int swapped = 0;
+
+  while (scanned < max_scans && swapped < max_pages) {
+    pte_t *pte = walk(p->pagetable, va, 0);
+    if (pte && (*pte & PTE_V) && (*pte & PTE_U)) {
+      if (*pte & PTE_A) {
+        *pte &= ~PTE_A;
+        sfence_vma();
+      } else {
+        uint64 pa = PTE2PA(*pte);
+        if (krefcnt((void *)pa) == 1) {
+          struct vm_area *vma = vma_lookup(p, va);
+          if (vma && vma->flags == MAP_SHARED) {
+            if (vma_writeback(vma, va, pa) < 0)
+              goto advance;
+
+            *pte = 0;
+            sfence_vma();
+            kfree((void *)pa);
+            swapped++;
+            swap_throttle();
+            goto advance;
+          }
+
+          int slot = swap_alloc();
+          if (slot < 0)
+            break;
+
+          swap_write(slot, (char *)pa);
+
+          uint flags = PTE_FLAGS(*pte);
+          flags = (flags & ~PTE_V) | PTE_S;
+          *pte = SWAP2PTE(slot) | flags;
+          sfence_vma();
+
+          swap_pbuf_put(slot, pa);
+          swapped++;
+          swap_throttle();
+        }
+      }
+    }
+
+advance:
+    va += PGSIZE;
+    if (va >= sz)
+      va = 0;
+    scanned++;
+  }
+
+  p->swap_hand = va;
+  return swapped;
 }
 
 int

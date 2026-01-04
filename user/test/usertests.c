@@ -2811,15 +2811,23 @@ void pitest_run(char *s)
 
 void swaptest_run(char *s)
 {
-  char *argv[] = {"swaptest", 0};
+  char *argv[] = {"swaptest", "-q", 0};
   exec("swaptest", argv);
   printf("%s: exec swaptest failed\n", s);
   exit(1);
 }
 
+void midschedtest_run(char *s)
+{
+  char *argv[] = {"midschedtest", "-q", 0};
+  exec("midschedtest", argv);
+  printf("%s: exec midschedtest failed\n", s);
+  exit(1);
+}
+
 void mmapswaptest_run(char *s)
 {
-  char *argv[] = {"mmapswaptest", 0};
+  char *argv[] = {"mmapswaptest", "-q", 0};
   exec("mmapswaptest", argv);
   printf("%s: exec mmapswaptest failed\n", s);
   exit(1);
@@ -3014,6 +3022,7 @@ int main(int argc, char *argv[])
       {cstest_run, "cstest"},
       {monitortest_run, "monitortest"},
       {pitest_run, "pitest"},
+      // {midschedtest_run, "midschedtest"},  // 耗时太长，单独测试
       {0, 0},
   };
 
