@@ -72,7 +72,6 @@ entry("cond_wait");
 entry("cond_signal");
 entry("cond_broadcast");
 entry("symlink");
-entry("mkf");
 entry("shmgetat"); # 共享内存
 entry("shmrefcount");#  共享内存
 entry("sigalarm");

@@ -180,7 +180,6 @@ UPROGS=\
 	$U/program/_symlink\
 	$U/program/_readfile\
 	$U/program/_writefile\
-	$U/program/_mkf\
 	$U/test/_sharemm\
 	$U/test/_alarmtest\
 	$U/test/_nettest\

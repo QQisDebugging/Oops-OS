@@ -1436,27 +1436,6 @@ sys_symlink(void) {
   return 0;
 }
 
-uint64 sys_mkf(void) {
-    char path[MAXPATH];  // 用于存储文件路径
-    struct inode *ip;    // 用于返回创建的 inode
-    // 获取系统调用参数：路径
-    if (argstr(0, path, MAXPATH) < 0) {          
-        return -1;  // 如果参数获取失败，返回错误
-    }
-    // 调用 create 函数创建文件
-    begin_op();
-    ip = create(path, T_FILE, 0, 0);
-    
-    // 如果文件创建失败，则返回错误
-    if (ip == 0)
-    {
-      end_op();
-      return -1;
-    }
-    // 如果创建成功，返回 inode 的编号
-    end_op();
-    return ip->inum;
-}
 int sys_connect(void)
 {
   struct file *f;
@@ -1618,34 +1597,6 @@ sys_getcwd(void)
     return -1;
   // printf("[sys_getcwd] cwd: %s, cwd_len: %d, addr: %p\n", mp, strlen(mp) + 1, addr);
   return addr;
-}
-
-uint64 sys_dup_new(void) // 复制文件描述符到指定的新文件描述符的系统调用
-{
-    struct file *f; // 文件指针
-    int newfd; // 新的文件描述符
-
-    // 获取文件指针
-    if(argfd(0, 0, &f) < 0) {
-        return -1;
-    }
-
-    // 获取新文件描述符
-    if(argint(1, &newfd) < 0 || newfd < 0 || newfd >= NOFILE) {
-        return -1;
-    }
-
-    // 如果新文件描述符已占用，则先关闭它
-    if (myproc()->ofile[newfd] != ((void*)0)) {
-        fileclose(myproc()->ofile[newfd]);  // 关闭已占用的文件描述符
-    }
-
-    // 将新文件描述符指向文件指针
-    if ((newfd = fdalloc(f)) < 0)
-      return -1;
-    filedup(f);  // 增加文件指针的引用计数
-
-    return newfd; // 返回新的文件描述符
 }
 
 // flock - 对文件加锁/解锁

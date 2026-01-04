@@ -121,7 +121,6 @@ int cond_free(int, int);
 int cond_wait(int, int);
 int cond_signal(int, int);
 int cond_broadcast(int, int);
-int mkf(char *);
 // 共享内存
 uint64 shmgetat(int, int);
 int shmrefcount(int);

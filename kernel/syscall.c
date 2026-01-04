@@ -168,14 +168,12 @@ extern uint64 sys_semset_p_multi(void);
 extern uint64 sys_dmsgsend(void);
 extern uint64 sys_dmsgrcv(void);
 extern uint64 sys_symlink(void);
-extern uint64 sys_mkf(void);
 extern uint64 sys_shmgetat(void); // 共享内存
 extern uint64 sys_shmrefcount(void); // 共享内存
 extern uint64 sys_mqget(void);
 extern uint64 sys_msgsnd(void);
 extern uint64 sys_msgrcv(void);
 extern uint64 sys_getcwd(void);
-extern uint64 sys_dup_new(void);
 extern uint64 sys_sigalarm(void);
 extern uint64 sys_sigreturn(void);
 extern uint64 sys_connect(void);
@@ -268,11 +266,9 @@ static uint64 (*syscalls[])(void) = {
     [SYS_dmsgsend] sys_dmsgsend,
     [SYS_dmsgrcv] sys_dmsgrcv,
     [SYS_symlink] sys_symlink,
-    [SYS_mkf] sys_mkf,
     [SYS_shmgetat] sys_shmgetat,
     [SYS_shmrefcount] sys_shmrefcount,
     [SYS_getcwd] sys_getcwd,
-    [SYS_dup_new] sys_dup_new,
     [SYS_sigalarm] sys_sigalarm,
     [SYS_sigreturn] sys_sigreturn,
     [SYS_connect] sys_connect,
@@ -369,11 +365,9 @@ static char *syscall_names[] = {
     [SYS_dmsgsend] "sys_dmsgsend",
     [SYS_dmsgrcv] "sys_dmsgrcv",
     [SYS_symlink] "sys_symlink",
-    [SYS_mkf] "sys_mkf",
     [SYS_shmgetat] "sys_shmgetat",
     [SYS_shmrefcount] "sys_shmrefcount",
     [SYS_getcwd] "sys_getcwd",
-    [SYS_dup_new] "sys_dup_new",
     [SYS_sigalarm] "sys_sigalarm",
     [SYS_sigreturn] "sys_sigreturn",
     [SYS_connect] "sys_connect",
