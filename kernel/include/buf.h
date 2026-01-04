@@ -1,3 +1,5 @@
+#include "fs.h"  // for BSIZE
+
 struct buf {
   int valid;   // has data been read from disk?
   int disk;    // device in use by disk driver?

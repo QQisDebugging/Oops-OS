@@ -127,6 +127,7 @@ extern uint64 sys_exec(void);
 extern uint64 sys_exit(void);
 extern uint64 sys_fork(void);
 extern uint64 sys_fstat(void);
+extern uint64 sys_fsinfo(void);
 extern uint64 sys_getpid(void);
 extern uint64 sys_gettid(void);
 extern uint64 sys_gettgid(void);
@@ -167,14 +168,12 @@ extern uint64 sys_semset_p_multi(void);
 extern uint64 sys_dmsgsend(void);
 extern uint64 sys_dmsgrcv(void);
 extern uint64 sys_symlink(void);
-extern uint64 sys_mkf(void);
 extern uint64 sys_shmgetat(void); // 共享内存
 extern uint64 sys_shmrefcount(void); // 共享内存
 extern uint64 sys_mqget(void);
 extern uint64 sys_msgsnd(void);
 extern uint64 sys_msgrcv(void);
 extern uint64 sys_getcwd(void);
-extern uint64 sys_dup_new(void);
 extern uint64 sys_sigalarm(void);
 extern uint64 sys_sigreturn(void);
 extern uint64 sys_connect(void);
@@ -195,6 +194,7 @@ extern uint64 sys_cond_signal(void);
 extern uint64 sys_cond_broadcast(void);
 extern uint64 sys_fallocate(void);
 extern uint64 sys_fclone(void);
+extern uint64 sys_fclonerange(void);
 extern uint64 sys_lseek(void);
 extern uint64 sys_truncate(void);
 extern uint64 sys_ftruncate(void);
@@ -214,6 +214,15 @@ extern uint64 sys_getxattr(void);
 extern uint64 sys_listxattr(void);
 extern uint64 sys_removexattr(void);
 extern uint64 sys_midsched(void);
+extern uint64 sys_fclonerange(void);
+extern uint64 sys_pread(void);
+extern uint64 sys_pwrite(void);
+extern uint64 sys_dup2(void);
+extern uint64 sys_readv(void);
+extern uint64 sys_writev(void);
+extern uint64 sys_access(void);
+extern uint64 sys_mount(void);
+extern uint64 sys_umount(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -223,6 +232,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_kill] sys_kill,
     [SYS_exec] sys_exec,
     [SYS_fstat] sys_fstat,
+    [SYS_fsinfo] sys_fsinfo,
     [SYS_chdir] sys_chdir,
     [SYS_dup] sys_dup,
     [SYS_getpid] sys_getpid,
@@ -262,11 +272,9 @@ static uint64 (*syscalls[])(void) = {
     [SYS_dmsgsend] sys_dmsgsend,
     [SYS_dmsgrcv] sys_dmsgrcv,
     [SYS_symlink] sys_symlink,
-    [SYS_mkf] sys_mkf,
     [SYS_shmgetat] sys_shmgetat,
     [SYS_shmrefcount] sys_shmrefcount,
     [SYS_getcwd] sys_getcwd,
-    [SYS_dup_new] sys_dup_new,
     [SYS_sigalarm] sys_sigalarm,
     [SYS_sigreturn] sys_sigreturn,
     [SYS_connect] sys_connect,
@@ -290,6 +298,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_cond_broadcast] sys_cond_broadcast,
     [SYS_fallocate] sys_fallocate,
     [SYS_fclone] sys_fclone,
+    [SYS_fclonerange] sys_fclonerange,
     [SYS_lseek] sys_lseek,
     [SYS_truncate] sys_truncate,
     [SYS_ftruncate] sys_ftruncate,
@@ -309,6 +318,14 @@ static uint64 (*syscalls[])(void) = {
     [SYS_listxattr] sys_listxattr,
     [SYS_removexattr] sys_removexattr,
     [SYS_midsched] sys_midsched,
+    [SYS_pread] sys_pread,
+    [SYS_pwrite] sys_pwrite,
+    [SYS_dup2] sys_dup2,
+    [SYS_readv] sys_readv,
+    [SYS_writev] sys_writev,
+    [SYS_access] sys_access,
+    [SYS_mount] sys_mount,
+    [SYS_umount] sys_umount,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -319,6 +336,7 @@ static char *syscall_names[] = {
     [SYS_kill] "kill",
     [SYS_exec] "exec",
     [SYS_fstat] "fstat",
+    [SYS_fsinfo] "sys_fsinfo",
     [SYS_chdir] "chdir",
     [SYS_dup] "dup",
     [SYS_getpid] "getpid",
@@ -358,11 +376,9 @@ static char *syscall_names[] = {
     [SYS_dmsgsend] "sys_dmsgsend",
     [SYS_dmsgrcv] "sys_dmsgrcv",
     [SYS_symlink] "sys_symlink",
-    [SYS_mkf] "sys_mkf",
     [SYS_shmgetat] "sys_shmgetat",
     [SYS_shmrefcount] "sys_shmrefcount",
     [SYS_getcwd] "sys_getcwd",
-    [SYS_dup_new] "sys_dup_new",
     [SYS_sigalarm] "sys_sigalarm",
     [SYS_sigreturn] "sys_sigreturn",
     [SYS_connect] "sys_connect",
@@ -386,6 +402,7 @@ static char *syscall_names[] = {
     [SYS_cond_broadcast] "sys_cond_broadcast",
     [SYS_fallocate] "sys_fallocate",
     [SYS_fclone] "sys_fclone",
+    [SYS_fclonerange] "sys_fclonerange",
     [SYS_lseek] "sys_lseek",
     [SYS_truncate] "sys_truncate",
     [SYS_ftruncate] "sys_ftruncate",
@@ -405,6 +422,14 @@ static char *syscall_names[] = {
     [SYS_listxattr] "sys_listxattr",
     [SYS_removexattr] "sys_removexattr",
     [SYS_midsched] "sys_midsched",
+    [SYS_pread] "sys_pread",
+    [SYS_pwrite] "sys_pwrite",
+    [SYS_dup2] "sys_dup2",
+    [SYS_readv] "sys_readv",
+    [SYS_writev] "sys_writev",
+    [SYS_access] "sys_access",
+    [SYS_mount] "sys_mount",
+    [SYS_umount] "sys_umount",
 };
 void syscall(void)
 {

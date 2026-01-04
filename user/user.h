@@ -1,5 +1,6 @@
 ﻿#include "param.h"
 struct stat;
+struct fsinfo;
 struct rtcdate;
 struct sysinfo;
 // system calls
@@ -29,6 +30,7 @@ int uptime(void);
 int cps(void);
 int trace(int);
 int sysinfo(struct sysinfo *);
+int fsinfo(struct fsinfo *);
 int setPriority(int pid, int priority);
 int rt_set(int pid, int period, int runtime, int deadline);
 int rt_clear(int pid);
@@ -53,6 +55,7 @@ int geti(const char*,uint64);
 int recoveri(uint,uint64);
 int fallocate(int fd, int offset, int len, int flags);
 int fclone(const char *, const char *);
+int fclonerange(int srcfd, int srcoff, int dstfd, int dstoff, int len);
 int lseek(int fd, int offset, int whence);
 int truncate(const char *path, int length);
 int ftruncate(int fd, int length);
@@ -65,6 +68,26 @@ int setxattr(const char *path, const char *name, const void *value, int size);
 int getxattr(const char *path, const char *name, void *value, int size);
 int listxattr(const char *path, char *list, int size);
 int removexattr(const char *path, const char *name);
+int pread(int fd, void *buf, int count, int offset);
+int pwrite(int fd, const void *buf, int count, int offset);
+int dup2(int oldfd, int newfd);
+int access(const char *path, int mode);
+int mount(const char *source, const char *target, const char *fstype);
+int umount(const char *target);
+
+// iovec 结构体用于分散/聚集 I/O
+struct iovec {
+  void  *iov_base;  // 缓冲区起始地址
+  int    iov_len;   // 缓冲区长度
+};
+int readv(int fd, struct iovec *iov, int iovcnt);
+int writev(int fd, struct iovec *iov, int iovcnt);
+
+// access 模式标志
+#define F_OK 0  // 测试文件是否存在
+#define R_OK 4  // 测试读权限
+#define W_OK 2  // 测试写权限
+#define X_OK 1  // 测试执行权限
 
 // fallocate flags
 #define FALLOC_KEEP_SIZE     0x001
@@ -103,7 +126,6 @@ int cond_free(int, int);
 int cond_wait(int, int);
 int cond_signal(int, int);
 int cond_broadcast(int, int);
-int mkf(char *);
 // 共享内存
 uint64 shmgetat(int, int);
 int shmrefcount(int);

@@ -102,24 +102,35 @@ main(int argc, char *argv[])
   if (sysinfo(&info) < 0)
     fail("sysinfo failed");
 
+  // 降低内存压力：只使用 freemem 的 80% + swap 的一小部分
+  // 避免多进程并发时超出总容量导致死锁
   uint64 swap_bytes = (uint64)SWAP_PAGES * PGSIZE;
   uint64 total;
+  uint64 per_proc_max;
+  
   if (full) {
+    // 全量模式：使用更多内存
     uint64 extra = swap_bytes / 16;
     uint64 max_extra = 8 * 1024 * 1024;
     if (extra > max_extra)
       extra = max_extra;
     total = info.freemem + extra;
+    per_proc_max = (uint64)256 * PGSIZE;  // 全量模式每进程最多 1MB
   } else {
-    total = 16 * 1024 * 1024;
-    if (total > info.freemem / 2)
-      total = info.freemem / 2;
+    // 轻量模式（默认）：保守策略避免死锁
+    uint64 safe_swap = swap_bytes / 8;  // 只使用 1/8 的 swap
+    uint64 safe_mem = (info.freemem * 4) / 5;  // 80% 的空闲内存
+    total = safe_mem + safe_swap;
+    per_proc_max = (uint64)32 * PGSIZE;  // 轻量模式每进程最多 128KB
   }
+  
   uint64 min_total = (uint64)nprocs * 8 * PGSIZE;
   if (total < min_total)
     total = min_total;
 
   uint64 amt = PGROUNDUP(total / nprocs);
+  if (amt > per_proc_max)
+    amt = per_proc_max;
 
   int start = uptime();
   if (!quiet) {

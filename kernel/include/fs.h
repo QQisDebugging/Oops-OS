@@ -1,3 +1,6 @@
+#ifndef __FS_H__
+#define __FS_H__
+
 // On-disk file system format.
 // Both the kernel and user programs use this header file.
 
@@ -67,3 +70,5 @@ struct dirent
   ushort inum;       // 文件或目录的 inode 编号
   char name[DIRSIZ]; //  文件或目录的名称（以 null 结尾的字符串）
 };
+
+#endif  // __FS_H__

@@ -16,6 +16,7 @@
 #include "file.h"
 #include "fcntl.h"
 #include "buf.h"
+#include "fsinfo.h"
 
 static struct inode *create(char *path, char type, short major, short minor);
 static struct inode *create_exclusive(char *path, char type, short major, short minor);
@@ -260,6 +261,13 @@ sys_fallocate(void)
   if (f->writable == 0)
     return -1;
 
+  if (len == 0)
+    return 0;
+  if ((uint64)offset + (uint64)len < (uint64)offset)
+    return -1;
+  if ((uint64)offset + (uint64)len > (uint64)MAXFILE * BSIZE)
+    return -1;
+
   // PUNCH_HOLE mode: release blocks in [offset, offset+len).
   if (flags & FALLOC_FL_PUNCH_HOLE) {
     uint startb = offset / BSIZE;
@@ -290,14 +298,7 @@ sys_fallocate(void)
 
   // Pre-allocation mode.
   uint target = (uint)(offset + len);
-
-  ilock(f->ip);
-  uint cur_size = f->ip->size;
-  iunlock(f->ip);
-  if (target <= cur_size)
-    return 0;
-
-  uint startb = (cur_size + BSIZE - 1) / BSIZE;
+  uint startb = offset / BSIZE;
   uint endb = (target + BSIZE - 1) / BSIZE;
   uint maxblocks = (MAXOPBLOCKS - 1 - 1 - 2) / 2;
   if (maxblocks < 1)
@@ -312,15 +313,6 @@ sys_fallocate(void)
 
     begin_op();
     ilock(f->ip);
-    uint cur_start = (f->ip->size + BSIZE - 1) / BSIZE;
-    if (cur_start > b)
-      b = cur_start;
-    if (b >= endb)
-    {
-      iunlock(f->ip);
-      end_op();
-      break;
-    }
     if (chunk > endb - b)
       chunk = endb - b;
     uint newsize = target;
@@ -386,6 +378,93 @@ sys_fclone(void)
 }
 
 uint64
+sys_fclonerange(void)
+{
+  struct file *fsrc;
+  struct file *fdst;
+  int src_off;
+  int dst_off;
+  int len;
+
+  if (argfd(0, 0, &fsrc) < 0 || argint(1, &src_off) < 0 ||
+      argfd(2, 0, &fdst) < 0 || argint(3, &dst_off) < 0 ||
+      argint(4, &len) < 0)
+    return -1;
+
+  if (src_off < 0 || dst_off < 0 || len < 0)
+    return -1;
+  if (len == 0)
+    return 0;
+  if ((src_off | dst_off | len) & (BSIZE - 1))
+    return -1;
+  if ((uint64)src_off + (uint64)len < (uint64)src_off)
+    return -1;
+  if ((uint64)dst_off + (uint64)len < (uint64)dst_off)
+    return -1;
+
+  if (fsrc->type != FD_INODE || fdst->type != FD_INODE)
+    return -1;
+  if (fsrc->ip->type != T_FILE || fdst->ip->type != T_FILE)
+    return -1;
+  if (fsrc->readable == 0)
+    return -1;
+  if (fdst->writable == 0)
+    return -1;
+  if (fsrc->ip == fdst->ip)
+    return -1;
+  if (fsrc->ip->dev != fdst->ip->dev)
+    return -1;
+  if ((uint64)dst_off + (uint64)len > (uint64)MAXFILE * BSIZE)
+    return -1;
+
+  ilock(fsrc->ip);
+  uint src_size = fsrc->ip->size;
+  iunlock(fsrc->ip);
+  if ((uint64)src_off + (uint64)len > src_size)
+    return -1;
+
+  uint nblocks = len / BSIZE;
+  uint maxblocks = (MAXOPBLOCKS - 1 - 2) / 2;
+  if (maxblocks < 1)
+    maxblocks = 1;
+
+  for (uint b = 0; b < nblocks; )
+  {
+    uint chunk = nblocks - b;
+    if (chunk > maxblocks)
+      chunk = maxblocks;
+
+    begin_op();
+    if (fsrc->ip->inum < fdst->ip->inum)
+    {
+      ilock(fsrc->ip);
+      ilock(fdst->ip);
+    }
+    else
+    {
+      ilock(fdst->ip);
+      ilock(fsrc->ip);
+    }
+
+    int r = iclone_range(fsrc->ip, fdst->ip,
+                         src_off + b * BSIZE,
+                         dst_off + b * BSIZE,
+                         chunk * BSIZE);
+
+    iunlock(fsrc->ip);
+    iunlock(fdst->ip);
+    end_op();
+
+    if (r < 0)
+      return -1;
+
+    b += chunk;
+  }
+
+  return 0;
+}
+
+uint64
 sys_close(void)
 {
   int fd;
@@ -407,6 +486,20 @@ sys_fstat(void)
   if (argfd(0, 0, &f) < 0 || argaddr(1, &st) < 0)
     return -1;
   return filestat(f, st);
+}
+
+uint64
+sys_fsinfo(void)
+{
+  uint64 uaddr;
+  struct fsinfo info;
+
+  if (argaddr(0, &uaddr) < 0)
+    return -1;
+  fsinfo(&info);
+  if (copyout(myproc()->pagetable, uaddr, (char *)&info, sizeof(info)) < 0)
+    return -1;
+  return 0;
 }
 
 // Create the path new as a link to the same inode as old.
@@ -1343,27 +1436,6 @@ sys_symlink(void) {
   return 0;
 }
 
-uint64 sys_mkf(void) {
-    char path[MAXPATH];  // 用于存储文件路径
-    struct inode *ip;    // 用于返回创建的 inode
-    // 获取系统调用参数：路径
-    if (argstr(0, path, MAXPATH) < 0) {          
-        return -1;  // 如果参数获取失败，返回错误
-    }
-    // 调用 create 函数创建文件
-    begin_op();
-    ip = create(path, T_FILE, 0, 0);
-    
-    // 如果文件创建失败，则返回错误
-    if (ip == 0)
-    {
-      end_op();
-      return -1;
-    }
-    // 如果创建成功，返回 inode 的编号
-    end_op();
-    return ip->inum;
-}
 int sys_connect(void)
 {
   struct file *f;
@@ -1525,34 +1597,6 @@ sys_getcwd(void)
     return -1;
   // printf("[sys_getcwd] cwd: %s, cwd_len: %d, addr: %p\n", mp, strlen(mp) + 1, addr);
   return addr;
-}
-
-uint64 sys_dup_new(void) // 复制文件描述符到指定的新文件描述符的系统调用
-{
-    struct file *f; // 文件指针
-    int newfd; // 新的文件描述符
-
-    // 获取文件指针
-    if(argfd(0, 0, &f) < 0) {
-        return -1;
-    }
-
-    // 获取新文件描述符
-    if(argint(1, &newfd) < 0 || newfd < 0 || newfd >= NOFILE) {
-        return -1;
-    }
-
-    // 如果新文件描述符已占用，则先关闭它
-    if (myproc()->ofile[newfd] != ((void*)0)) {
-        fileclose(myproc()->ofile[newfd]);  // 关闭已占用的文件描述符
-    }
-
-    // 将新文件描述符指向文件指针
-    if ((newfd = fdalloc(f)) < 0)
-      return -1;
-    filedup(f);  // 增加文件指针的引用计数
-
-    return newfd; // 返回新的文件描述符
 }
 
 // flock - 对文件加锁/解锁
@@ -1727,4 +1771,356 @@ sys_removexattr(void)
   iput(ip);
   end_op();
   return ret;
+}
+
+// pread - 在指定偏移位置读取文件，不修改文件偏移量
+// 参数: fd - 文件描述符
+//       buf - 用户缓冲区地址
+//       count - 读取字节数
+//       offset - 读取起始偏移
+// 返回: 成功返回读取字节数，失败返回 -1
+uint64
+sys_pread(void)
+{
+  struct file *f;
+  uint64 buf;
+  int count;
+  int offset;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &buf) < 0 ||
+     argint(2, &count) < 0 || argint(3, &offset) < 0)
+    return -1;
+
+  if(count < 0 || offset < 0)
+    return -1;
+
+  // 只支持普通文件
+  if(f->type != FD_INODE)
+    return -1;
+  if(f->readable == 0)
+    return -1;
+
+  struct inode *ip = f->ip;
+  int r;
+
+  ilock(ip);
+
+  // 检查权限
+  if((ip->mode & 1) == 0) {
+    iunlock(ip);
+    return -1;
+  }
+
+  // 在指定偏移位置读取，不修改 f->off
+  r = readi(ip, 1, buf, offset, count);
+
+  iunlock(ip);
+  return r;
+}
+
+// pwrite - 在指定偏移位置写入文件，不修改文件偏移量
+// 参数: fd - 文件描述符
+//       buf - 用户缓冲区地址
+//       count - 写入字节数
+//       offset - 写入起始偏移
+// 返回: 成功返回写入字节数，失败返回 -1
+uint64
+sys_pwrite(void)
+{
+  struct file *f;
+  uint64 buf;
+  int count;
+  int offset;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &buf) < 0 ||
+     argint(2, &count) < 0 || argint(3, &offset) < 0)
+    return -1;
+
+  if(count < 0 || offset < 0)
+    return -1;
+
+  // 只支持普通文件
+  if(f->type != FD_INODE)
+    return -1;
+  if(f->writable == 0)
+    return -1;
+
+  struct inode *ip = f->ip;
+  int r, total = 0;
+
+  // 分批写入，避免超过日志事务大小
+  int max = ((MAXOPBLOCKS - 1 - 1 - 2) / 2) * BSIZE;
+  int cur_offset = offset;
+
+  while(total < count) {
+    int n1 = count - total;
+    if(n1 > max)
+      n1 = max;
+
+    begin_op();
+    ilock(ip);
+
+    // 如果写入位置超过当前文件大小，需要先扩展文件
+    uint end_pos = cur_offset + n1;
+    if(end_pos > ip->size) {
+      // 扩展文件大小
+      ip->size = end_pos;
+      iupdate(ip);
+    }
+
+    // 在指定偏移位置写入，不修改 f->off
+    r = writei(ip, 1, buf + total, cur_offset, n1);
+
+    iunlock(ip);
+    end_op();
+
+    if(r < 0)
+      break;
+    if(r != n1) {
+      total += r;
+      break;
+    }
+
+    total += r;
+    cur_offset += r;
+  }
+
+  return total > 0 ? total : -1;
+}
+
+// dup2 - 复制文件描述符到指定编号
+// 如果 newfd 已打开，先关闭它
+// 返回: 成功返回 newfd，失败返回 -1
+uint64
+sys_dup2(void)
+{
+  struct file *f;
+  int oldfd, newfd;
+  struct proc *p = myproc();
+
+  if(argint(0, &oldfd) < 0 || argint(1, &newfd) < 0)
+    return -1;
+
+  // 验证 oldfd
+  if(oldfd < 0 || oldfd >= NOFILE || p->ofile[oldfd] == 0)
+    return -1;
+
+  // 验证 newfd 范围
+  if(newfd < 0 || newfd >= NOFILE)
+    return -1;
+
+  // 如果 oldfd == newfd，直接返回 newfd
+  if(oldfd == newfd)
+    return newfd;
+
+  f = p->ofile[oldfd];
+
+  // 如果 newfd 已打开，先关闭它
+  if(p->ofile[newfd]) {
+    fileclose(p->ofile[newfd]);
+    p->ofile[newfd] = 0;
+  }
+
+  // 复制文件描述符
+  filedup(f);
+  p->ofile[newfd] = f;
+
+  return newfd;
+}
+
+// iovec 结构体（用户态定义，内核需要匹配）
+struct iovec {
+  uint64 iov_base;  // 缓冲区地址
+  int    iov_len;   // 缓冲区长度
+};
+
+#define UIO_MAXIOV 16  // 最大 iovec 数量
+
+// readv - 分散读取，将数据读入多个缓冲区
+// 返回: 成功返回读取的总字节数，失败返回 -1
+uint64
+sys_readv(void)
+{
+  struct file *f;
+  uint64 uiov;
+  int iovcnt;
+  struct iovec iov[UIO_MAXIOV];
+  int total = 0;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &uiov) < 0 || argint(2, &iovcnt) < 0)
+    return -1;
+
+  if(iovcnt <= 0 || iovcnt > UIO_MAXIOV)
+    return -1;
+
+  // 从用户空间复制 iovec 数组
+  struct proc *p = myproc();
+  if(copyin(p->pagetable, (char*)iov, uiov, sizeof(struct iovec) * iovcnt) < 0)
+    return -1;
+
+  // 验证所有 iovec
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len < 0)
+      return -1;
+  }
+
+  // 逐个缓冲区读取
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len == 0)
+      continue;
+
+    int r = fileread(f, iov[i].iov_base, iov[i].iov_len);
+    if(r < 0) {
+      if(total > 0)
+        return total;
+      return -1;
+    }
+    total += r;
+
+    // 如果读取不足，说明到达文件末尾
+    if(r < iov[i].iov_len)
+      break;
+  }
+
+  return total;
+}
+
+// writev - 聚集写入，从多个缓冲区写入数据
+// 返回: 成功返回写入的总字节数，失败返回 -1
+uint64
+sys_writev(void)
+{
+  struct file *f;
+  uint64 uiov;
+  int iovcnt;
+  struct iovec iov[UIO_MAXIOV];
+  int total = 0;
+
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &uiov) < 0 || argint(2, &iovcnt) < 0)
+    return -1;
+
+  if(iovcnt <= 0 || iovcnt > UIO_MAXIOV)
+    return -1;
+
+  // 从用户空间复制 iovec 数组
+  struct proc *p = myproc();
+  if(copyin(p->pagetable, (char*)iov, uiov, sizeof(struct iovec) * iovcnt) < 0)
+    return -1;
+
+  // 验证所有 iovec
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len < 0)
+      return -1;
+  }
+
+  // 逐个缓冲区写入
+  for(int i = 0; i < iovcnt; i++) {
+    if(iov[i].iov_len == 0)
+      continue;
+
+    int r = filewrite(f, iov[i].iov_base, iov[i].iov_len);
+    if(r < 0) {
+      if(total > 0)
+        return total;
+      return -1;
+    }
+    total += r;
+
+    // 如果写入不足，返回已写入的总数
+    if(r < iov[i].iov_len)
+      break;
+  }
+
+  return total;
+}
+
+// access 模式标志
+#define F_OK 0  // 测试文件是否存在
+#define R_OK 4  // 测试读权限
+#define W_OK 2  // 测试写权限
+#define X_OK 1  // 测试执行权限
+
+// access - 检查文件访问权限
+// 返回: 成功（有权限）返回 0，失败返回 -1
+uint64
+sys_access(void)
+{
+  char path[MAXPATH];
+  int mode;
+  struct inode *ip;
+
+  if(argstr(0, path, MAXPATH) < 0 || argint(1, &mode) < 0)
+    return -1;
+
+  begin_op();
+  if((ip = namei(path)) == 0) {
+    end_op();
+    return -1;  // 文件不存在
+  }
+
+  ilock(ip);
+
+  int result = 0;
+
+  // F_OK: 只检查文件是否存在
+  if(mode == F_OK) {
+    result = 0;  // 文件存在
+  } else {
+    // 检查权限位
+    // mode 字段: rwx (4=读, 2=写, 1=执行)
+    // ip->mode: rwx 格式
+    if((mode & R_OK) && !(ip->mode & 4))
+      result = -1;
+    if((mode & W_OK) && !(ip->mode & 2))
+      result = -1;
+    if((mode & X_OK) && !(ip->mode & 1))
+      result = -1;
+  }
+
+  iunlockput(ip);
+  end_op();
+
+  return result;
+}
+
+// mount - 挂载文件系统
+// 参数: source - 设备路径
+//       target - 挂载点路径
+//       fstype - 文件系统类型字符串 ("xv6", "fat")
+// 返回: 成功返回 0，失败返回 -1
+uint64
+sys_mount(void)
+{
+  char source[MAXPATH], target[MAXPATH], fstype[16];
+  
+  if(argstr(0, source, MAXPATH) < 0 ||
+     argstr(1, target, MAXPATH) < 0 ||
+     argstr(2, fstype, 16) < 0)
+    return -1;
+  
+  // 解析文件系统类型
+  int fs_type;
+  if(strncmp(fstype, "xv6", 3) == 0)
+    fs_type = 0;  // FS_TYPE_XV6
+  else if(strncmp(fstype, "fat", 3) == 0)
+    fs_type = 1;  // FS_TYPE_FAT
+  else
+    return -1;
+  
+  // 调用 VFS 挂载
+  return vfs_mount(source, target, fs_type);
+}
+
+// umount - 卸载文件系统
+// 参数: target - 挂载点路径
+// 返回: 成功返回 0，失败返回 -1
+uint64
+sys_umount(void)
+{
+  char target[MAXPATH];
+  
+  if(argstr(0, target, MAXPATH) < 0)
+    return -1;
+  
+  return vfs_umount(target);
 }

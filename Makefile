@@ -26,6 +26,8 @@ OBJS = \
   $K/filesystem/xattr.o \
   $K/lock/sleeplock.o \
   $K/filesystem/file.o \
+  $K/filesystem/vfs.o \
+  $K/filesystem/fat.o \
   $K/proc/pipe.o \
   $K/proc/exec.o \
   $K/sysfile.o \
@@ -139,6 +141,7 @@ UPROGS=\
 	$U/program/_kill\
 	$U/program/_ln\
 	$U/program/_ls\
+	$U/program/_df\
 	$U/program/_mkdir\
 	$U/program/_rm\
 	$U/program/_sh\
@@ -178,11 +181,11 @@ UPROGS=\
 	$U/test/_bigfiletest\
 	$U/test/_fallocatetest\
 	$U/test/_fclonetest\
+	$U/test/_fclonerangetest\
 	$U/program/_bigbss\
 	$U/program/_symlink\
 	$U/program/_readfile\
 	$U/program/_writefile\
-	$U/program/_mkf\
 	$U/test/_sharemm\
 	$U/test/_alarmtest\
 	$U/test/_nettest\
@@ -216,6 +219,12 @@ UPROGS=\
 	$U/test/_flocktest\
 	$U/test/_fsynctest\
 	$U/test/_xattrtest\
+	$U/test/_fsinfotest\
+	$U/test/_preadwritetest\
+	$U/test/_dup2test\
+	$U/test/_readvwritevtest\
+	$U/test/_accesstest\
+	$U/program/_vfstest\
 	$U/program/_statistics
 
 

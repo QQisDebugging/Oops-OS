@@ -2897,6 +2897,14 @@ void fclonetest_run(char *s)
   exit(1);
 }
 
+void fclonerangetest_run(char *s)
+{
+  char *argv[] = {"fclonerangetest", 0};
+  exec("fclonerangetest", argv);
+  printf("%s: exec fclonerangetest failed\n", s);
+  exit(1);
+}
+
 void lseektest_run(char *s)
 {
   char *argv[] = {"lseektest", 0};
@@ -2958,6 +2966,46 @@ void xattrtest_run(char *s)
   char *argv[] = {"xattrtest", 0};
   exec("xattrtest", argv);
   printf("%s: exec xattrtest failed\n", s);
+  exit(1);
+}
+
+void fsinfotest_run(char *s)
+{
+  char *argv[] = {"fsinfotest", 0};
+  exec("fsinfotest", argv);
+  printf("%s: exec fsinfotest failed\n", s);
+  exit(1);
+}
+
+void preadwritetest_run(char *s)
+{
+  char *argv[] = {"preadwritetest", 0};
+  exec("preadwritetest", argv);
+  printf("%s: exec preadwritetest failed\n", s);
+  exit(1);
+}
+
+void dup2test_run(char *s)
+{
+  char *argv[] = {"dup2test", 0};
+  exec("dup2test", argv);
+  printf("%s: exec dup2test failed\n", s);
+  exit(1);
+}
+
+void readvwritevtest_run(char *s)
+{
+  char *argv[] = {"readvwritevtest", 0};
+  exec("readvwritevtest", argv);
+  printf("%s: exec readvwritevtest failed\n", s);
+  exit(1);
+}
+
+void accesstest_run(char *s)
+{
+  char *argv[] = {"accesstest", 0};
+  exec("accesstest", argv);
+  printf("%s: exec accesstest failed\n", s);
   exit(1);
 }
 
@@ -3055,6 +3103,7 @@ int main(int argc, char *argv[])
       {lseektest_run, "lseektest"},
       {fallocatetest_run, "fallocatetest"},
       {fclonetest_run, "fclonetest"},
+      {fclonerangetest_run, "fclonerangetest"},
       {truncatetest_run, "truncatetest"},
       {renametest_run, "renametest"},
       {deduptest_run, "deduptest"},
@@ -3062,6 +3111,11 @@ int main(int argc, char *argv[])
       {flocktest_run, "flocktest"},
       {fsynctest_run, "fsynctest"},
       {xattrtest_run, "xattrtest"},
+      {fsinfotest_run, "fsinfotest"},
+      {preadwritetest_run, "preadwritetest"},
+      {dup2test_run, "dup2test"},
+      {readvwritevtest_run, "readvwritevtest"},
+      {accesstest_run, "accesstest"},
       {dirfile, "dirfile"},
       {iref, "iref"},
       {forktest, "forktest"},
