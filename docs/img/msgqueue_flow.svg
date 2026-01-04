@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="964pt" height="128pt" viewBox="0.00 0.00 964.00 128.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 124)">
+<title>msgqueue_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-124 959.51,-124 959.51,4 -4,4"/>
+<!-- sender -->
+<g id="node1" class="node">
+<title>sender</title>
+<ellipse fill="#90ee90" stroke="black" cx="40.01" cy="-50" rx="40.01" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="40.01" y="-45.8" font-family="Microsoft YaHei" font-size="14.00">发送进程</text>
+</g>
+<!-- msgsnd -->
+<g id="node2" class="node">
+<title>msgsnd</title>
+<path fill="#e6f3ff" stroke="black" d="M263.35,-68C263.35,-68 129.01,-68 129.01,-68 123.01,-68 117.01,-62 117.01,-56 117.01,-56 117.01,-44 117.01,-44 117.01,-38 123.01,-32 129.01,-32 129.01,-32 263.35,-32 263.35,-32 269.35,-32 275.35,-38 275.35,-44 275.35,-44 275.35,-56 275.35,-56 275.35,-62 269.35,-68 263.35,-68"/>
+<text xml:space="preserve" text-anchor="middle" x="196.18" y="-45.8" font-family="Microsoft YaHei" font-size="14.00">msgsnd(mqid, msg, type)</text>
+</g>
+<!-- sender&#45;&gt;msgsnd -->
+<g id="edge1" class="edge">
+<title>sender-&gt;msgsnd</title>
+<path fill="none" stroke="black" d="M80.31,-50C88.06,-50 96.5,-50 105.15,-50"/>
+<polygon fill="black" stroke="black" points="105.11,-53.5 115.11,-50 105.11,-46.5 105.11,-53.5"/>
+</g>
+<!-- queue -->
+<g id="node3" class="node">
+<title>queue</title>
+<path fill="#dda0dd" stroke="black" d="M428.71,-106.4C428.71,-109.27 409,-111.6 384.74,-111.6 360.48,-111.6 340.78,-109.27 340.78,-106.4 340.78,-106.4 340.78,-59.6 340.78,-59.6 340.78,-56.73 360.48,-54.4 384.74,-54.4 409,-54.4 428.71,-56.73 428.71,-59.6 428.71,-59.6 428.71,-106.4 428.71,-106.4"/>
+<path fill="none" stroke="black" d="M428.71,-106.4C428.71,-103.53 409,-101.2 384.74,-101.2 360.48,-101.2 340.78,-103.53 340.78,-106.4"/>
+<text xml:space="preserve" text-anchor="middle" x="384.74" y="-87.2" font-family="Microsoft YaHei" font-size="14.00">消息队列</text>
+<text xml:space="preserve" text-anchor="middle" x="384.74" y="-70.4" font-family="Microsoft YaHei" font-size="14.00">(按 type 组织)</text>
+</g>
+<!-- msgsnd&#45;&gt;queue -->
+<g id="edge2" class="edge">
+<title>msgsnd-&gt;queue</title>
+<path fill="none" stroke="black" d="M275.76,-63.9C293.72,-67.08 312.43,-70.39 329.13,-73.34"/>
+<polygon fill="black" stroke="black" points="328.39,-76.76 338.85,-75.06 329.61,-69.87 328.39,-76.76"/>
+<text xml:space="preserve" text-anchor="middle" x="303.85" y="-74.63" font-family="Times,serif" font-size="14.00">入队</text>
+</g>
+<!-- full -->
+<g id="node6" class="node">
+<title>full</title>
+<path fill="#ffe4b5" stroke="black" d="M373.39,-32.1C373.39,-32.1 343.69,-21.9 343.69,-21.9 338.02,-19.95 338.02,-16.05 343.69,-14.1 343.69,-14.1 373.39,-3.9 373.39,-3.9 379.07,-1.95 390.42,-1.95 396.09,-3.9 396.09,-3.9 425.79,-14.1 425.79,-14.1 431.47,-16.05 431.47,-19.95 425.79,-21.9 425.79,-21.9 396.09,-32.1 396.09,-32.1 390.42,-34.05 379.07,-34.05 373.39,-32.1"/>
+<text xml:space="preserve" text-anchor="middle" x="384.74" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">队列满?</text>
+</g>
+<!-- msgsnd&#45;&gt;full -->
+<g id="edge5" class="edge">
+<title>msgsnd-&gt;full</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M275.76,-36.52C296.87,-32.9 319.01,-29.1 337.71,-25.9"/>
+<polygon fill="black" stroke="black" points="338.12,-29.38 347.38,-24.24 336.93,-22.48 338.12,-29.38"/>
+</g>
+<!-- msgrcv -->
+<g id="node4" class="node">
+<title>msgrcv</title>
+<path fill="#e6f3ff" stroke="black" d="M686.72,-101C686.72,-101 547.74,-101 547.74,-101 541.74,-101 535.74,-95 535.74,-89 535.74,-89 535.74,-77 535.74,-77 535.74,-71 541.74,-65 547.74,-65 547.74,-65 686.72,-65 686.72,-65 692.72,-65 698.72,-71 698.72,-77 698.72,-77 698.72,-89 698.72,-89 698.72,-95 692.72,-101 686.72,-101"/>
+<text xml:space="preserve" text-anchor="middle" x="617.23" y="-78.8" font-family="Microsoft YaHei" font-size="14.00">msgrcv(mqid, &amp;buf, type)</text>
+</g>
+<!-- queue&#45;&gt;msgrcv -->
+<g id="edge3" class="edge">
+<title>queue-&gt;msgrcv</title>
+<path fill="none" stroke="black" d="M429.1,-83C455.81,-83 491.1,-83 523.83,-83"/>
+<polygon fill="black" stroke="black" points="523.77,-86.5 533.77,-83 523.77,-79.5 523.77,-86.5"/>
+<text xml:space="preserve" text-anchor="middle" x="486.44" y="-87.2" font-family="Times,serif" font-size="14.00">按 type 匹配</text>
+</g>
+<!-- receiver -->
+<g id="node5" class="node">
+<title>receiver</title>
+<ellipse fill="#87ceeb" stroke="black" cx="788.12" cy="-102" rx="40.01" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="788.12" y="-97.8" font-family="Microsoft YaHei" font-size="14.00">接收进程</text>
+</g>
+<!-- msgrcv&#45;&gt;receiver -->
+<g id="edge4" class="edge">
+<title>msgrcv-&gt;receiver</title>
+<path fill="none" stroke="black" d="M699.21,-92.11C712.43,-93.6 725.75,-95.1 737.9,-96.46"/>
+<polygon fill="black" stroke="black" points="737.3,-99.92 747.63,-97.56 738.09,-92.96 737.3,-99.92"/>
+</g>
+<!-- empty -->
+<g id="node7" class="node">
+<title>empty</title>
+<path fill="#ffe4b5" stroke="black" d="M776.77,-62.1C776.77,-62.1 747.07,-51.9 747.07,-51.9 741.39,-49.95 741.39,-46.05 747.07,-44.1 747.07,-44.1 776.77,-33.9 776.77,-33.9 782.44,-31.95 793.79,-31.95 799.46,-33.9 799.46,-33.9 829.16,-44.1 829.16,-44.1 834.84,-46.05 834.84,-49.95 829.16,-51.9 829.16,-51.9 799.46,-62.1 799.46,-62.1 793.79,-64.05 782.44,-64.05 776.77,-62.1"/>
+<text xml:space="preserve" text-anchor="middle" x="788.12" y="-43.8" font-family="Microsoft YaHei" font-size="14.00">队列空?</text>
+</g>
+<!-- msgrcv&#45;&gt;empty -->
+<g id="edge7" class="edge">
+<title>msgrcv-&gt;empty</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M699.21,-66.22C714.42,-63.07 729.78,-59.88 743.32,-57.08"/>
+<polygon fill="black" stroke="black" points="743.65,-60.58 752.73,-55.13 742.23,-53.73 743.65,-60.58"/>
+</g>
+<!-- block_s -->
+<g id="node8" class="node">
+<title>block_s</title>
+<path fill="#ffb6c1" stroke="black" d="M639.48,-36C639.48,-36 594.98,-36 594.98,-36 588.98,-36 582.98,-30 582.98,-24 582.98,-24 582.98,-12 582.98,-12 582.98,-6 588.98,0 594.98,0 594.98,0 639.48,0 639.48,0 645.48,0 651.48,-6 651.48,-12 651.48,-12 651.48,-24 651.48,-24 651.48,-30 645.48,-36 639.48,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="617.23" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">发送者阻塞</text>
+</g>
+<!-- full&#45;&gt;block_s -->
+<g id="edge6" class="edge">
+<title>full-&gt;block_s</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M438.62,-18C478.73,-18 533.26,-18 571.28,-18"/>
+<polygon fill="black" stroke="black" points="571,-21.5 581,-18 571,-14.5 571,-21.5"/>
+<text xml:space="preserve" text-anchor="middle" x="486.44" y="-22.2" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- block_r -->
+<g id="node9" class="node">
+<title>block_r</title>
+<path fill="#ffb6c1" stroke="black" d="M943.51,-66C943.51,-66 899.01,-66 899.01,-66 893.01,-66 887.01,-60 887.01,-54 887.01,-54 887.01,-42 887.01,-42 887.01,-36 893.01,-30 899.01,-30 899.01,-30 943.51,-30 943.51,-30 949.51,-30 955.51,-36 955.51,-42 955.51,-42 955.51,-54 955.51,-54 955.51,-60 949.51,-66 943.51,-66"/>
+<text xml:space="preserve" text-anchor="middle" x="921.26" y="-43.8" font-family="Microsoft YaHei" font-size="14.00">接收者阻塞</text>
+</g>
+<!-- empty&#45;&gt;block_r -->
+<g id="edge8" class="edge">
+<title>empty-&gt;block_r</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M841.7,-48C852.8,-48 864.41,-48 875.2,-48"/>
+<polygon fill="black" stroke="black" points="875,-51.5 885,-48 875,-44.5 875,-51.5"/>
+<text xml:space="preserve" text-anchor="middle" x="863.76" y="-52.2" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+</g>
+</svg>

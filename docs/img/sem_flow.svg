@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="730pt" height="341pt" viewBox="0.00 0.00 730.00 341.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 337.2)">
+<title>sem_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-337.2 726,-337.2 726,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_p</title>
+<polygon fill="#fff0f5" stroke="black" points="8,-81 8,-325.2 238,-325.2 238,-81 8,-81"/>
+<text xml:space="preserve" text-anchor="middle" x="123" y="-308.6" font-family="Times,serif" font-size="14.00">P 操作 (wait)</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_v</title>
+<polygon fill="#f0fff0" stroke="black" points="246,-8 246,-325.2 428,-325.2 428,-8 246,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="337" y="-308.6" font-family="Times,serif" font-size="14.00">V 操作 (signal)</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_and</title>
+<polygon fill="#fffaf0" stroke="black" points="436,-81 436,-325.2 714,-325.2 714,-81 436,-81"/>
+<text xml:space="preserve" text-anchor="middle" x="575" y="-308.6" font-family="Times,serif" font-size="14.00">AND 信号量</text>
+</g>
+<!-- p_start -->
+<g id="node1" class="node">
+<title>p_start</title>
+<ellipse fill="#90ee90" stroke="black" cx="123" cy="-274.4" rx="58.24" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="123" y="-270.2" font-family="Microsoft YaHei" font-size="14.00">sem_p(sem)</text>
+</g>
+<!-- p_check -->
+<g id="node2" class="node">
+<title>p_check</title>
+<path fill="#ffe4b5" stroke="black" d="M111.17,-217.41C111.17,-217.41 27.98,-203.39 27.98,-203.39 22.06,-202.4 22.06,-200.4 27.98,-199.41 27.98,-199.41 111.17,-185.39 111.17,-185.39 117.08,-184.4 128.92,-184.4 134.83,-185.39 134.83,-185.39 218.02,-199.41 218.02,-199.41 223.94,-200.4 223.94,-202.4 218.02,-203.39 218.02,-203.39 134.83,-217.41 134.83,-217.41 128.92,-218.4 117.08,-218.4 111.17,-217.41"/>
+<text xml:space="preserve" text-anchor="middle" x="123" y="-197.2" font-family="Microsoft YaHei" font-size="14.00">sem-&gt;value &gt; 0?</text>
+</g>
+<!-- p_start&#45;&gt;p_check -->
+<g id="edge1" class="edge">
+<title>p_start-&gt;p_check</title>
+<path fill="none" stroke="black" d="M123,-256.21C123,-248.63 123,-239.5 123,-230.94"/>
+<polygon fill="black" stroke="black" points="126.5,-230.94 123,-220.94 119.5,-230.94 126.5,-230.94"/>
+</g>
+<!-- p_dec -->
+<g id="node3" class="node">
+<title>p_dec</title>
+<path fill="#e6f3ff" stroke="black" d="M107.38,-130.6C107.38,-130.6 40.62,-130.6 40.62,-130.6 34.62,-130.6 28.62,-124.6 28.62,-118.6 28.62,-118.6 28.62,-101 28.62,-101 28.62,-95 34.62,-89 40.62,-89 40.62,-89 107.38,-89 107.38,-89 113.38,-89 119.38,-95 119.38,-101 119.38,-101 119.38,-118.6 119.38,-118.6 119.38,-124.6 113.38,-130.6 107.38,-130.6"/>
+<text xml:space="preserve" text-anchor="middle" x="74" y="-114" font-family="Microsoft YaHei" font-size="14.00">sem-&gt;value--</text>
+<text xml:space="preserve" text-anchor="middle" x="74" y="-97.2" font-family="Microsoft YaHei" font-size="14.00">继续执行</text>
+</g>
+<!-- p_check&#45;&gt;p_dec -->
+<g id="edge2" class="edge">
+<title>p_check-&gt;p_dec</title>
+<path fill="none" stroke="black" d="M114.24,-184.38C107.68,-172.39 98.52,-155.63 90.59,-141.14"/>
+<polygon fill="black" stroke="black" points="93.69,-139.5 85.82,-132.41 87.55,-142.86 93.69,-139.5"/>
+<text xml:space="preserve" text-anchor="middle" x="108.14" y="-152.8" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- p_block -->
+<g id="node4" class="node">
+<title>p_block</title>
+<path fill="#e6f3ff" stroke="black" d="M204.5,-130.6C204.5,-130.6 149.5,-130.6 149.5,-130.6 143.5,-130.6 137.5,-124.6 137.5,-118.6 137.5,-118.6 137.5,-101 137.5,-101 137.5,-95 143.5,-89 149.5,-89 149.5,-89 204.5,-89 204.5,-89 210.5,-89 216.5,-95 216.5,-101 216.5,-101 216.5,-118.6 216.5,-118.6 216.5,-124.6 210.5,-130.6 204.5,-130.6"/>
+<text xml:space="preserve" text-anchor="middle" x="177" y="-114" font-family="Microsoft YaHei" font-size="14.00">加入等待队列</text>
+<text xml:space="preserve" text-anchor="middle" x="177" y="-97.2" font-family="Microsoft YaHei" font-size="14.00">进程阻塞</text>
+</g>
+<!-- p_check&#45;&gt;p_block -->
+<g id="edge3" class="edge">
+<title>p_check-&gt;p_block</title>
+<path fill="none" stroke="black" d="M132.41,-184.79C139.72,-172.65 150.09,-155.45 158.99,-140.68"/>
+<polygon fill="black" stroke="black" points="161.91,-142.61 164.08,-132.24 155.92,-139 161.91,-142.61"/>
+<text xml:space="preserve" text-anchor="middle" x="158.48" y="-152.8" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+<!-- v_start -->
+<g id="node5" class="node">
+<title>v_start</title>
+<ellipse fill="#90ee90" stroke="black" cx="337" cy="-274.4" rx="58.24" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="337" y="-270.2" font-family="Microsoft YaHei" font-size="14.00">sem_v(sem)</text>
+</g>
+<!-- v_check -->
+<g id="node6" class="node">
+<title>v_check</title>
+<path fill="#ffe4b5" stroke="black" d="M325.27,-216.86C325.27,-216.86 265.6,-203.94 265.6,-203.94 259.74,-202.67 259.74,-200.13 265.6,-198.86 265.6,-198.86 325.27,-185.94 325.27,-185.94 331.14,-184.67 342.86,-184.67 348.73,-185.94 348.73,-185.94 408.4,-198.86 408.4,-198.86 414.26,-200.13 414.26,-202.67 408.4,-203.94 408.4,-203.94 348.73,-216.86 348.73,-216.86 342.86,-218.13 331.14,-218.13 325.27,-216.86"/>
+<text xml:space="preserve" text-anchor="middle" x="337" y="-197.2" font-family="Microsoft YaHei" font-size="14.00">等待队列非空?</text>
+</g>
+<!-- v_start&#45;&gt;v_check -->
+<g id="edge4" class="edge">
+<title>v_start-&gt;v_check</title>
+<path fill="none" stroke="black" d="M337,-256.21C337,-248.63 337,-239.5 337,-230.94"/>
+<polygon fill="black" stroke="black" points="340.5,-230.94 337,-220.94 333.5,-230.94 340.5,-230.94"/>
+</g>
+<!-- v_inc -->
+<g id="node7" class="node">
+<title>v_inc</title>
+<path fill="#e6f3ff" stroke="black" d="M353.61,-52C353.61,-52 280.39,-52 280.39,-52 274.39,-52 268.39,-46 268.39,-40 268.39,-40 268.39,-28 268.39,-28 268.39,-22 274.39,-16 280.39,-16 280.39,-16 353.61,-16 353.61,-16 359.61,-16 365.61,-22 365.61,-28 365.61,-28 365.61,-40 365.61,-40 365.61,-46 359.61,-52 353.61,-52"/>
+<text xml:space="preserve" text-anchor="middle" x="317" y="-29.8" font-family="Microsoft YaHei" font-size="14.00">sem-&gt;value++</text>
+</g>
+<!-- v_check&#45;&gt;v_inc -->
+<g id="edge6" class="edge">
+<title>v_check-&gt;v_inc</title>
+<path fill="none" stroke="black" d="M330.26,-184.39C324.78,-170.46 317.49,-149.59 314.5,-130.6 311.08,-108.82 313.9,-103.04 314.5,-81 314.65,-75.4 314.91,-69.42 315.2,-63.68"/>
+<polygon fill="black" stroke="black" points="318.68,-64.16 315.74,-53.98 311.69,-63.77 318.68,-64.16"/>
+<text xml:space="preserve" text-anchor="middle" x="319.75" y="-105.6" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+<!-- v_wake -->
+<g id="node8" class="node">
+<title>v_wake</title>
+<path fill="#e6f3ff" stroke="black" d="M400.5,-127.8C400.5,-127.8 345.5,-127.8 345.5,-127.8 339.5,-127.8 333.5,-121.8 333.5,-115.8 333.5,-115.8 333.5,-103.8 333.5,-103.8 333.5,-97.8 339.5,-91.8 345.5,-91.8 345.5,-91.8 400.5,-91.8 400.5,-91.8 406.5,-91.8 412.5,-97.8 412.5,-103.8 412.5,-103.8 412.5,-115.8 412.5,-115.8 412.5,-121.8 406.5,-127.8 400.5,-127.8"/>
+<text xml:space="preserve" text-anchor="middle" x="373" y="-105.6" font-family="Microsoft YaHei" font-size="14.00">唤醒队首进程</text>
+</g>
+<!-- v_check&#45;&gt;v_wake -->
+<g id="edge5" class="edge">
+<title>v_check-&gt;v_wake</title>
+<path fill="none" stroke="black" d="M343.44,-184.38C348.55,-171.66 355.81,-153.58 361.86,-138.52"/>
+<polygon fill="black" stroke="black" points="364.96,-140.2 365.44,-129.61 358.46,-137.59 364.96,-140.2"/>
+<text xml:space="preserve" text-anchor="middle" x="362.41" y="-152.8" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- v_wake&#45;&gt;v_inc -->
+<g id="edge7" class="edge">
+<title>v_wake-&gt;v_inc</title>
+<path fill="none" stroke="black" d="M359.73,-91.31C352.96,-82.4 344.6,-71.37 337.06,-61.44"/>
+<polygon fill="black" stroke="black" points="339.92,-59.42 331.09,-53.57 334.35,-63.65 339.92,-59.42"/>
+</g>
+<!-- and_start -->
+<g id="node9" class="node">
+<title>and_start</title>
+<ellipse fill="#90ee90" stroke="black" cx="575" cy="-274.4" rx="93.64" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="575" y="-270.2" font-family="Microsoft YaHei" font-size="14.00">sem_p_multi(sems[])</text>
+</g>
+<!-- and_check -->
+<g id="node10" class="node">
+<title>and_check</title>
+<path fill="#ffe4b5" stroke="black" d="M563.11,-217.76C563.11,-217.76 456.14,-203.04 456.14,-203.04 450.19,-202.22 450.19,-200.58 456.14,-199.76 456.14,-199.76 563.11,-185.04 563.11,-185.04 569.06,-184.22 580.94,-184.22 586.89,-185.04 586.89,-185.04 693.86,-199.76 693.86,-199.76 699.81,-200.58 699.81,-202.22 693.86,-203.04 693.86,-203.04 586.89,-217.76 586.89,-217.76 580.94,-218.58 569.06,-218.58 563.11,-217.76"/>
+<text xml:space="preserve" text-anchor="middle" x="575" y="-197.2" font-family="Microsoft YaHei" font-size="14.00">所有 sem-&gt;value &gt; 0?</text>
+</g>
+<!-- and_start&#45;&gt;and_check -->
+<g id="edge8" class="edge">
+<title>and_start-&gt;and_check</title>
+<path fill="none" stroke="black" d="M575,-256.21C575,-248.63 575,-239.5 575,-230.94"/>
+<polygon fill="black" stroke="black" points="578.5,-230.94 575,-220.94 571.5,-230.94 578.5,-230.94"/>
+</g>
+<!-- and_dec -->
+<g id="node11" class="node">
+<title>and_dec</title>
+<path fill="#e6f3ff" stroke="black" d="M563.25,-127.8C563.25,-127.8 476.75,-127.8 476.75,-127.8 470.75,-127.8 464.75,-121.8 464.75,-115.8 464.75,-115.8 464.75,-103.8 464.75,-103.8 464.75,-97.8 470.75,-91.8 476.75,-91.8 476.75,-91.8 563.25,-91.8 563.25,-91.8 569.25,-91.8 575.25,-97.8 575.25,-103.8 575.25,-103.8 575.25,-115.8 575.25,-115.8 575.25,-121.8 569.25,-127.8 563.25,-127.8"/>
+<text xml:space="preserve" text-anchor="middle" x="520" y="-105.6" font-family="Microsoft YaHei" font-size="14.00">原子递减所有信号量</text>
+</g>
+<!-- and_check&#45;&gt;and_dec -->
+<g id="edge9" class="edge">
+<title>and_check-&gt;and_dec</title>
+<path fill="none" stroke="black" d="M565.17,-184.38C557.21,-171.42 545.83,-152.87 536.48,-137.65"/>
+<polygon fill="black" stroke="black" points="539.69,-136.19 531.48,-129.5 533.73,-139.85 539.69,-136.19"/>
+<text xml:space="preserve" text-anchor="middle" x="557.68" y="-152.8" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- and_block -->
+<g id="node12" class="node">
+<title>and_block</title>
+<path fill="#e6f3ff" stroke="black" d="M660.5,-130.6C660.5,-130.6 605.5,-130.6 605.5,-130.6 599.5,-130.6 593.5,-124.6 593.5,-118.6 593.5,-118.6 593.5,-101 593.5,-101 593.5,-95 599.5,-89 605.5,-89 605.5,-89 660.5,-89 660.5,-89 666.5,-89 672.5,-95 672.5,-101 672.5,-101 672.5,-118.6 672.5,-118.6 672.5,-124.6 666.5,-130.6 660.5,-130.6"/>
+<text xml:space="preserve" text-anchor="middle" x="633" y="-114" font-family="Microsoft YaHei" font-size="14.00">释放已获取的</text>
+<text xml:space="preserve" text-anchor="middle" x="633" y="-97.2" font-family="Microsoft YaHei" font-size="14.00">阻塞等待</text>
+</g>
+<!-- and_check&#45;&gt;and_block -->
+<g id="edge10" class="edge">
+<title>and_check-&gt;and_block</title>
+<path fill="none" stroke="black" d="M585.37,-184.38C593.21,-172.28 604.19,-155.31 613.63,-140.72"/>
+<polygon fill="black" stroke="black" points="616.55,-142.65 619.05,-132.35 610.68,-138.85 616.55,-142.65"/>
+<text xml:space="preserve" text-anchor="middle" x="612.72" y="-152.8" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+</g>
+</svg>

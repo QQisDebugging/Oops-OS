@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="829pt" height="98pt" viewBox="0.00 0.00 829.00 98.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 94)">
+<title>dmsg_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-94 824.85,-94 824.85,4 -4,4"/>
+<!-- p1 -->
+<g id="node1" class="node">
+<title>p1</title>
+<ellipse fill="#90ee90" stroke="black" cx="38.14" cy="-44" rx="38.14" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="38.14" y="-39.8" font-family="Microsoft YaHei" font-size="14.00">进程 P1</text>
+</g>
+<!-- send -->
+<g id="node2" class="node">
+<title>send</title>
+<path fill="#e6f3ff" stroke="black" d="M252.61,-62C252.61,-62 125.27,-62 125.27,-62 119.27,-62 113.27,-56 113.27,-50 113.27,-50 113.27,-38 113.27,-38 113.27,-32 119.27,-26 125.27,-26 125.27,-26 252.61,-26 252.61,-26 258.61,-26 264.61,-32 264.61,-38 264.61,-38 264.61,-50 264.61,-50 264.61,-56 258.61,-62 252.61,-62"/>
+<text xml:space="preserve" text-anchor="middle" x="188.94" y="-39.8" font-family="Microsoft YaHei" font-size="14.00">dmsgsend(P2_pid, msg)</text>
+</g>
+<!-- p1&#45;&gt;send -->
+<g id="edge1" class="edge">
+<title>p1-&gt;send</title>
+<path fill="none" stroke="black" d="M76.68,-44C84.41,-44 92.84,-44 101.49,-44"/>
+<polygon fill="black" stroke="black" points="101.45,-47.5 111.44,-44 101.44,-40.5 101.45,-47.5"/>
+</g>
+<!-- mailbox -->
+<g id="node3" class="node">
+<title>mailbox</title>
+<path fill="#dda0dd" stroke="black" d="M455.98,-86.73C455.98,-88.53 441.24,-90 423.09,-90 404.94,-90 390.19,-88.53 390.19,-86.73 390.19,-86.73 390.19,-57.27 390.19,-57.27 390.19,-55.47 404.94,-54 423.09,-54 441.24,-54 455.98,-55.47 455.98,-57.27 455.98,-57.27 455.98,-86.73 455.98,-86.73"/>
+<path fill="none" stroke="black" d="M455.98,-86.73C455.98,-84.92 441.24,-83.45 423.09,-83.45 404.94,-83.45 390.19,-84.92 390.19,-86.73"/>
+<text xml:space="preserve" text-anchor="middle" x="423.09" y="-67.8" font-family="Microsoft YaHei" font-size="14.00">P2 的邮箱</text>
+</g>
+<!-- send&#45;&gt;mailbox -->
+<g id="edge2" class="edge">
+<title>send-&gt;mailbox</title>
+<path fill="none" stroke="black" d="M264.99,-53.05C302.63,-57.59 346.87,-62.93 378.79,-66.78"/>
+<polygon fill="black" stroke="black" points="378.11,-70.22 388.46,-67.94 378.95,-63.27 378.11,-70.22"/>
+<text xml:space="preserve" text-anchor="middle" x="303.61" y="-63.88" font-family="Times,serif" font-size="14.00">直接投递</text>
+</g>
+<!-- block -->
+<g id="node6" class="node">
+<title>block</title>
+<path fill="#ffe4b5" stroke="black" d="M411.38,-33.38C411.38,-33.38 354.32,-20.62 354.32,-20.62 348.46,-19.31 348.46,-16.69 354.32,-15.38 354.32,-15.38 411.38,-2.62 411.38,-2.62 417.23,-1.31 428.94,-1.31 434.8,-2.62 434.8,-2.62 491.86,-15.38 491.86,-15.38 497.71,-16.69 497.71,-19.31 491.86,-20.62 491.86,-20.62 434.8,-33.38 434.8,-33.38 428.94,-34.69 417.23,-34.69 411.38,-33.38"/>
+<text xml:space="preserve" text-anchor="middle" x="423.09" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">P2 未准备好?</text>
+</g>
+<!-- send&#45;&gt;block -->
+<g id="edge5" class="edge">
+<title>send-&gt;block</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M264.99,-35.59C294.58,-32.28 328.25,-28.51 356.81,-25.31"/>
+<polygon fill="black" stroke="black" points="356.83,-28.83 366.38,-24.24 356.06,-21.87 356.83,-28.83"/>
+</g>
+<!-- recv -->
+<g id="node4" class="node">
+<title>recv</title>
+<path fill="#e6f3ff" stroke="black" d="M695.58,-90C695.58,-90 562.07,-90 562.07,-90 556.07,-90 550.07,-84 550.07,-78 550.07,-78 550.07,-66 550.07,-66 550.07,-60 556.07,-54 562.07,-54 562.07,-54 695.58,-54 695.58,-54 701.58,-54 707.58,-60 707.58,-66 707.58,-66 707.58,-78 707.58,-78 707.58,-84 701.58,-90 695.58,-90"/>
+<text xml:space="preserve" text-anchor="middle" x="628.82" y="-67.8" font-family="Microsoft YaHei" font-size="14.00">dmsgrcv(&amp;sender, &amp;buf)</text>
+</g>
+<!-- mailbox&#45;&gt;recv -->
+<g id="edge3" class="edge">
+<title>mailbox-&gt;recv</title>
+<path fill="none" stroke="black" d="M456.37,-72C478.66,-72 509.45,-72 538.81,-72"/>
+<polygon fill="black" stroke="black" points="538.45,-75.5 548.45,-72 538.45,-68.5 538.45,-75.5"/>
+</g>
+<!-- p2 -->
+<g id="node5" class="node">
+<title>p2</title>
+<ellipse fill="#87ceeb" stroke="black" cx="782.72" cy="-72" rx="38.14" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="782.72" y="-67.8" font-family="Microsoft YaHei" font-size="14.00">进程 P2</text>
+</g>
+<!-- recv&#45;&gt;p2 -->
+<g id="edge4" class="edge">
+<title>recv-&gt;p2</title>
+<path fill="none" stroke="black" d="M708,-72C716.49,-72 724.96,-72 732.95,-72"/>
+<polygon fill="black" stroke="black" points="732.78,-75.5 742.78,-72 732.78,-68.5 732.78,-75.5"/>
+</g>
+<!-- wait -->
+<g id="node7" class="node">
+<title>wait</title>
+<path fill="#ffb6c1" stroke="black" d="M654.97,-36C654.97,-36 602.68,-36 602.68,-36 596.68,-36 590.68,-30 590.68,-24 590.68,-24 590.68,-12 590.68,-12 590.68,-6 596.68,0 602.68,0 602.68,0 654.97,0 654.97,0 660.97,0 666.97,-6 666.97,-12 666.97,-12 666.97,-24 666.97,-24 666.97,-30 660.97,-36 654.97,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="628.82" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">P1 阻塞等待</text>
+</g>
+<!-- block&#45;&gt;wait -->
+<g id="edge6" class="edge">
+<title>block-&gt;wait</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M505.78,-18C530.56,-18 556.99,-18 578.9,-18"/>
+<polygon fill="black" stroke="black" points="578.72,-21.5 588.72,-18 578.72,-14.5 578.72,-21.5"/>
+<text xml:space="preserve" text-anchor="middle" x="526.82" y="-22.2" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+</g>
+</svg>

@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="490pt" height="316pt" viewBox="0.00 0.00 490.00 316.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 312.44)">
+<title>sched_overview</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-312.44 486,-312.44 486,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_sched</title>
+<polygon fill="#f0f8ff" stroke="black" points="8,-201.24 8,-300.44 474,-300.44 474,-201.24 8,-201.24"/>
+<text xml:space="preserve" text-anchor="middle" x="241" y="-283.84" font-family="Times,serif" font-size="14.00">OopsOS 调度策略</text>
+</g>
+<!-- MLFQ -->
+<g id="node1" class="node">
+<title>MLFQ</title>
+<path fill="#87ceeb" stroke="black" d="M83.5,-259.24C83.5,-259.24 28.5,-259.24 28.5,-259.24 22.5,-259.24 16.5,-253.24 16.5,-247.24 16.5,-247.24 16.5,-229.64 16.5,-229.64 16.5,-223.64 22.5,-217.64 28.5,-217.64 28.5,-217.64 83.5,-217.64 83.5,-217.64 89.5,-217.64 95.5,-223.64 95.5,-229.64 95.5,-229.64 95.5,-247.24 95.5,-247.24 95.5,-253.24 89.5,-259.24 83.5,-259.24"/>
+<text xml:space="preserve" text-anchor="middle" x="56" y="-242.64" font-family="Microsoft YaHei" font-size="14.00">MLFQ</text>
+<text xml:space="preserve" text-anchor="middle" x="56" y="-225.84" font-family="Microsoft YaHei" font-size="14.00">多级反馈队列</text>
+</g>
+<!-- Ready -->
+<g id="node6" class="node">
+<title>Ready</title>
+<ellipse fill="#fff8dc" stroke="black" cx="255" cy="-138.44" rx="40.01" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="255" y="-134.24" font-family="Microsoft YaHei" font-size="14.00">就绪队列</text>
+</g>
+<!-- MLFQ&#45;&gt;Ready -->
+<g id="edge1" class="edge">
+<title>MLFQ-&gt;Ready</title>
+<path fill="none" stroke="black" d="M77.62,-217.43C93.46,-203.68 116.03,-185.92 138.5,-174.44 160.28,-163.32 186.2,-155.1 208.05,-149.43"/>
+<polygon fill="black" stroke="black" points="208.74,-152.87 217.6,-147.06 207.05,-146.08 208.74,-152.87"/>
+<text xml:space="preserve" text-anchor="middle" x="164.75" y="-178.64" font-family="Times,serif" font-size="14.00">时间片轮转</text>
+</g>
+<!-- DYNPRIO -->
+<g id="node2" class="node">
+<title>DYNPRIO</title>
+<path fill="#98fb98" stroke="black" d="M180.11,-259.24C180.11,-259.24 125.89,-259.24 125.89,-259.24 119.89,-259.24 113.89,-253.24 113.89,-247.24 113.89,-247.24 113.89,-229.64 113.89,-229.64 113.89,-223.64 119.89,-217.64 125.89,-217.64 125.89,-217.64 180.11,-217.64 180.11,-217.64 186.11,-217.64 192.11,-223.64 192.11,-229.64 192.11,-229.64 192.11,-247.24 192.11,-247.24 192.11,-253.24 186.11,-259.24 180.11,-259.24"/>
+<text xml:space="preserve" text-anchor="middle" x="153" y="-242.64" font-family="Microsoft YaHei" font-size="14.00">DYNPRIO</text>
+<text xml:space="preserve" text-anchor="middle" x="153" y="-225.84" font-family="Microsoft YaHei" font-size="14.00">动态优先级</text>
+</g>
+<!-- DYNPRIO&#45;&gt;Ready -->
+<g id="edge2" class="edge">
+<title>DYNPRIO-&gt;Ready</title>
+<path fill="none" stroke="black" d="M170.41,-217.15C181.65,-204.43 196.83,-187.96 211.34,-174.44 216.17,-169.95 221.5,-165.38 226.74,-161.08"/>
+<polygon fill="black" stroke="black" points="228.56,-164.11 234.18,-155.13 224.18,-158.65 228.56,-164.11"/>
+<text xml:space="preserve" text-anchor="middle" x="231.17" y="-178.64" font-family="Times,serif" font-size="14.00">I/O优先</text>
+</g>
+<!-- LLF -->
+<g id="node3" class="node">
+<title>LLF</title>
+<path fill="#ffb6c1" stroke="black" d="M287.75,-267.64C287.75,-267.64 222.25,-267.64 222.25,-267.64 216.25,-267.64 210.25,-261.64 210.25,-255.64 210.25,-255.64 210.25,-221.24 210.25,-221.24 210.25,-215.24 216.25,-209.24 222.25,-209.24 222.25,-209.24 287.75,-209.24 287.75,-209.24 293.75,-209.24 299.75,-215.24 299.75,-221.24 299.75,-221.24 299.75,-255.64 299.75,-255.64 299.75,-261.64 293.75,-267.64 287.75,-267.64"/>
+<text xml:space="preserve" text-anchor="middle" x="255" y="-251.04" font-family="Microsoft YaHei" font-size="14.00">LLF</text>
+<text xml:space="preserve" text-anchor="middle" x="255" y="-234.24" font-family="Microsoft YaHei" font-size="14.00">最小松弛度优先</text>
+<text xml:space="preserve" text-anchor="middle" x="255" y="-217.44" font-family="Microsoft YaHei" font-size="14.00">(实时调度)</text>
+</g>
+<!-- LLF&#45;&gt;Ready -->
+<g id="edge3" class="edge">
+<title>LLF-&gt;Ready</title>
+<path fill="none" stroke="black" d="M255,-208.84C255,-196.08 255,-181.07 255,-168.29"/>
+<polygon fill="black" stroke="black" points="258.5,-168.37 255,-158.37 251.5,-168.37 258.5,-168.37"/>
+<text xml:space="preserve" text-anchor="middle" x="276" y="-178.64" font-family="Times,serif" font-size="14.00">实时任务</text>
+</g>
+<!-- MIDSCHED -->
+<g id="node4" class="node">
+<title>MIDSCHED</title>
+<path fill="#dda0dd" stroke="black" d="M367.94,-259.24C367.94,-259.24 330.06,-259.24 330.06,-259.24 324.06,-259.24 318.06,-253.24 318.06,-247.24 318.06,-247.24 318.06,-229.64 318.06,-229.64 318.06,-223.64 324.06,-217.64 330.06,-217.64 330.06,-217.64 367.94,-217.64 367.94,-217.64 373.94,-217.64 379.94,-223.64 379.94,-229.64 379.94,-229.64 379.94,-247.24 379.94,-247.24 379.94,-253.24 373.94,-259.24 367.94,-259.24"/>
+<text xml:space="preserve" text-anchor="middle" x="349" y="-242.64" font-family="Microsoft YaHei" font-size="14.00">中级调度</text>
+<text xml:space="preserve" text-anchor="middle" x="349" y="-225.84" font-family="Microsoft YaHei" font-size="14.00">挂起/恢复</text>
+</g>
+<!-- MIDSCHED&#45;&gt;Ready -->
+<g id="edge5" class="edge">
+<title>MIDSCHED-&gt;Ready</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M335.77,-217.32C326.76,-204.37 314.13,-187.57 301,-174.44 296.27,-169.72 290.89,-165.08 285.51,-160.81"/>
+<polygon fill="black" stroke="black" points="287.86,-158.2 277.79,-154.92 283.62,-163.77 287.86,-158.2"/>
+<text xml:space="preserve" text-anchor="middle" x="326.05" y="-178.64" font-family="Times,serif" font-size="14.00">恢复</text>
+</g>
+<!-- PI -->
+<g id="node5" class="node">
+<title>PI</title>
+<path fill="#f0e68c" stroke="black" d="M454.25,-259.24C454.25,-259.24 409.75,-259.24 409.75,-259.24 403.75,-259.24 397.75,-253.24 397.75,-247.24 397.75,-247.24 397.75,-229.64 397.75,-229.64 397.75,-223.64 403.75,-217.64 409.75,-217.64 409.75,-217.64 454.25,-217.64 454.25,-217.64 460.25,-217.64 466.25,-223.64 466.25,-229.64 466.25,-229.64 466.25,-247.24 466.25,-247.24 466.25,-253.24 460.25,-259.24 454.25,-259.24"/>
+<text xml:space="preserve" text-anchor="middle" x="432" y="-242.64" font-family="Microsoft YaHei" font-size="14.00">优先级继承</text>
+<text xml:space="preserve" text-anchor="middle" x="432" y="-225.84" font-family="Microsoft YaHei" font-size="14.00">解决倒置</text>
+</g>
+<!-- CPU -->
+<g id="node7" class="node">
+<title>CPU</title>
+<ellipse fill="#ffd700" stroke="black" cx="328" cy="-33.82" rx="29.82" ry="29.82"/>
+<ellipse fill="none" stroke="black" cx="328" cy="-33.82" rx="33.82" ry="33.82"/>
+<text xml:space="preserve" text-anchor="middle" x="328" y="-29.62" font-family="Microsoft YaHei" font-size="14.00">CPU</text>
+</g>
+<!-- PI&#45;&gt;CPU -->
+<g id="edge6" class="edge">
+<title>PI-&gt;CPU</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M421.65,-217.28C404.61,-184.08 370.35,-117.33 348.33,-74.43"/>
+<polygon fill="black" stroke="black" points="351.52,-72.98 343.84,-65.68 345.29,-76.18 351.52,-72.98"/>
+<text xml:space="preserve" text-anchor="middle" x="411.34" y="-134.24" font-family="Times,serif" font-size="14.00">临时提升</text>
+</g>
+<!-- Ready&#45;&gt;CPU -->
+<g id="edge4" class="edge">
+<title>Ready-&gt;CPU</title>
+<path fill="none" stroke="black" d="M266.73,-120.96C276.25,-107.57 290.03,-88.2 302.11,-71.22"/>
+<polygon fill="black" stroke="black" points="304.79,-73.49 307.73,-63.31 299.09,-69.43 304.79,-73.49"/>
+<text xml:space="preserve" text-anchor="middle" x="312.5" y="-89.84" font-family="Times,serif" font-size="14.00">调度选择</text>
+</g>
+</g>
+</svg>

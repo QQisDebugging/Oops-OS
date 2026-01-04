@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="184pt" height="380pt" viewBox="0.00 0.00 184.00 380.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 375.8)">
+<title>deadlock_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-375.8 180,-375.8 180,4 -4,4"/>
+<!-- start -->
+<g id="node1" class="node">
+<title>start</title>
+<ellipse fill="#90ee90" stroke="black" cx="98" cy="-353.8" rx="54.49" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-349.6" font-family="Microsoft YaHei" font-size="14.00">调用死锁检测</text>
+</g>
+<!-- build -->
+<g id="node2" class="node">
+<title>build</title>
+<path fill="#e6f3ff" stroke="black" d="M154.68,-298.8C154.68,-298.8 41.32,-298.8 41.32,-298.8 35.32,-298.8 29.32,-292.8 29.32,-286.8 29.32,-286.8 29.32,-252.4 29.32,-252.4 29.32,-246.4 35.32,-240.4 41.32,-240.4 41.32,-240.4 154.68,-240.4 154.68,-240.4 160.68,-240.4 166.68,-246.4 166.68,-252.4 166.68,-252.4 166.68,-286.8 166.68,-286.8 166.68,-292.8 160.68,-298.8 154.68,-298.8"/>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-282.2" font-family="Microsoft YaHei" font-size="14.00">构建等待图</text>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-265.4" font-family="Microsoft YaHei" font-size="14.00">P_i 等待 P_j 持有的资源</text>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-248.6" font-family="Microsoft YaHei" font-size="14.00">→ 边 P_i → P_j</text>
+</g>
+<!-- start&#45;&gt;build -->
+<g id="edge1" class="edge">
+<title>start-&gt;build</title>
+<path fill="none" stroke="black" d="M98,-335.37C98,-328.03 98,-319.16 98,-310.37"/>
+<polygon fill="black" stroke="black" points="101.5,-310.52 98,-300.52 94.5,-310.52 101.5,-310.52"/>
+</g>
+<!-- dfs -->
+<g id="node3" class="node">
+<title>dfs</title>
+<path fill="#e6f3ff" stroke="black" d="M134.84,-203.4C134.84,-203.4 61.16,-203.4 61.16,-203.4 55.16,-203.4 49.16,-197.4 49.16,-191.4 49.16,-191.4 49.16,-179.4 49.16,-179.4 49.16,-173.4 55.16,-167.4 61.16,-167.4 61.16,-167.4 134.84,-167.4 134.84,-167.4 140.84,-167.4 146.84,-173.4 146.84,-179.4 146.84,-179.4 146.84,-191.4 146.84,-191.4 146.84,-197.4 140.84,-203.4 134.84,-203.4"/>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-181.2" font-family="Microsoft YaHei" font-size="14.00">DFS 遍历等待图</text>
+</g>
+<!-- build&#45;&gt;dfs -->
+<g id="edge2" class="edge">
+<title>build-&gt;dfs</title>
+<path fill="none" stroke="black" d="M98,-240.31C98,-232.07 98,-223.07 98,-214.83"/>
+<polygon fill="black" stroke="black" points="101.5,-214.98 98,-204.98 94.5,-214.98 101.5,-214.98"/>
+</g>
+<!-- cycle -->
+<g id="node4" class="node">
+<title>cycle</title>
+<path fill="#ffe4b5" stroke="black" d="M86.47,-127.09C86.47,-127.09 46.89,-115.71 46.89,-115.71 41.13,-114.06 41.13,-110.74 46.89,-109.09 46.89,-109.09 86.47,-97.71 86.47,-97.71 92.23,-96.06 103.77,-96.06 109.53,-97.71 109.53,-97.71 149.11,-109.09 149.11,-109.09 154.87,-110.74 154.87,-114.06 149.11,-115.71 149.11,-115.71 109.53,-127.09 109.53,-127.09 103.77,-128.74 92.23,-128.74 86.47,-127.09"/>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-108.2" font-family="Microsoft YaHei" font-size="14.00">发现环路?</text>
+</g>
+<!-- dfs&#45;&gt;cycle -->
+<g id="edge3" class="edge">
+<title>dfs-&gt;cycle</title>
+<path fill="none" stroke="black" d="M98,-167.21C98,-159.63 98,-150.5 98,-141.94"/>
+<polygon fill="black" stroke="black" points="101.5,-141.94 98,-131.94 94.5,-141.94 101.5,-141.94"/>
+</g>
+<!-- deadlock -->
+<g id="node5" class="node">
+<title>deadlock</title>
+<path fill="#ff6347" stroke="black" d="M88,-41.6C88,-41.6 12,-41.6 12,-41.6 6,-41.6 0,-35.6 0,-29.6 0,-29.6 0,-12 0,-12 0,-6 6,0 12,0 12,0 88,0 88,0 94,0 100,-6 100,-12 100,-12 100,-29.6 100,-29.6 100,-35.6 94,-41.6 88,-41.6"/>
+<text xml:space="preserve" text-anchor="middle" x="50" y="-25" font-family="Microsoft YaHei" font-size="14.00">检测到死锁!</text>
+<text xml:space="preserve" text-anchor="middle" x="50" y="-8.2" font-family="Microsoft YaHei" font-size="14.00">返回环路上的进程</text>
+</g>
+<!-- cycle&#45;&gt;deadlock -->
+<g id="edge4" class="edge">
+<title>cycle-&gt;deadlock</title>
+<path fill="none" stroke="black" d="M90.07,-96.6C83.58,-84.49 74.19,-66.95 66.13,-51.91"/>
+<polygon fill="black" stroke="black" points="69.34,-50.48 61.53,-43.32 63.17,-53.79 69.34,-50.48"/>
+<text xml:space="preserve" text-anchor="middle" x="83.55" y="-63.8" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- safe -->
+<g id="node6" class="node">
+<title>safe</title>
+<path fill="#90ee90" stroke="black" d="M164,-41.6C164,-41.6 130,-41.6 130,-41.6 124,-41.6 118,-35.6 118,-29.6 118,-29.6 118,-12 118,-12 118,-6 124,0 130,0 130,0 164,0 164,0 170,0 176,-6 176,-12 176,-12 176,-29.6 176,-29.6 176,-35.6 170,-41.6 164,-41.6"/>
+<text xml:space="preserve" text-anchor="middle" x="147" y="-25" font-family="Microsoft YaHei" font-size="14.00">无死锁</text>
+<text xml:space="preserve" text-anchor="middle" x="147" y="-8.2" font-family="Microsoft YaHei" font-size="14.00">返回安全</text>
+</g>
+<!-- cycle&#45;&gt;safe -->
+<g id="edge5" class="edge">
+<title>cycle-&gt;safe</title>
+<path fill="none" stroke="black" d="M106.09,-96.6C112.72,-84.49 122.31,-66.95 130.53,-51.91"/>
+<polygon fill="black" stroke="black" points="133.51,-53.77 135.24,-43.31 127.37,-50.41 133.51,-53.77"/>
+<text xml:space="preserve" text-anchor="middle" x="130.68" y="-63.8" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+</g>
+</svg>

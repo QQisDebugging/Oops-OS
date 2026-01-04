@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="343pt" height="530pt" viewBox="0.00 0.00 343.00 530.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 526.4)">
+<title>shm_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-526.4 339.33,-526.4 339.33,4 -4,4"/>
+<!-- start -->
+<g id="node1" class="node">
+<title>start</title>
+<ellipse fill="#90ee90" stroke="black" cx="86.12" cy="-504.4" rx="86.12" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="86.12" y="-500.2" font-family="Microsoft YaHei" font-size="14.00">shmgetat(key, size)</text>
+</g>
+<!-- lookup -->
+<g id="node2" class="node">
+<title>lookup</title>
+<path fill="#e6f3ff" stroke="black" d="M121.98,-449.4C121.98,-449.4 50.26,-449.4 50.26,-449.4 44.26,-449.4 38.26,-443.4 38.26,-437.4 38.26,-437.4 38.26,-419.8 38.26,-419.8 38.26,-413.8 44.26,-407.8 50.26,-407.8 50.26,-407.8 121.98,-407.8 121.98,-407.8 127.98,-407.8 133.98,-413.8 133.98,-419.8 133.98,-419.8 133.98,-437.4 133.98,-437.4 133.98,-443.4 127.98,-449.4 121.98,-449.4"/>
+<text xml:space="preserve" text-anchor="middle" x="86.12" y="-432.8" font-family="Microsoft YaHei" font-size="14.00">查找 key 对应的</text>
+<text xml:space="preserve" text-anchor="middle" x="86.12" y="-416" font-family="Microsoft YaHei" font-size="14.00">共享内存段</text>
+</g>
+<!-- start&#45;&gt;lookup -->
+<g id="edge1" class="edge">
+<title>start-&gt;lookup</title>
+<path fill="none" stroke="black" d="M86.12,-485.91C86.12,-478.55 86.12,-469.75 86.12,-461.32"/>
+<polygon fill="black" stroke="black" points="89.62,-461.35 86.12,-451.35 82.62,-461.35 89.62,-461.35"/>
+</g>
+<!-- exist -->
+<g id="node3" class="node">
+<title>exist</title>
+<path fill="#ffe4b5" stroke="black" d="M74.59,-367.49C74.59,-367.49 35.01,-356.11 35.01,-356.11 29.24,-354.46 29.24,-351.14 35.01,-349.49 35.01,-349.49 74.59,-338.11 74.59,-338.11 80.35,-336.46 91.88,-336.46 97.65,-338.11 97.65,-338.11 137.23,-349.49 137.23,-349.49 142.99,-351.14 142.99,-354.46 137.23,-356.11 137.23,-356.11 97.65,-367.49 97.65,-367.49 91.88,-369.14 80.35,-369.14 74.59,-367.49"/>
+<text xml:space="preserve" text-anchor="middle" x="86.12" y="-348.6" font-family="Microsoft YaHei" font-size="14.00">段已存在?</text>
+</g>
+<!-- lookup&#45;&gt;exist -->
+<g id="edge2" class="edge">
+<title>lookup-&gt;exist</title>
+<path fill="none" stroke="black" d="M86.12,-407.43C86.12,-399.66 86.12,-390.63 86.12,-382.22"/>
+<polygon fill="black" stroke="black" points="89.62,-382.45 86.12,-372.45 82.62,-382.45 89.62,-382.45"/>
+</g>
+<!-- create -->
+<g id="node4" class="node">
+<title>create</title>
+<path fill="#e6f3ff" stroke="black" d="M94.12,-282C94.12,-282 18.12,-282 18.12,-282 12.12,-282 6.12,-276 6.12,-270 6.12,-270 6.12,-252.4 6.12,-252.4 6.12,-246.4 12.12,-240.4 18.12,-240.4 18.12,-240.4 94.12,-240.4 94.12,-240.4 100.12,-240.4 106.12,-246.4 106.12,-252.4 106.12,-252.4 106.12,-270 106.12,-270 106.12,-276 100.12,-282 94.12,-282"/>
+<text xml:space="preserve" text-anchor="middle" x="56.12" y="-265.4" font-family="Microsoft YaHei" font-size="14.00">创建新共享内存段</text>
+<text xml:space="preserve" text-anchor="middle" x="56.12" y="-248.6" font-family="Microsoft YaHei" font-size="14.00">分配物理页</text>
+</g>
+<!-- exist&#45;&gt;create -->
+<g id="edge4" class="edge">
+<title>exist-&gt;create</title>
+<path fill="none" stroke="black" d="M80.89,-336.19C76.91,-324.29 71.29,-307.51 66.41,-292.94"/>
+<polygon fill="black" stroke="black" points="69.84,-292.15 63.34,-283.78 63.2,-294.37 69.84,-292.15"/>
+<text xml:space="preserve" text-anchor="middle" x="79.06" y="-304.2" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+<!-- map -->
+<g id="node5" class="node">
+<title>map</title>
+<path fill="#e6f3ff" stroke="black" d="M120.37,-187.6C120.37,-187.6 33.87,-187.6 33.87,-187.6 27.87,-187.6 21.87,-181.6 21.87,-175.6 21.87,-175.6 21.87,-158 21.87,-158 21.87,-152 27.87,-146 33.87,-146 33.87,-146 120.37,-146 120.37,-146 126.37,-146 132.37,-152 132.37,-158 132.37,-158 132.37,-175.6 132.37,-175.6 132.37,-181.6 126.37,-187.6 120.37,-187.6"/>
+<text xml:space="preserve" text-anchor="middle" x="77.12" y="-171" font-family="Microsoft YaHei" font-size="14.00">映射到进程地址空间</text>
+<text xml:space="preserve" text-anchor="middle" x="77.12" y="-154.2" font-family="Microsoft YaHei" font-size="14.00">更新页表</text>
+</g>
+<!-- exist&#45;&gt;map -->
+<g id="edge3" class="edge">
+<title>exist-&gt;map</title>
+<path fill="none" stroke="black" d="M94.73,-337.06C106.08,-315.76 123.66,-275.14 115.12,-240.4 111.45,-225.47 104.1,-210.2 96.84,-197.54"/>
+<polygon fill="black" stroke="black" points="100.04,-196.07 91.88,-189.31 94.04,-199.68 100.04,-196.07"/>
+<text xml:space="preserve" text-anchor="middle" x="122.63" y="-257" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- create&#45;&gt;map -->
+<g id="edge5" class="edge">
+<title>create-&gt;map</title>
+<path fill="none" stroke="black" d="M60.67,-240.15C63.43,-228.04 66.99,-212.36 70.1,-198.69"/>
+<polygon fill="black" stroke="black" points="73.43,-199.81 72.24,-189.29 66.61,-198.26 73.43,-199.81"/>
+</g>
+<!-- ref -->
+<g id="node6" class="node">
+<title>ref</title>
+<path fill="#e6f3ff" stroke="black" d="M102.01,-109C102.01,-109 52.22,-109 52.22,-109 46.22,-109 40.22,-103 40.22,-97 40.22,-97 40.22,-85 40.22,-85 40.22,-79 46.22,-73 52.22,-73 52.22,-73 102.01,-73 102.01,-73 108.01,-73 114.01,-79 114.01,-85 114.01,-85 114.01,-97 114.01,-97 114.01,-103 108.01,-109 102.01,-109"/>
+<text xml:space="preserve" text-anchor="middle" x="77.12" y="-86.8" font-family="Microsoft YaHei" font-size="14.00">引用计数++</text>
+</g>
+<!-- map&#45;&gt;ref -->
+<g id="edge6" class="edge">
+<title>map-&gt;ref</title>
+<path fill="none" stroke="black" d="M77.12,-145.63C77.12,-137.86 77.12,-128.83 77.12,-120.42"/>
+<polygon fill="black" stroke="black" points="80.62,-120.65 77.12,-110.65 73.62,-120.65 80.62,-120.65"/>
+</g>
+<!-- done -->
+<g id="node7" class="node">
+<title>done</title>
+<ellipse fill="#90ee90" stroke="black" cx="77.12" cy="-18" rx="54.49" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="77.12" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">返回虚拟地址</text>
+</g>
+<!-- ref&#45;&gt;done -->
+<g id="edge7" class="edge">
+<title>ref-&gt;done</title>
+<path fill="none" stroke="black" d="M77.12,-72.81C77.12,-65.23 77.12,-56.1 77.12,-47.54"/>
+<polygon fill="black" stroke="black" points="80.62,-47.54 77.12,-37.54 73.62,-47.54 80.62,-47.54"/>
+</g>
+<!-- detach -->
+<g id="node8" class="node">
+<title>detach</title>
+<ellipse fill="#ffb6c1" stroke="black" cx="264.12" cy="-504.4" rx="67.89" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="264.12" y="-500.2" font-family="Microsoft YaHei" font-size="14.00">进程退出/detach</text>
+</g>
+<!-- unmap -->
+<g id="node9" class="node">
+<title>unmap</title>
+<path fill="#e6f3ff" stroke="black" d="M281.12,-446.6C281.12,-446.6 247.12,-446.6 247.12,-446.6 241.12,-446.6 235.12,-440.6 235.12,-434.6 235.12,-434.6 235.12,-422.6 235.12,-422.6 235.12,-416.6 241.12,-410.6 247.12,-410.6 247.12,-410.6 281.12,-410.6 281.12,-410.6 287.12,-410.6 293.12,-416.6 293.12,-422.6 293.12,-422.6 293.12,-434.6 293.12,-434.6 293.12,-440.6 287.12,-446.6 281.12,-446.6"/>
+<text xml:space="preserve" text-anchor="middle" x="264.12" y="-424.4" font-family="Microsoft YaHei" font-size="14.00">解除映射</text>
+</g>
+<!-- detach&#45;&gt;unmap -->
+<g id="edge8" class="edge">
+<title>detach-&gt;unmap</title>
+<path fill="none" stroke="black" d="M264.12,-485.91C264.12,-477.64 264.12,-467.55 264.12,-458.2"/>
+<polygon fill="black" stroke="black" points="267.62,-458.48 264.12,-448.48 260.62,-458.48 267.62,-458.48"/>
+</g>
+<!-- decref -->
+<g id="node10" class="node">
+<title>decref</title>
+<path fill="#e6f3ff" stroke="black" d="M285.78,-370.8C285.78,-370.8 242.46,-370.8 242.46,-370.8 236.46,-370.8 230.46,-364.8 230.46,-358.8 230.46,-358.8 230.46,-346.8 230.46,-346.8 230.46,-340.8 236.46,-334.8 242.46,-334.8 242.46,-334.8 285.78,-334.8 285.78,-334.8 291.78,-334.8 297.78,-340.8 297.78,-346.8 297.78,-346.8 297.78,-358.8 297.78,-358.8 297.78,-364.8 291.78,-370.8 285.78,-370.8"/>
+<text xml:space="preserve" text-anchor="middle" x="264.12" y="-348.6" font-family="Microsoft YaHei" font-size="14.00">引用计数--</text>
+</g>
+<!-- unmap&#45;&gt;decref -->
+<g id="edge9" class="edge">
+<title>unmap-&gt;decref</title>
+<path fill="none" stroke="black" d="M264.12,-410.11C264.12,-401.84 264.12,-391.75 264.12,-382.4"/>
+<polygon fill="black" stroke="black" points="267.62,-382.68 264.12,-372.68 260.62,-382.68 267.62,-382.68"/>
+</g>
+<!-- zero -->
+<g id="node11" class="node">
+<title>zero</title>
+<path fill="#ffe4b5" stroke="black" d="M252.48,-276.26C252.48,-276.26 204.54,-264.14 204.54,-264.14 198.72,-262.67 198.72,-259.73 204.54,-258.26 204.54,-258.26 252.48,-246.14 252.48,-246.14 258.3,-244.67 269.94,-244.67 275.75,-246.14 275.75,-246.14 323.7,-258.26 323.7,-258.26 329.52,-259.73 329.52,-262.67 323.7,-264.14 323.7,-264.14 275.75,-276.26 275.75,-276.26 269.94,-277.73 258.3,-277.73 252.48,-276.26"/>
+<text xml:space="preserve" text-anchor="middle" x="264.12" y="-257" font-family="Microsoft YaHei" font-size="14.00">计数 == 0?</text>
+</g>
+<!-- decref&#45;&gt;zero -->
+<g id="edge10" class="edge">
+<title>decref-&gt;zero</title>
+<path fill="none" stroke="black" d="M264.12,-334.52C264.12,-322.13 264.12,-305.14 264.12,-290.75"/>
+<polygon fill="black" stroke="black" points="267.62,-290.94 264.12,-280.94 260.62,-290.94 267.62,-290.94"/>
+</g>
+<!-- free -->
+<g id="node12" class="node">
+<title>free</title>
+<path fill="#e6f3ff" stroke="black" d="M223.37,-184.8C223.37,-184.8 178.87,-184.8 178.87,-184.8 172.87,-184.8 166.87,-178.8 166.87,-172.8 166.87,-172.8 166.87,-160.8 166.87,-160.8 166.87,-154.8 172.87,-148.8 178.87,-148.8 178.87,-148.8 223.37,-148.8 223.37,-148.8 229.37,-148.8 235.37,-154.8 235.37,-160.8 235.37,-160.8 235.37,-172.8 235.37,-172.8 235.37,-178.8 229.37,-184.8 223.37,-184.8"/>
+<text xml:space="preserve" text-anchor="middle" x="201.12" y="-162.6" font-family="Microsoft YaHei" font-size="14.00">释放物理页</text>
+</g>
+<!-- zero&#45;&gt;free -->
+<g id="edge11" class="edge">
+<title>zero-&gt;free</title>
+<path fill="none" stroke="black" d="M254,-245.35C244.63,-231.62 230.5,-210.89 219.2,-194.32"/>
+<polygon fill="black" stroke="black" points="222.31,-192.67 213.78,-186.38 216.53,-196.61 222.31,-192.67"/>
+<text xml:space="preserve" text-anchor="middle" x="243.51" y="-209.8" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- keep -->
+<g id="node13" class="node">
+<title>keep</title>
+<path fill="#e6f3ff" stroke="black" d="M295.12,-184.8C295.12,-184.8 265.12,-184.8 265.12,-184.8 259.12,-184.8 253.12,-178.8 253.12,-172.8 253.12,-172.8 253.12,-160.8 253.12,-160.8 253.12,-154.8 259.12,-148.8 265.12,-148.8 265.12,-148.8 295.12,-148.8 295.12,-148.8 301.12,-148.8 307.12,-154.8 307.12,-160.8 307.12,-160.8 307.12,-172.8 307.12,-172.8 307.12,-178.8 301.12,-184.8 295.12,-184.8"/>
+<text xml:space="preserve" text-anchor="middle" x="280.12" y="-162.6" font-family="Microsoft YaHei" font-size="14.00">保留段</text>
+</g>
+<!-- zero&#45;&gt;keep -->
+<g id="edge12" class="edge">
+<title>zero-&gt;keep</title>
+<path fill="none" stroke="black" d="M266.98,-243.68C269.26,-230.53 272.5,-211.81 275.19,-196.25"/>
+<polygon fill="black" stroke="black" points="278.6,-197.06 276.86,-186.61 271.71,-195.86 278.6,-197.06"/>
+<text xml:space="preserve" text-anchor="middle" x="278.8" y="-209.8" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+</g>
+</svg>

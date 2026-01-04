@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="246pt" height="436pt" viewBox="0.00 0.00 246.00 436.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 432)">
+<title>llf_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-432 242.14,-432 242.14,4 -4,4"/>
+<!-- start -->
+<g id="node1" class="node">
+<title>start</title>
+<ellipse fill="#90ee90" stroke="black" cx="119.07" cy="-410" rx="40.01" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="119.07" y="-405.8" font-family="Microsoft YaHei" font-size="14.00">时钟中断</text>
+</g>
+<!-- calc -->
+<g id="node2" class="node">
+<title>calc</title>
+<path fill="#e6f3ff" stroke="black" d="M226.14,-355C226.14,-355 12,-355 12,-355 6,-355 0,-349 0,-343 0,-343 0,-325.4 0,-325.4 0,-319.4 6,-313.4 12,-313.4 12,-313.4 226.14,-313.4 226.14,-313.4 232.14,-313.4 238.14,-319.4 238.14,-325.4 238.14,-325.4 238.14,-343 238.14,-343 238.14,-349 232.14,-355 226.14,-355"/>
+<text xml:space="preserve" text-anchor="middle" x="119.07" y="-338.4" font-family="Microsoft YaHei" font-size="14.00">计算所有实时进程</text>
+<text xml:space="preserve" text-anchor="middle" x="119.07" y="-321.6" font-family="Microsoft YaHei" font-size="14.00">松弛度 = deadline - 剩余执行时间 - 当前时间</text>
+</g>
+<!-- start&#45;&gt;calc -->
+<g id="edge1" class="edge">
+<title>start-&gt;calc</title>
+<path fill="none" stroke="black" d="M119.07,-391.51C119.07,-384.15 119.07,-375.35 119.07,-366.92"/>
+<polygon fill="black" stroke="black" points="122.57,-366.95 119.07,-356.95 115.57,-366.95 122.57,-366.95"/>
+</g>
+<!-- select -->
+<g id="node3" class="node">
+<title>select</title>
+<path fill="#e6f3ff" stroke="black" d="M167.57,-276.4C167.57,-276.4 70.57,-276.4 70.57,-276.4 64.57,-276.4 58.57,-270.4 58.57,-264.4 58.57,-264.4 58.57,-252.4 58.57,-252.4 58.57,-246.4 64.57,-240.4 70.57,-240.4 70.57,-240.4 167.57,-240.4 167.57,-240.4 173.57,-240.4 179.57,-246.4 179.57,-252.4 179.57,-252.4 179.57,-264.4 179.57,-264.4 179.57,-270.4 173.57,-276.4 167.57,-276.4"/>
+<text xml:space="preserve" text-anchor="middle" x="119.07" y="-254.2" font-family="Microsoft YaHei" font-size="14.00">选择松弛度最小的进程</text>
+</g>
+<!-- calc&#45;&gt;select -->
+<g id="edge2" class="edge">
+<title>calc-&gt;select</title>
+<path fill="none" stroke="black" d="M119.07,-313.03C119.07,-305.26 119.07,-296.23 119.07,-287.82"/>
+<polygon fill="black" stroke="black" points="122.57,-288.05 119.07,-278.05 115.57,-288.05 122.57,-288.05"/>
+</g>
+<!-- cond -->
+<g id="node4" class="node">
+<title>cond</title>
+<path fill="#ffe4b5" stroke="black" d="M107.39,-200.64C107.39,-200.64 54.45,-188.16 54.45,-188.16 48.61,-186.78 48.61,-184.02 54.45,-182.64 54.45,-182.64 107.39,-170.16 107.39,-170.16 113.23,-168.78 124.91,-168.78 130.75,-170.16 130.75,-170.16 183.69,-182.64 183.69,-182.64 189.53,-184.02 189.53,-186.78 183.69,-188.16 183.69,-188.16 130.75,-200.64 130.75,-200.64 124.91,-202.02 113.23,-202.02 107.39,-200.64"/>
+<text xml:space="preserve" text-anchor="middle" x="119.07" y="-181.2" font-family="Microsoft YaHei" font-size="14.00">松弛度 ≤ 0?</text>
+</g>
+<!-- select&#45;&gt;cond -->
+<g id="edge3" class="edge">
+<title>select-&gt;cond</title>
+<path fill="none" stroke="black" d="M119.07,-240.21C119.07,-232.63 119.07,-223.5 119.07,-214.94"/>
+<polygon fill="black" stroke="black" points="122.57,-214.94 119.07,-204.94 115.57,-214.94 122.57,-214.94"/>
+</g>
+<!-- preempt -->
+<g id="node5" class="node">
+<title>preempt</title>
+<path fill="#e6f3ff" stroke="black" d="M92.57,-114.6C92.57,-114.6 37.57,-114.6 37.57,-114.6 31.57,-114.6 25.57,-108.6 25.57,-102.6 25.57,-102.6 25.57,-85 25.57,-85 25.57,-79 31.57,-73 37.57,-73 37.57,-73 92.57,-73 92.57,-73 98.57,-73 104.57,-79 104.57,-85 104.57,-85 104.57,-102.6 104.57,-102.6 104.57,-108.6 98.57,-114.6 92.57,-114.6"/>
+<text xml:space="preserve" text-anchor="middle" x="65.07" y="-98" font-family="Microsoft YaHei" font-size="14.00">立即抢占</text>
+<text xml:space="preserve" text-anchor="middle" x="65.07" y="-81.2" font-family="Microsoft YaHei" font-size="14.00">切换到该进程</text>
+</g>
+<!-- cond&#45;&gt;preempt -->
+<g id="edge4" class="edge">
+<title>cond-&gt;preempt</title>
+<path fill="none" stroke="black" d="M109.91,-169.2C102.58,-157.03 92.06,-139.59 83.06,-124.65"/>
+<polygon fill="black" stroke="black" points="86.06,-122.85 77.91,-116.1 80.07,-126.47 86.06,-122.85"/>
+<text xml:space="preserve" text-anchor="middle" x="102.16" y="-136.8" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- normal -->
+<g id="node6" class="node">
+<title>normal</title>
+<path fill="#e6f3ff" stroke="black" d="M211.07,-111.8C211.07,-111.8 135.07,-111.8 135.07,-111.8 129.07,-111.8 123.07,-105.8 123.07,-99.8 123.07,-99.8 123.07,-87.8 123.07,-87.8 123.07,-81.8 129.07,-75.8 135.07,-75.8 135.07,-75.8 211.07,-75.8 211.07,-75.8 217.07,-75.8 223.07,-81.8 223.07,-87.8 223.07,-87.8 223.07,-99.8 223.07,-99.8 223.07,-105.8 217.07,-111.8 211.07,-111.8"/>
+<text xml:space="preserve" text-anchor="middle" x="173.07" y="-89.6" font-family="Microsoft YaHei" font-size="14.00">正常调度继续执行</text>
+</g>
+<!-- cond&#45;&gt;normal -->
+<g id="edge5" class="edge">
+<title>cond-&gt;normal</title>
+<path fill="none" stroke="black" d="M128.23,-169.2C136.03,-156.26 147.43,-137.35 156.78,-121.83"/>
+<polygon fill="black" stroke="black" points="159.62,-123.89 161.79,-113.52 153.63,-120.28 159.62,-123.89"/>
+<text xml:space="preserve" text-anchor="middle" x="154.55" y="-136.8" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+<!-- done -->
+<g id="node7" class="node">
+<title>done</title>
+<ellipse fill="#ffb6c1" stroke="black" cx="118.07" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="118.07" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">返回</text>
+</g>
+<!-- preempt&#45;&gt;done -->
+<g id="edge6" class="edge">
+<title>preempt-&gt;done</title>
+<path fill="none" stroke="black" d="M79.55,-72.63C85.92,-63.76 93.47,-53.26 100.18,-43.91"/>
+<polygon fill="black" stroke="black" points="102.92,-46.09 105.92,-35.93 97.24,-42.01 102.92,-46.09"/>
+</g>
+<!-- normal&#45;&gt;done -->
+<g id="edge7" class="edge">
+<title>normal-&gt;done</title>
+<path fill="none" stroke="black" d="M160.04,-75.31C152.93,-65.78 144.03,-53.84 136.26,-43.41"/>
+<polygon fill="black" stroke="black" points="139.21,-41.5 130.42,-35.58 133.59,-45.68 139.21,-41.5"/>
+</g>
+</g>
+</svg>

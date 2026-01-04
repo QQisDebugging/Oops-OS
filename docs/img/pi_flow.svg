@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="252pt" height="693pt" viewBox="0.00 0.00 252.00 693.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 688.63)">
+<title>pi_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-688.63 247.5,-688.63 247.5,4 -4,4"/>
+<!-- start -->
+<g id="node1" class="node">
+<title>start</title>
+<ellipse fill="#90ee90" stroke="black" cx="121.75" cy="-655.22" rx="65.49" ry="29.42"/>
+<text xml:space="preserve" text-anchor="middle" x="121.75" y="-659.42" font-family="Microsoft YaHei" font-size="14.00">高优先级进程 H</text>
+<text xml:space="preserve" text-anchor="middle" x="121.75" y="-642.62" font-family="Microsoft YaHei" font-size="14.00">请求锁 L</text>
+</g>
+<!-- check -->
+<g id="node2" class="node">
+<title>check</title>
+<path fill="#ffe4b5" stroke="black" d="M110.4,-584.92C110.4,-584.92 11.36,-551.08 11.36,-551.08 5.68,-549.14 5.68,-545.26 11.36,-543.32 11.36,-543.32 110.4,-509.48 110.4,-509.48 116.07,-507.54 127.43,-507.54 133.11,-509.48 133.11,-509.48 232.15,-543.32 232.15,-543.32 237.83,-545.26 237.83,-549.14 232.15,-551.08 232.15,-551.08 133.11,-584.92 133.11,-584.92 127.43,-586.86 116.07,-586.86 110.4,-584.92"/>
+<text xml:space="preserve" text-anchor="middle" x="121.75" y="-551.4" font-family="Microsoft YaHei" font-size="14.00">锁 L 被低优先级</text>
+<text xml:space="preserve" text-anchor="middle" x="121.75" y="-534.6" font-family="Microsoft YaHei" font-size="14.00">进程 L_owner 持有?</text>
+</g>
+<!-- start&#45;&gt;check -->
+<g id="edge1" class="edge">
+<title>start-&gt;check</title>
+<path fill="none" stroke="black" d="M121.75,-625.53C121.75,-617.77 121.75,-609.12 121.75,-600.5"/>
+<polygon fill="black" stroke="black" points="125.25,-600.76 121.75,-590.76 118.25,-600.76 125.25,-600.76"/>
+</g>
+<!-- inherit -->
+<g id="node3" class="node">
+<title>inherit</title>
+<path fill="#e6f3ff" stroke="black" d="M123.77,-452.8C123.77,-452.8 35.73,-452.8 35.73,-452.8 29.73,-452.8 23.73,-446.8 23.73,-440.8 23.73,-440.8 23.73,-423.2 23.73,-423.2 23.73,-417.2 29.73,-411.2 35.73,-411.2 35.73,-411.2 123.77,-411.2 123.77,-411.2 129.77,-411.2 135.77,-417.2 135.77,-423.2 135.77,-423.2 135.77,-440.8 135.77,-440.8 135.77,-446.8 129.77,-452.8 123.77,-452.8"/>
+<text xml:space="preserve" text-anchor="middle" x="79.75" y="-436.2" font-family="Microsoft YaHei" font-size="14.00">L_owner 临时继承</text>
+<text xml:space="preserve" text-anchor="middle" x="79.75" y="-419.4" font-family="Microsoft YaHei" font-size="14.00">H 的优先级</text>
+</g>
+<!-- check&#45;&gt;inherit -->
+<g id="edge2" class="edge">
+<title>check-&gt;inherit</title>
+<path fill="none" stroke="black" d="M108.23,-509.76C102.74,-494.97 96.47,-478.07 91.21,-463.9"/>
+<polygon fill="black" stroke="black" points="94.54,-462.78 87.78,-454.63 87.97,-465.22 94.54,-462.78"/>
+<text xml:space="preserve" text-anchor="middle" x="104.74" y="-475" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- direct -->
+<g id="node8" class="node">
+<title>direct</title>
+<path fill="#e6f3ff" stroke="black" d="M198.83,-393.2C198.83,-393.2 128.67,-393.2 128.67,-393.2 122.67,-393.2 116.67,-387.2 116.67,-381.2 116.67,-381.2 116.67,-369.2 116.67,-369.2 116.67,-363.2 122.67,-357.2 128.67,-357.2 128.67,-357.2 198.83,-357.2 198.83,-357.2 204.83,-357.2 210.83,-363.2 210.83,-369.2 210.83,-369.2 210.83,-381.2 210.83,-381.2 210.83,-387.2 204.83,-393.2 198.83,-393.2"/>
+<text xml:space="preserve" text-anchor="middle" x="163.75" y="-371" font-family="Microsoft YaHei" font-size="14.00">H 直接获得锁 L</text>
+</g>
+<!-- check&#45;&gt;direct -->
+<g id="edge3" class="edge">
+<title>check-&gt;direct</title>
+<path fill="none" stroke="black" d="M131.07,-508.47C138.85,-477.01 149.75,-432.87 156.79,-404.4"/>
+<polygon fill="black" stroke="black" points="160.09,-405.62 159.09,-395.07 153.29,-403.94 160.09,-405.62"/>
+<text xml:space="preserve" text-anchor="middle" x="145.31" y="-475" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+<!-- wait -->
+<g id="node4" class="node">
+<title>wait</title>
+<path fill="#e6f3ff" stroke="black" d="M114.83,-339.2C114.83,-339.2 44.67,-339.2 44.67,-339.2 38.67,-339.2 32.67,-333.2 32.67,-327.2 32.67,-327.2 32.67,-315.2 32.67,-315.2 32.67,-309.2 38.67,-303.2 44.67,-303.2 44.67,-303.2 114.83,-303.2 114.83,-303.2 120.83,-303.2 126.83,-309.2 126.83,-315.2 126.83,-315.2 126.83,-327.2 126.83,-327.2 126.83,-333.2 120.83,-339.2 114.83,-339.2"/>
+<text xml:space="preserve" text-anchor="middle" x="79.75" y="-317" font-family="Microsoft YaHei" font-size="14.00">H 阻塞等待锁 L</text>
+</g>
+<!-- inherit&#45;&gt;wait -->
+<g id="edge4" class="edge">
+<title>inherit-&gt;wait</title>
+<path fill="none" stroke="black" d="M79.75,-410.79C79.75,-393.95 79.75,-369.77 79.75,-350.92"/>
+<polygon fill="black" stroke="black" points="83.25,-350.95 79.75,-340.95 76.25,-350.95 83.25,-350.95"/>
+</g>
+<!-- release -->
+<g id="node5" class="node">
+<title>release</title>
+<path fill="#e6f3ff" stroke="black" d="M123.55,-266.2C123.55,-266.2 33.96,-266.2 33.96,-266.2 27.96,-266.2 21.96,-260.2 21.96,-254.2 21.96,-254.2 21.96,-242.2 21.96,-242.2 21.96,-236.2 27.96,-230.2 33.96,-230.2 33.96,-230.2 123.55,-230.2 123.55,-230.2 129.55,-230.2 135.55,-236.2 135.55,-242.2 135.55,-242.2 135.55,-254.2 135.55,-254.2 135.55,-260.2 129.55,-266.2 123.55,-266.2"/>
+<text xml:space="preserve" text-anchor="middle" x="78.75" y="-244" font-family="Microsoft YaHei" font-size="14.00">L_owner 释放锁 L</text>
+</g>
+<!-- wait&#45;&gt;release -->
+<g id="edge5" class="edge">
+<title>wait-&gt;release</title>
+<path fill="none" stroke="black" d="M79.51,-303.01C79.4,-295.43 79.27,-286.3 79.15,-277.74"/>
+<polygon fill="black" stroke="black" points="82.65,-277.69 79.01,-267.74 75.65,-277.79 82.65,-277.69"/>
+</g>
+<!-- restore -->
+<g id="node6" class="node">
+<title>restore</title>
+<path fill="#e6f3ff" stroke="black" d="M120.27,-193.2C120.27,-193.2 53.23,-193.2 53.23,-193.2 47.23,-193.2 41.23,-187.2 41.23,-181.2 41.23,-181.2 41.23,-163.6 41.23,-163.6 41.23,-157.6 47.23,-151.6 53.23,-151.6 53.23,-151.6 120.27,-151.6 120.27,-151.6 126.27,-151.6 132.27,-157.6 132.27,-163.6 132.27,-163.6 132.27,-181.2 132.27,-181.2 132.27,-187.2 126.27,-193.2 120.27,-193.2"/>
+<text xml:space="preserve" text-anchor="middle" x="86.75" y="-176.6" font-family="Microsoft YaHei" font-size="14.00">L_owner 恢复</text>
+<text xml:space="preserve" text-anchor="middle" x="86.75" y="-159.8" font-family="Microsoft YaHei" font-size="14.00">原优先级</text>
+</g>
+<!-- release&#45;&gt;restore -->
+<g id="edge6" class="edge">
+<title>release-&gt;restore</title>
+<path fill="none" stroke="black" d="M80.65,-229.71C81.45,-222.27 82.42,-213.35 83.34,-204.83"/>
+<polygon fill="black" stroke="black" points="86.8,-205.46 84.4,-195.14 79.84,-204.71 86.8,-205.46"/>
+</g>
+<!-- acquire -->
+<g id="node7" class="node">
+<title>acquire</title>
+<path fill="#e6f3ff" stroke="black" d="M119.33,-114.6C119.33,-114.6 70.17,-114.6 70.17,-114.6 64.17,-114.6 58.17,-108.6 58.17,-102.6 58.17,-102.6 58.17,-85 58.17,-85 58.17,-79 64.17,-73 70.17,-73 70.17,-73 119.33,-73 119.33,-73 125.33,-73 131.33,-79 131.33,-85 131.33,-85 131.33,-102.6 131.33,-102.6 131.33,-108.6 125.33,-114.6 119.33,-114.6"/>
+<text xml:space="preserve" text-anchor="middle" x="94.75" y="-98" font-family="Microsoft YaHei" font-size="14.00">H 获得锁 L</text>
+<text xml:space="preserve" text-anchor="middle" x="94.75" y="-81.2" font-family="Microsoft YaHei" font-size="14.00">继续执行</text>
+</g>
+<!-- restore&#45;&gt;acquire -->
+<g id="edge7" class="edge">
+<title>restore-&gt;acquire</title>
+<path fill="none" stroke="black" d="M88.85,-151.27C89.65,-143.68 90.57,-134.85 91.45,-126.46"/>
+<polygon fill="black" stroke="black" points="94.92,-126.87 92.48,-116.56 87.96,-126.14 94.92,-126.87"/>
+</g>
+<!-- done -->
+<g id="node9" class="node">
+<title>done</title>
+<ellipse fill="#ffb6c1" stroke="black" cx="128.75" cy="-18" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="128.75" y="-13.8" font-family="Microsoft YaHei" font-size="14.00">完成</text>
+</g>
+<!-- acquire&#45;&gt;done -->
+<g id="edge8" class="edge">
+<title>acquire-&gt;done</title>
+<path fill="none" stroke="black" d="M104.04,-72.63C107.84,-64.38 112.3,-54.71 116.37,-45.87"/>
+<polygon fill="black" stroke="black" points="119.44,-47.58 120.45,-37.03 113.08,-44.65 119.44,-47.58"/>
+</g>
+<!-- direct&#45;&gt;done -->
+<g id="edge9" class="edge">
+<title>direct-&gt;done</title>
+<path fill="none" stroke="black" d="M163.75,-356.81C163.75,-338.86 163.75,-310.08 163.75,-285.2 163.75,-285.2 163.75,-285.2 163.75,-92.8 163.75,-75.23 155.55,-57.37 147.09,-43.63"/>
+<polygon fill="black" stroke="black" points="150.26,-42.09 141.83,-35.67 144.42,-45.95 150.26,-42.09"/>
+</g>
+</g>
+</svg>

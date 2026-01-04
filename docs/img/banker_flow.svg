@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="454pt" height="571pt" viewBox="0.00 0.00 454.00 571.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 567.23)">
+<title>banker_flow</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-567.23 449.91,-567.23 449.91,4 -4,4"/>
+<!-- start -->
+<g id="node1" class="node">
+<title>start</title>
+<ellipse fill="#90ee90" stroke="black" cx="282.21" cy="-533.82" rx="74.02" ry="29.42"/>
+<text xml:space="preserve" text-anchor="middle" x="282.21" y="-538.02" font-family="Microsoft YaHei" font-size="14.00">进程 P_i 请求资源</text>
+<text xml:space="preserve" text-anchor="middle" x="282.21" y="-521.22" font-family="Microsoft YaHei" font-size="14.00">Request[i]</text>
+</g>
+<!-- check1 -->
+<g id="node2" class="node">
+<title>check1</title>
+<path fill="#ffe4b5" stroke="black" d="M270.32,-465.84C270.32,-465.84 156.78,-450.96 156.78,-450.96 150.83,-450.18 150.83,-448.62 156.78,-447.84 156.78,-447.84 270.32,-432.96 270.32,-432.96 276.26,-432.18 288.16,-432.18 294.11,-432.96 294.11,-432.96 407.65,-447.84 407.65,-447.84 413.6,-448.62 413.6,-450.18 407.65,-450.96 407.65,-450.96 294.11,-465.84 294.11,-465.84 288.16,-466.62 276.26,-466.62 270.32,-465.84"/>
+<text xml:space="preserve" text-anchor="middle" x="282.21" y="-445.2" font-family="Microsoft YaHei" font-size="14.00">Request[i] ≤ Need[i]?</text>
+</g>
+<!-- start&#45;&gt;check1 -->
+<g id="edge1" class="edge">
+<title>start-&gt;check1</title>
+<path fill="none" stroke="black" d="M282.21,-503.99C282.21,-495.98 282.21,-487.27 282.21,-479.26"/>
+<polygon fill="black" stroke="black" points="285.71,-479.31 282.21,-469.31 278.71,-479.31 285.71,-479.31"/>
+</g>
+<!-- check2 -->
+<g id="node3" class="node">
+<title>check2</title>
+<path fill="#ffe4b5" stroke="black" d="M160.3,-377.16C160.3,-377.16 35.41,-362.04 35.41,-362.04 29.45,-361.32 29.45,-359.88 35.41,-359.16 35.41,-359.16 160.3,-344.04 160.3,-344.04 166.26,-343.32 178.17,-343.32 184.13,-344.04 184.13,-344.04 309.02,-359.16 309.02,-359.16 314.97,-359.88 314.97,-361.32 309.02,-362.04 309.02,-362.04 184.13,-377.16 184.13,-377.16 178.17,-377.88 166.26,-377.88 160.3,-377.16"/>
+<text xml:space="preserve" text-anchor="middle" x="172.21" y="-356.4" font-family="Microsoft YaHei" font-size="14.00">Request[i] ≤ Available?</text>
+</g>
+<!-- check1&#45;&gt;check2 -->
+<g id="edge2" class="edge">
+<title>check1-&gt;check2</title>
+<path fill="none" stroke="black" d="M263.55,-433.68C246.2,-419.98 220.1,-399.39 200.24,-383.72"/>
+<polygon fill="black" stroke="black" points="202.54,-381.07 192.52,-377.63 198.21,-386.57 202.54,-381.07"/>
+<text xml:space="preserve" text-anchor="middle" x="242.32" y="-400.8" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- error -->
+<g id="node8" class="node">
+<title>error</title>
+<path fill="#ff6347" stroke="black" d="M433.91,-378.6C433.91,-378.6 350.52,-378.6 350.52,-378.6 344.52,-378.6 338.52,-372.6 338.52,-366.6 338.52,-366.6 338.52,-354.6 338.52,-354.6 338.52,-348.6 344.52,-342.6 350.52,-342.6 350.52,-342.6 433.91,-342.6 433.91,-342.6 439.91,-342.6 445.91,-348.6 445.91,-354.6 445.91,-354.6 445.91,-366.6 445.91,-366.6 445.91,-372.6 439.91,-378.6 433.91,-378.6"/>
+<text xml:space="preserve" text-anchor="middle" x="392.21" y="-356.4" font-family="Microsoft YaHei" font-size="14.00">错误: 超出最大需求</text>
+</g>
+<!-- check1&#45;&gt;error -->
+<g id="edge3" class="edge">
+<title>check1-&gt;error</title>
+<path fill="none" stroke="black" d="M300.87,-433.68C317.38,-420.65 341.8,-401.38 361.24,-386.04"/>
+<polygon fill="black" stroke="black" points="363.17,-388.97 368.86,-380.03 358.84,-383.48 363.17,-388.97"/>
+<text xml:space="preserve" text-anchor="middle" x="352.32" y="-400.8" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+<!-- trial -->
+<g id="node4" class="node">
+<title>trial</title>
+<path fill="#e6f3ff" stroke="black" d="M178.92,-289.8C178.92,-289.8 33.5,-289.8 33.5,-289.8 27.5,-289.8 21.5,-283.8 21.5,-277.8 21.5,-277.8 21.5,-226.6 21.5,-226.6 21.5,-220.6 27.5,-214.6 33.5,-214.6 33.5,-214.6 178.92,-214.6 178.92,-214.6 184.92,-214.6 190.92,-220.6 190.92,-226.6 190.92,-226.6 190.92,-277.8 190.92,-277.8 190.92,-283.8 184.92,-289.8 178.92,-289.8"/>
+<text xml:space="preserve" text-anchor="middle" x="106.21" y="-273.2" font-family="Microsoft YaHei" font-size="14.00">试探分配:</text>
+<text xml:space="preserve" text-anchor="middle" x="106.21" y="-256.4" font-family="Microsoft YaHei" font-size="14.00">Available -= Request[i]</text>
+<text xml:space="preserve" text-anchor="middle" x="106.21" y="-239.6" font-family="Microsoft YaHei" font-size="14.00">Allocation[i] += Request[i]</text>
+<text xml:space="preserve" text-anchor="middle" x="106.21" y="-222.8" font-family="Microsoft YaHei" font-size="14.00">Need[i] -= Request[i]</text>
+</g>
+<!-- check2&#45;&gt;trial -->
+<g id="edge4" class="edge">
+<title>check2-&gt;trial</title>
+<path fill="none" stroke="black" d="M162.19,-343.44C154.96,-331.79 144.82,-315.43 135.15,-299.84"/>
+<polygon fill="black" stroke="black" points="138.26,-298.22 130.01,-291.57 132.31,-301.91 138.26,-298.22"/>
+<text xml:space="preserve" text-anchor="middle" x="154.23" y="-312" font-family="Times,serif" font-size="14.00">是</text>
+</g>
+<!-- wait -->
+<g id="node9" class="node">
+<title>wait</title>
+<path fill="#ffb6c1" stroke="black" d="M255.21,-273C255.21,-273 221.21,-273 221.21,-273 215.21,-273 209.21,-267 209.21,-261 209.21,-261 209.21,-243.4 209.21,-243.4 209.21,-237.4 215.21,-231.4 221.21,-231.4 221.21,-231.4 255.21,-231.4 255.21,-231.4 261.21,-231.4 267.21,-237.4 267.21,-243.4 267.21,-243.4 267.21,-261 267.21,-261 267.21,-267 261.21,-273 255.21,-273"/>
+<text xml:space="preserve" text-anchor="middle" x="238.21" y="-256.4" font-family="Microsoft YaHei" font-size="14.00">资源不足</text>
+<text xml:space="preserve" text-anchor="middle" x="238.21" y="-239.6" font-family="Microsoft YaHei" font-size="14.00">进程等待</text>
+</g>
+<!-- check2&#45;&gt;wait -->
+<g id="edge5" class="edge">
+<title>check2-&gt;wait</title>
+<path fill="none" stroke="black" d="M182.24,-343.44C192.19,-327.4 207.67,-302.44 219.83,-282.84"/>
+<polygon fill="black" stroke="black" points="222.75,-284.78 225.04,-274.43 216.8,-281.09 222.75,-284.78"/>
+<text xml:space="preserve" text-anchor="middle" x="208.48" y="-312" font-family="Times,serif" font-size="14.00">否</text>
+</g>
+<!-- safety -->
+<g id="node5" class="node">
+<title>safety</title>
+<path fill="#ffe4b5" stroke="black" d="M95.04,-173.22C95.04,-173.22 11.17,-140.38 11.17,-140.38 5.59,-138.19 5.59,-133.81 11.17,-131.62 11.17,-131.62 95.04,-98.78 95.04,-98.78 100.63,-96.59 111.8,-96.59 117.39,-98.78 117.39,-98.78 201.25,-131.62 201.25,-131.62 206.84,-133.81 206.84,-138.19 201.25,-140.38 201.25,-140.38 117.39,-173.22 117.39,-173.22 111.8,-175.41 100.63,-175.41 95.04,-173.22"/>
+<text xml:space="preserve" text-anchor="middle" x="106.21" y="-140.2" font-family="Microsoft YaHei" font-size="14.00">安全性检查:</text>
+<text xml:space="preserve" text-anchor="middle" x="106.21" y="-123.4" font-family="Microsoft YaHei" font-size="14.00">能否找到安全序列?</text>
+</g>
+<!-- trial&#45;&gt;safety -->
+<g id="edge6" class="edge">
+<title>trial-&gt;safety</title>
+<path fill="none" stroke="black" d="M106.21,-214.12C106.21,-206.15 106.21,-197.59 106.21,-189.16"/>
+<polygon fill="black" stroke="black" points="109.71,-189.35 106.21,-179.35 102.71,-189.35 109.71,-189.35"/>
+</g>
+<!-- grant -->
+<g id="node6" class="node">
+<title>grant</title>
+<path fill="#90ee90" stroke="black" d="M85.21,-38.8C85.21,-38.8 51.21,-38.8 51.21,-38.8 45.21,-38.8 39.21,-32.8 39.21,-26.8 39.21,-26.8 39.21,-14.8 39.21,-14.8 39.21,-8.8 45.21,-2.8 51.21,-2.8 51.21,-2.8 85.21,-2.8 85.21,-2.8 91.21,-2.8 97.21,-8.8 97.21,-14.8 97.21,-14.8 97.21,-26.8 97.21,-26.8 97.21,-32.8 91.21,-38.8 85.21,-38.8"/>
+<text xml:space="preserve" text-anchor="middle" x="68.21" y="-16.6" font-family="Microsoft YaHei" font-size="14.00">分配成功</text>
+</g>
+<!-- safety&#45;&gt;grant -->
+<g id="edge7" class="edge">
+<title>safety-&gt;grant</title>
+<path fill="none" stroke="black" d="M94.09,-98.87C88.75,-82.99 82.59,-64.62 77.62,-49.81"/>
+<polygon fill="black" stroke="black" points="81.06,-49.07 74.56,-40.7 74.42,-51.29 81.06,-49.07"/>
+<text xml:space="preserve" text-anchor="middle" x="96.57" y="-63.8" font-family="Times,serif" font-size="14.00">安全</text>
+</g>
+<!-- rollback -->
+<g id="node7" class="node">
+<title>rollback</title>
+<path fill="#ff6347" stroke="black" d="M161.21,-41.6C161.21,-41.6 127.21,-41.6 127.21,-41.6 121.21,-41.6 115.21,-35.6 115.21,-29.6 115.21,-29.6 115.21,-12 115.21,-12 115.21,-6 121.21,0 127.21,0 127.21,0 161.21,0 161.21,0 167.21,0 173.21,-6 173.21,-12 173.21,-12 173.21,-29.6 173.21,-29.6 173.21,-35.6 167.21,-41.6 161.21,-41.6"/>
+<text xml:space="preserve" text-anchor="middle" x="144.21" y="-25" font-family="Microsoft YaHei" font-size="14.00">回滚试探</text>
+<text xml:space="preserve" text-anchor="middle" x="144.21" y="-8.2" font-family="Microsoft YaHei" font-size="14.00">拒绝请求</text>
+</g>
+<!-- safety&#45;&gt;rollback -->
+<g id="edge8" class="edge">
+<title>safety-&gt;rollback</title>
+<path fill="none" stroke="black" d="M118.34,-98.87C123.35,-83.96 129.09,-66.86 133.89,-52.57"/>
+<polygon fill="black" stroke="black" points="137.16,-53.82 137.02,-43.23 130.52,-51.6 137.16,-53.82"/>
+<text xml:space="preserve" text-anchor="middle" x="146.59" y="-63.8" font-family="Times,serif" font-size="14.00">不安全</text>
+</g>
+</g>
+</svg>
