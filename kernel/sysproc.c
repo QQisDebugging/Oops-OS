@@ -54,6 +54,24 @@ sys_midsched(void)
   return midsched_set(on);
 }
 
+uint64
+sys_consctl(void)
+{
+  int on;
+  if (argint(0, &on) < 0)
+    return -1;
+  return consctl(on);
+}
+
+uint64
+sys_consfg(void)
+{
+  int pid;
+  if (argint(0, &pid) < 0)
+    return -1;
+  return consfg(pid);
+}
+
 uint64 sys_banker_init(void)
 {
   int n;
@@ -167,6 +185,18 @@ sys_wait(void)
   if (argaddr(0, &p) < 0)
     return -1;
   return wait(p);
+}
+
+uint64
+sys_waitpid(void)
+{
+  int pid;
+  uint64 p;
+  int options;
+
+  if (argint(0, &pid) < 0 || argaddr(1, &p) < 0 || argint(2, &options) < 0)
+    return -1;
+  return waitpid(pid, p, options);
 }
 
 uint64

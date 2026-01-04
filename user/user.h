@@ -7,6 +7,7 @@ struct sysinfo;
 int fork(void);
 int exit(int) __attribute__((noreturn));
 int wait(int *);
+int waitpid(int pid, int *status, int options);
 int pipe(int *);
 int write(int, const void *, int);
 int read(int, void *, int);
@@ -39,6 +40,9 @@ int banker_set_max(int nres, int *max);
 int banker_request(int nres, int *req);
 int banker_release(int nres, int *rel);
 int midsched(int on);
+int consctl(int on);
+int consfg(int pid);
+int getcwd(char *buf);
 int execve(const char *path, char *argv[], char *envp[]);
 int getparentpid(void);
 int print_pgtable(void);
@@ -92,6 +96,8 @@ int writev(int fd, struct iovec *iov, int iovcnt);
 // fallocate flags
 #define FALLOC_KEEP_SIZE     0x001
 #define FALLOC_FL_PUNCH_HOLE 0x002
+
+#define WNOHANG 1
 
 // flock 操作标志
 #define LOCK_SH   1   // 共享锁（读锁）

@@ -223,6 +223,9 @@ extern uint64 sys_writev(void);
 extern uint64 sys_access(void);
 extern uint64 sys_mount(void);
 extern uint64 sys_umount(void);
+extern uint64 sys_consctl(void);
+extern uint64 sys_consfg(void);
+extern uint64 sys_waitpid(void);
 static uint64 (*syscalls[])(void) = {
     [SYS_fork] sys_fork,
     [SYS_exit] sys_exit,
@@ -326,6 +329,9 @@ static uint64 (*syscalls[])(void) = {
     [SYS_access] sys_access,
     [SYS_mount] sys_mount,
     [SYS_umount] sys_umount,
+    [SYS_consctl] sys_consctl,
+    [SYS_consfg] sys_consfg,
+    [SYS_waitpid] sys_waitpid,
 };
 static char *syscall_names[] = {
     [SYS_fork] "fork",
@@ -430,6 +436,9 @@ static char *syscall_names[] = {
     [SYS_access] "sys_access",
     [SYS_mount] "sys_mount",
     [SYS_umount] "sys_umount",
+    [SYS_consctl] "sys_consctl",
+    [SYS_consfg] "sys_consfg",
+    [SYS_waitpid] "sys_waitpid",
 };
 void syscall(void)
 {

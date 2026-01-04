@@ -108,3 +108,7 @@
 // VFS 挂载 (来自 filesystem 分支)
 #define SYS_mount 103
 #define SYS_umount 104
+// 控制台与交互
+#define SYS_consctl 105
+#define SYS_waitpid 106
+#define SYS_consfg 107

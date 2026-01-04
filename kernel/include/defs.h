@@ -47,6 +47,8 @@ void consoleinit(void);
 void spoolinit(void);
 void consoleintr(int);
 void consputc(int);
+int consctl(int on);
+int consfg(int pid);
 
 // exec.c
 int exec(char *, char **);
@@ -157,6 +159,7 @@ int growproc(int);
 pagetable_t proc_pagetable(struct proc *);
 void proc_freepagetable(pagetable_t, uint64);
 int kill(int);
+int killtree(int);
 struct cpu *mycpu(void);
 struct cpu *getmycpu(void);
 struct proc *myproc();
@@ -167,6 +170,7 @@ void setproc(struct proc *);
 void sleep(void *, struct spinlock *);
 void userinit(void);
 int wait(uint64);
+int waitpid(int, uint64, int);
 void wakeup(void *);
 void wakeupOneProc(void *chan); // 信号量机制需要
 void yield(void);

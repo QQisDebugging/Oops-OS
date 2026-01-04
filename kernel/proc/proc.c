@@ -1580,6 +1580,60 @@ int wait(uint64 addr)
   }
 }
 
+int
+waitpid(int pid, uint64 addr, int options)
+{
+  struct proc *np;
+  int havekids;
+  struct proc *p = myproc();
+
+  acquire(&p->lock);
+  for (;;)
+  {
+    havekids = 0;
+    for (np = proc; np < &proc[NPROC]; np++)
+    {
+      if (np->parent == p && (pid < 0 || np->pid == pid))
+      {
+        acquire(&np->lock);
+        havekids = 1;
+        if (np->state == ZOMBIE)
+        {
+          int cpid = np->pid;
+          releasemq2(p->mqmask);
+          p->mqmask = 0;
+          if (addr != 0 && copyout(p->pagetable, addr, (char *)&np->xstate,
+                                   sizeof(np->xstate)) < 0)
+          {
+            release(&np->lock);
+            release(&p->lock);
+            return -1;
+          }
+          freeproc(np);
+          release(&np->lock);
+          release(&p->lock);
+          return cpid;
+        }
+        release(&np->lock);
+      }
+    }
+
+    if (!havekids || p->killed)
+    {
+      release(&p->lock);
+      return -1;
+    }
+
+    if (options & 1) // WNOHANG
+    {
+      release(&p->lock);
+      return 0;
+    }
+
+    sleep(p, &p->lock);
+  }
+}
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -2069,6 +2123,43 @@ wakeup1(struct proc *p)
 // Kill the process with the given pid.
 // The victim won't exit until it tries to return
 // to user space (see usertrap() in trap.c).
+static void
+mark_killed(struct proc *p)
+{
+  p->killed = 1;
+  if (p->state == SLEEPING)
+  {
+    // Wake process from sleep().
+    p->state = RUNNABLE;
+#if defined(SCHED_MLFQ)
+    p->mlfq_level = 0;
+    p->mlfq_ticks = 0;
+#endif
+  }
+  else if (p->state == SUSPENDED || p->state == SUSPENDED_SLEEP)
+  {
+    p->state = RUNNABLE;
+    p->midsched_suspending = 0;
+#if defined(SCHED_MLFQ)
+    p->mlfq_level = 0;
+    p->mlfq_ticks = 0;
+#endif
+  }
+}
+
+static int
+is_descendant(struct proc *p, int root_pid)
+{
+  struct proc *cur = p;
+  while (cur != 0)
+  {
+    if (cur->pid == root_pid)
+      return 1;
+    cur = cur->parent;
+  }
+  return 0;
+}
+
 int kill(int pid)
 {
   struct proc *p;
@@ -2078,31 +2169,37 @@ int kill(int pid)
     acquire(&p->lock);
     if (p->pid == pid)
     {
-      p->killed = 1;
-      if (p->state == SLEEPING)
-      {
-        // Wake process from sleep().
-        p->state = RUNNABLE;
-#if defined(SCHED_MLFQ)
-        p->mlfq_level = 0;
-        p->mlfq_ticks = 0;
-#endif
-      }
-      else if (p->state == SUSPENDED || p->state == SUSPENDED_SLEEP)
-      {
-        p->state = RUNNABLE;
-        p->midsched_suspending = 0;
-#if defined(SCHED_MLFQ)
-        p->mlfq_level = 0;
-        p->mlfq_ticks = 0;
-#endif
-      }
+      mark_killed(p);
       release(&p->lock);
       return 0;
     }
     release(&p->lock);
   }
   return -1;
+}
+
+int
+killtree(int pid)
+{
+  int found = 0;
+  struct proc *p;
+
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock);
+    if (p->state == UNUSED)
+    {
+      release(&p->lock);
+      continue;
+    }
+    if (p->pid == pid || is_descendant(p, pid))
+    {
+      mark_killed(p);
+      found = 1;
+    }
+    release(&p->lock);
+  }
+  return found ? 0 : -1;
 }
 
 // Copy to either a user address, or kernel address,

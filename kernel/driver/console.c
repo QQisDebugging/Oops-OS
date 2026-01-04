@@ -52,6 +52,35 @@ struct {
   uint e;  // Edit index
 } cons;
 
+static int cons_raw = 0;
+static int cons_fgpid = 0;
+
+int
+consctl(int on)
+{
+  int old;
+
+  acquire(&cons.lock);
+  old = cons_raw;
+  cons_raw = on ? 1 : 0;
+  if (cons_raw) {
+    cons.r = cons.w = cons.e;
+  }
+  release(&cons.lock);
+  return old;
+}
+
+int
+consfg(int pid)
+{
+  int old;
+
+  acquire(&cons.lock);
+  old = cons_fgpid;
+  cons_fgpid = pid;
+  release(&cons.lock);
+  return old;
+}
 //
 // user write()s to the console go here.
 //
@@ -100,6 +129,17 @@ consoleread(int user_dst, uint64 dst, int n)
 
     c = cons.buf[cons.r++ % INPUT_BUF];
 
+    if(cons_raw){
+      cbuf = c;
+      if(either_copyout(user_dst, dst, &cbuf, 1) == -1)
+        break;
+      dst++;
+      --n;
+      if(cons.r == cons.w)
+        break;
+      continue;
+    }
+
     if(c == C('D')){  // end-of-file
       if(n < target){
         // Save ^D for next time, to make sure
@@ -139,7 +179,30 @@ consoleintr(int c)
 {
   acquire(&cons.lock);
 
+  if(cons_raw){
+    if(c != 0 && cons.e-cons.r < INPUT_BUF){
+      c = (c == '\r') ? '\n' : c;
+      cons.buf[cons.e++ % INPUT_BUF] = c;
+      cons.w = cons.e;
+      wakeup(&cons.r);
+    }
+    release(&cons.lock);
+    return;
+  }
+
   switch(c){
+  case C('C'):  // Interrupt foreground process.
+    if (cons_fgpid > 0) {
+      consputc('^');
+      consputc('C');
+      consputc('\n');
+      cons.e = cons.w = cons.r;
+      int fg = cons_fgpid;
+      release(&cons.lock);
+      killtree(fg);
+      acquire(&cons.lock);
+    }
+    break;
   case C('P'):  // Print process list.
     procdump();
     break;
